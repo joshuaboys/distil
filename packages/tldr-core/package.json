@@ -1,0 +1,63 @@
+{
+  "name": "@edda-tldr/core",
+  "version": "0.1.0",
+  "description": "Core analysis engine for TLDR - token-efficient code analysis for LLMs",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "tree-sitter": "^0.22.4",
+    "tree-sitter-typescript": "^0.23.2",
+    "ignore": "^7.0.3"
+  },
+
+  "optionalDependencies": {
+    "tree-sitter-python": "^0.23.6",
+    "tree-sitter-rust": "^0.23.2",
+    "tree-sitter-c-sharp": "^0.23.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "keywords": [
+    "code-analysis",
+    "llm",
+    "ast",
+    "call-graph",
+    "cfg",
+    "dfg",
+    "pdg",
+    "tree-sitter",
+    "typescript",
+    "javascript"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EddaCraft/tldr.git",
+    "directory": "packages/tldr-core"
+  }
+}

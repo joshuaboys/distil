@@ -1,0 +1,42 @@
+{
+  "name": "@edda-tldr/cli",
+  "version": "0.1.0",
+  "description": "CLI for TLDR - token-efficient code analysis for LLMs",
+  "type": "module",
+  "bin": {
+    "tldr": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@edda-tldr/core": "workspace:*",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "keywords": [
+    "cli",
+    "code-analysis",
+    "llm",
+    "tldr"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EddaCraft/tldr.git",
+    "directory": "packages/tldr-cli"
+  }
+}
