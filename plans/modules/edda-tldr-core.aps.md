@@ -2,7 +2,7 @@
 
 | Scope | Owner | Priority | Status |
 |-------|-------|----------|--------|
-| CORE | @aneki | high | Draft |
+| CORE | @aneki | high | In Progress |
 
 ## Purpose
 
@@ -57,13 +57,13 @@ This is the analytical spine of TLDR. It extracts structure from code and produc
 
 ## Acceptance Criteria
 
-- [ ] L1: Extract functions, classes, imports from TS/JS files
+- [x] L1: Extract functions, classes, imports from TS/JS files
 - [ ] L2: Build project-wide call graph with forward/backward edges
 - [ ] L3: Extract CFG with basic blocks and cyclomatic complexity
 - [ ] L4: Extract DFG with variable definitions and uses
 - [ ] L5: Compute program slices (backward and forward)
 - [ ] Kindling integration caches all analysis results
-- [ ] Dirty detection via content hashes avoids redundant analysis
+- [x] Dirty detection via content hashes avoids redundant analysis
 - [ ] Context output reduces tokens by 80%+ vs raw code
 
 ## Risks & Mitigations
@@ -76,8 +76,9 @@ This is the analytical spine of TLDR. It extracts structure from code and produc
 
 ## Tasks
 
-### CORE-001: Define core types and interfaces
+### CORE-001: Define core types and interfaces ✅
 
+- **Status:** Complete
 - **Intent:** Establish stable type definitions for all analysis layers
 - **Expected Outcome:** FunctionInfo, ClassInfo, ModuleInfo, CallGraphInfo, CFGInfo, DFGInfo, PDGInfo types compile and validate
 - **Scope:** `src/types/`
@@ -87,9 +88,11 @@ This is the analytical spine of TLDR. It extracts structure from code and produc
 - **Validation:** `pnpm test -- types`
 - **Confidence:** high
 - **Risks:** Type changes after M1 require migrations
+- **Completed:** All types defined and compiling
 
-### CORE-002: Tree-sitter TypeScript parser setup
+### CORE-002: Tree-sitter TypeScript parser setup ✅
 
+- **Status:** Complete
 - **Intent:** Establish parsing foundation for TypeScript/JavaScript
 - **Expected Outcome:** Parser loads TS/JS grammars; can parse source to tree-sitter AST
 - **Scope:** `src/parsers/`
@@ -99,18 +102,21 @@ This is the analytical spine of TLDR. It extracts structure from code and produc
 - **Validation:** `pnpm test -- parsers`
 - **Confidence:** high
 - **Risks:** Tree-sitter WASM vs native bindings complexity
+- **Completed:** TypeScript parser working with native bindings, 9 tests passing
 
-### CORE-003: L1 AST extractor
+### CORE-003: L1 AST extractor ✅
 
+- **Status:** Complete
 - **Intent:** Extract functions, classes, imports, and signatures from source files
 - **Expected Outcome:** `extractFile()` returns complete ModuleInfo with all declarations
-- **Scope:** `src/extractors/ast/`
+- **Scope:** `src/parsers/typescript.ts` (integrated with parser)
 - **Non-scope:** Call graph, CFG, DFG, PDG
-- **Files:** `src/extractors/ast/index.ts`, `src/extractors/ast/typescript.ts`
+- **Files:** `src/parsers/typescript.ts`
 - **Dependencies:** CORE-001, CORE-002
-- **Validation:** `pnpm test -- ast`
+- **Validation:** `pnpm test -- parsers`
 - **Confidence:** high
 - **Risks:** Complex TypeScript syntax edge cases
+- **Completed:** Extracts functions, classes, methods, imports, exports, parameters, types
 
 ### CORE-004: L2 Call graph extractor
 
@@ -124,8 +130,9 @@ This is the analytical spine of TLDR. It extracts structure from code and produc
 - **Confidence:** medium
 - **Risks:** Import resolution complexity; dynamic calls
 
-### CORE-005: Kindling integration layer
+### CORE-005: Kindling integration layer 🔄
 
+- **Status:** In Progress
 - **Intent:** Cache analysis results in Kindling for fast retrieval
 - **Expected Outcome:** Analysis results stored as Kindling observations; dirty detection via content hashes
 - **Scope:** `src/kindling/`
@@ -135,6 +142,37 @@ This is the analytical spine of TLDR. It extracts structure from code and produc
 - **Validation:** `pnpm test -- kindling`
 - **Confidence:** medium
 - **Risks:** Kindling API stability during early development
+
+**Implementation Details:**
+
+1. **Observation Kinds** (to be added to @kindling/core):
+   - `code.symbol` — Functions, classes, variables
+   - `code.reference` — Imports, usages
+   - `code.callgraph` — Call relationships
+   - `code.flow.control` — CFG blocks/edges
+   - `code.flow.data` — DFG defs/uses
+   - `code.dependence` — PDG edges, slices
+   - `analysis.metric` — Complexity, coverage
+
+2. **TLDR Metadata Schema:**
+   ```typescript
+   interface TLDRObservationMeta {
+     producer: 'tldr';
+     subkind: string;  // e.g., 'tldr.ast.function'
+     language: Language;
+     schemaVersion: '1';
+     payload: unknown;
+   }
+   ```
+
+3. **Capsule Strategy:**
+   - One capsule per project analysis session
+   - Auto-close on CLI exit or explicit `tldr warm` completion
+
+4. **Cache Invalidation:**
+   - Content hash (SHA-256) stored per file
+   - Re-analyze only when hash changes
+   - Cascading invalidation for call graph edges
 
 ### CORE-006: L3 CFG extractor
 

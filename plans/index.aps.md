@@ -127,5 +127,38 @@ Those concerns are either out of scope or deferred to future versions.
 
 ## Open Questions
 
-* **Q-001:** Should we support JSX/TSX as distinct from JS/TS, or treat them as variants?
-* **Q-002:** How should we handle monorepo projects with multiple tsconfig.json files?
+*No open questions at this time.*
+
+---
+
+## Resolved Questions
+
+### Q-001: JSX/TSX Support (Resolved)
+
+**Decision:** Treat JSX/TSX as variants of JS/TS, not distinct languages.
+
+**Rationale:**
+- Tree-sitter already handles this via grammar switching (TSX grammar for .tsx/.jsx)
+- Simpler API with unified `typescript`/`javascript` language identifiers
+- Matches industry standard tooling behavior
+- JSX-specific analysis (components, hooks) can be added as optional metadata later
+
+**Implementation:** Current approach is correct. Optionally add `hasJSX: boolean` to `ModuleInfo` if JSX-specific analysis becomes valuable.
+
+### Q-002: Monorepo tsconfig.json Handling (Resolved)
+
+**Decision:** Use nearest tsconfig.json heuristic with explicit override support.
+
+**Rationale:**
+- Works naturally for most monorepo structures
+- Explicit `--project` flag covers edge cases
+- Avoids over-engineering for M1-M2
+
+**Implementation (M1-M2):**
+- Find nearest `tsconfig.json` walking up from file
+- Add `--project <path>` CLI flag for explicit override
+
+**Implementation (M3+):**
+- Add workspace detection (pnpm-workspace.yaml, package.json workspaces)
+- Add `.tldr/config.json` for complex configurations
+- Cache tsconfig parsing per-project
