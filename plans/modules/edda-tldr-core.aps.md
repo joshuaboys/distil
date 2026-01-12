@@ -63,7 +63,7 @@ This is the analytical spine of TLDR. It extracts structure from code and produc
 - [ ] L4: Extract DFG with variable definitions and uses
 - [ ] L5: Compute program slices (backward and forward)
 - [ ] Kindling integration caches all analysis results
-- [x] Dirty detection via content hashes avoids redundant analysis
+- [ ] Dirty detection via content hashes avoids redundant analysis
 - [ ] Context output reduces tokens by 80%+ vs raw code
 
 ## Risks & Mitigations
@@ -132,7 +132,7 @@ This is the analytical spine of TLDR. It extracts structure from code and produc
 
 ### CORE-005: Kindling integration layer 🔄
 
-- **Status:** In Progress
+- **Status:** Planned
 - **Intent:** Cache analysis results in Kindling for fast retrieval
 - **Expected Outcome:** Analysis results stored as Kindling observations; dirty detection via content hashes
 - **Scope:** `src/kindling/`

@@ -34,34 +34,28 @@ TLDR builds 5 analysis layers, each answering different questions:
 # Install
 pnpm add @edda-tldr/cli
 
-# Index your project
-tldr warm .
+# Show file tree
+tldr tree .
 
-# Get LLM-ready context for a function
-tldr context processData --project .
-
-# Find all callers of a function
-tldr impact validateToken .
-
-# Get program slice (what affects line 42?)
-tldr slice src/auth.ts login 42
+# Extract file structure (L1)
+tldr extract src/index.ts
 ```
 
 ## Commands
 
-| Command | What It Does |
-|---------|--------------|
-| `tldr tree [path]` | File tree structure |
-| `tldr structure [path]` | Code structure overview |
-| `tldr extract <file>` | Full file analysis (L1) |
-| `tldr context <func> --project <path>` | LLM-ready summary |
-| `tldr calls [path]` | Build call graph (L2) |
-| `tldr impact <func> [path]` | Find all callers (L2) |
-| `tldr cfg <file> <func>` | Control flow graph (L3) |
-| `tldr dfg <file> <func>` | Data flow graph (L4) |
-| `tldr slice <file> <func> <line>` | Program slice (L5) |
-| `tldr semantic <query> [path]` | Natural language search |
-| `tldr warm [path]` | Build all indexes |
+| Command | What It Does | Status |
+|---------|--------------|--------|
+| `tldr tree [path]` | File tree structure | ✅ Available |
+| `tldr extract <file>` | Full file analysis (L1) | ✅ Available |
+| `tldr structure [path]` | Code structure overview | 🔜 Planned |
+| `tldr context <func> --project <path>` | LLM-ready summary | 🔜 Planned |
+| `tldr calls [path]` | Build call graph (L2) | 🔜 Planned |
+| `tldr impact <func> [path]` | Find all callers (L2) | 🔜 Planned |
+| `tldr cfg <file> <func>` | Control flow graph (L3) | 🔜 Planned |
+| `tldr dfg <file> <func>` | Data flow graph (L4) | 🔜 Planned |
+| `tldr slice <file> <func> <line>` | Program slice (L5) | 🔜 Planned |
+| `tldr semantic <query> [path]` | Natural language search | 🔜 Planned |
+| `tldr warm [path]` | Build all indexes | 🔜 Planned |
 
 ## Supported Languages
 
@@ -75,7 +69,7 @@ tldr slice src/auth.ts login 42
 
 ## Architecture
 
-TLDR integrates with [Kindling](https://github.com/EddaCraft/kindling) for caching and persistence:
+TLDR plans to integrate with [Kindling](https://github.com/EddaCraft/kindling) for caching and persistence:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

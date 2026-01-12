@@ -2,7 +2,7 @@
 
 | Scope | Owner | Priority | Status |
 |-------|-------|----------|--------|
-| CLI | @aneki | high | Draft |
+| CLI | @aneki | high | In Progress |
 
 ## Purpose
 
@@ -77,6 +77,7 @@ This is the user-facing surface of TLDR. It formats analysis results for human c
 
 ### CLI-001: Project setup and command structure
 
+- **Status:** In Progress (extract/tree registered)
 - **Intent:** Establish CLI framework and command hierarchy
 - **Expected Outcome:** `tldr --help` shows all commands; subcommands parse correctly
 - **Scope:** `src/index.ts`, `src/commands/`
@@ -89,6 +90,7 @@ This is the user-facing surface of TLDR. It formats analysis results for human c
 
 ### CLI-002: Tree and structure commands
 
+- **Status:** In Progress (tree complete)
 - **Intent:** Provide project overview commands
 - **Expected Outcome:** `tldr tree` shows file tree; `tldr structure` shows code overview
 - **Scope:** `src/commands/tree.ts`, `src/commands/structure.ts`
@@ -101,6 +103,7 @@ This is the user-facing surface of TLDR. It formats analysis results for human c
 
 ### CLI-003: Extract command
 
+- **Status:** Complete
 - **Intent:** Expose L1 AST extraction via CLI
 - **Expected Outcome:** `tldr extract <file>` outputs file analysis in requested format
 - **Scope:** `src/commands/extract.ts`
