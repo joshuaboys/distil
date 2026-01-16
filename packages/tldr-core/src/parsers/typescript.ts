@@ -243,7 +243,7 @@ export class TypeScriptParser implements LanguageParser {
     const calls = new Map<string, string[]>();
 
     // Find all function declarations and their calls
-    this.traverseForCalls(root, null, calls);
+    this.traverseForCalls(root, null, calls, null);
 
     return calls;
   }
@@ -800,8 +800,24 @@ export class TypeScriptParser implements LanguageParser {
   private traverseForCalls(
     node: TSNode,
     currentFunction: string | null,
-    calls: Map<string, string[]>
+    calls: Map<string, string[]>,
+    currentClass: string | null
   ): void {
+    if (node.type === 'class_declaration') {
+      let className = currentClass;
+      for (const child of node.children) {
+        if (child.type === 'identifier' || child.type === 'type_identifier') {
+          className = child.text;
+          break;
+        }
+      }
+
+      for (const child of node.children) {
+        this.traverseForCalls(child, currentFunction, calls, className);
+      }
+      return;
+    }
+
     // Track current function context
     if (
       node.type === 'function_declaration' ||
@@ -817,13 +833,20 @@ export class TypeScriptParser implements LanguageParser {
         }
       }
 
-      if (funcName && !calls.has(funcName)) {
-        calls.set(funcName, []);
-      }
+      if (funcName) {
+        const qualifiedName =
+          node.type === 'method_definition' && currentClass
+            ? `${currentClass}.${funcName}`
+            : funcName;
 
-      // Traverse children with this function as context
-      for (const child of node.children) {
-        this.traverseForCalls(child, funcName, calls);
+        if (!calls.has(qualifiedName)) {
+          calls.set(qualifiedName, []);
+        }
+
+        // Traverse children with this function as context
+        for (const child of node.children) {
+          this.traverseForCalls(child, qualifiedName, calls, currentClass);
+        }
       }
       return;
     }
@@ -853,7 +876,7 @@ export class TypeScriptParser implements LanguageParser {
 
     // Continue traversing
     for (const child of node.children) {
-      this.traverseForCalls(child, currentFunction, calls);
+      this.traverseForCalls(child, currentFunction, calls, currentClass);
     }
   }
 }

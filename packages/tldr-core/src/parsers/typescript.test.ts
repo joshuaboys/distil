@@ -112,6 +112,12 @@ describe('TypeScriptParser', () => {
           process();
         }
         
+        class User {
+          greet() {
+            helper();
+          }
+        }
+        
         function helper() {
           console.log('help');
         }
@@ -125,6 +131,7 @@ describe('TypeScriptParser', () => {
       expect(calls.get('main')).toContain('helper');
       expect(calls.get('main')).toContain('process');
       expect(calls.get('process')).toContain('helper');
+      expect(calls.get('User.greet')).toContain('helper');
     });
   });
 });
