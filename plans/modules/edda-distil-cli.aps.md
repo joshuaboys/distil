@@ -1,4 +1,4 @@
-# @edda-tldr/cli
+# @edda-distil/cli
 
 | Scope | Owner | Priority | Status |
 |-------|-------|----------|--------|
@@ -6,9 +6,9 @@
 
 ## Purpose
 
-Provides the command-line interface for TLDR. Exposes all analysis capabilities through intuitive commands for developers and LLM agents.
+Provides the command-line interface for Distil. Exposes all analysis capabilities through intuitive commands for developers and LLM agents.
 
-This is the user-facing surface of TLDR. It formats analysis results for human consumption and LLM context injection.
+This is the user-facing surface of Distil. It formats analysis results for human consumption and LLM context injection.
 
 ## In Scope
 
@@ -22,8 +22,8 @@ This is the user-facing surface of TLDR. It formats analysis results for human c
 
 ## Out of Scope
 
-- Analysis implementation (edda-tldr-core)
-- Kindling persistence (edda-tldr-core handles this)
+- Analysis implementation (edda-distil-core)
+- Kindling persistence (edda-distil-core handles this)
 - MCP server (future consideration)
 - Editor integrations
 
@@ -31,30 +31,30 @@ This is the user-facing surface of TLDR. It formats analysis results for human c
 
 **Depends on:**
 
-- @edda-tldr/core — all analysis functions
+- @edda-distil/core — all analysis functions
 - commander — CLI framework
 - openai — embeddings API (for semantic search)
 
 **Exposes:**
 
-- `tldr tree [path]` — file tree structure
-- `tldr structure [path]` — code structure overview
-- `tldr extract <file>` — full file analysis (L1)
-- `tldr context <func> --project <path>` — LLM-ready context
-- `tldr calls [path]` — build call graph (L2)
-- `tldr impact <func> [path]` — reverse call graph (L2)
-- `tldr cfg <file> <func>` — control flow graph (L3)
-- `tldr dfg <file> <func>` — data flow graph (L4)
-- `tldr slice <file> <func> <line>` — program slice (L5)
-- `tldr semantic <query> [path]` — semantic search
-- `tldr warm [path]` — build all indexes
+- `distil tree [path]` — file tree structure
+- `distil structure [path]` — code structure overview
+- `distil extract <file>` — full file analysis (L1)
+- `distil context <func> --project <path>` — LLM-ready context
+- `distil calls [path]` — build call graph (L2)
+- `distil impact <func> [path]` — reverse call graph (L2)
+- `distil cfg <file> <func>` — control flow graph (L3)
+- `distil dfg <file> <func>` — data flow graph (L4)
+- `distil slice <file> <func> <line>` — program slice (L5)
+- `distil semantic <query> [path]` — semantic search
+- `distil warm [path]` — build all indexes
 
 ## Boundary Rules
 
 - CLI must not implement analysis logic; delegate to CORE
 - CLI must support multiple output formats (JSON, text, compact)
 - CLI must provide helpful error messages with actionable guidance
-- CLI must respect .tldrignore patterns
+- CLI must respect .distilignore patterns
 
 ## Acceptance Criteria
 
@@ -92,12 +92,12 @@ This is the user-facing surface of TLDR. It formats analysis results for human c
 
 - **Status:** In Progress (tree complete)
 - **Intent:** Provide project overview commands
-- **Expected Outcome:** `tldr tree` shows file tree; `tldr structure` shows code overview
+- **Expected Outcome:** `distil tree` shows file tree; `distil structure` shows code overview
 - **Scope:** `src/commands/tree.ts`, `src/commands/structure.ts`
 - **Non-scope:** Analysis logic (uses CORE)
 - **Files:** `src/commands/tree.ts`, `src/commands/structure.ts`
 - **Dependencies:** CLI-001, CORE-003
-- **Validation:** `tldr tree . && tldr structure .`
+- **Validation:** `distil tree . && distil structure .`
 - **Confidence:** high
 - **Risks:** Large directory handling
 
@@ -105,84 +105,84 @@ This is the user-facing surface of TLDR. It formats analysis results for human c
 
 - **Status:** Complete
 - **Intent:** Expose L1 AST extraction via CLI
-- **Expected Outcome:** `tldr extract <file>` outputs file analysis in requested format
+- **Expected Outcome:** `distil extract <file>` outputs file analysis in requested format
 - **Scope:** `src/commands/extract.ts`
 - **Non-scope:** AST extraction logic
 - **Files:** `src/commands/extract.ts`
 - **Dependencies:** CLI-001, CORE-003
-- **Validation:** `tldr extract src/index.ts --json`
+- **Validation:** `distil extract src/index.ts --json`
 - **Confidence:** high
 - **Risks:** None significant
 
 ### CLI-004: Call graph commands (calls, impact)
 
 - **Intent:** Expose L2 call graph via CLI
-- **Expected Outcome:** `tldr calls` builds call graph; `tldr impact <func>` shows callers
+- **Expected Outcome:** `distil calls` builds call graph; `distil impact <func>` shows callers
 - **Scope:** `src/commands/calls.ts`, `src/commands/impact.ts`
 - **Non-scope:** Call graph construction logic
 - **Files:** `src/commands/calls.ts`, `src/commands/impact.ts`
 - **Dependencies:** CLI-001, CORE-004
-- **Validation:** `tldr calls . && tldr impact main .`
+- **Validation:** `distil calls . && distil impact main .`
 - **Confidence:** high
 - **Risks:** None significant
 
 ### CLI-005: Context command
 
 - **Intent:** Provide LLM-ready context with configurable depth
-- **Expected Outcome:** `tldr context <func>` outputs token-efficient summary
+- **Expected Outcome:** `distil context <func>` outputs token-efficient summary
 - **Scope:** `src/commands/context.ts`
 - **Non-scope:** Context generation logic
 - **Files:** `src/commands/context.ts`
 - **Dependencies:** CLI-001, CORE-009
-- **Validation:** `tldr context main --project . --depth 2`
+- **Validation:** `distil context main --project . --depth 2`
 - **Confidence:** high
 - **Risks:** Token budget display accuracy
 
 ### CLI-006: CFG and DFG commands
 
 - **Intent:** Expose L3/L4 analysis via CLI
-- **Expected Outcome:** `tldr cfg` shows control flow; `tldr dfg` shows data flow
+- **Expected Outcome:** `distil cfg` shows control flow; `distil dfg` shows data flow
 - **Scope:** `src/commands/cfg.ts`, `src/commands/dfg.ts`
 - **Non-scope:** CFG/DFG extraction logic
 - **Files:** `src/commands/cfg.ts`, `src/commands/dfg.ts`
 - **Dependencies:** CLI-001, CORE-006, CORE-007
-- **Validation:** `tldr cfg src/index.ts main && tldr dfg src/index.ts main`
+- **Validation:** `distil cfg src/index.ts main && distil dfg src/index.ts main`
 - **Confidence:** high
 - **Risks:** None significant
 
 ### CLI-007: Slice command
 
 - **Intent:** Expose L5 program slicing via CLI
-- **Expected Outcome:** `tldr slice <file> <func> <line>` shows relevant lines
+- **Expected Outcome:** `distil slice <file> <func> <line>` shows relevant lines
 - **Scope:** `src/commands/slice.ts`
 - **Non-scope:** Slicing logic
 - **Files:** `src/commands/slice.ts`
 - **Dependencies:** CLI-001, CORE-008
-- **Validation:** `tldr slice src/index.ts main 42`
+- **Validation:** `distil slice src/index.ts main 42`
 - **Confidence:** high
 - **Risks:** None significant
 
 ### CLI-008: Semantic search command
 
 - **Intent:** Enable natural language code search
-- **Expected Outcome:** `tldr semantic <query>` finds relevant functions by behavior
+- **Expected Outcome:** `distil semantic <query>` finds relevant functions by behavior
 - **Scope:** `src/commands/semantic.ts`, `src/semantic/`
 - **Non-scope:** Embedding model implementation
 - **Files:** `src/commands/semantic.ts`, `src/semantic/embeddings.ts`, `src/semantic/index.ts`
 - **Dependencies:** CLI-001, CORE-003, CORE-004
-- **Validation:** `OPENAI_API_KEY=xxx tldr semantic "validate JWT"`
+- **Validation:** `OPENAI_API_KEY=xxx distil semantic "validate JWT"`
 - **Confidence:** medium
 - **Risks:** API key management; rate limiting
 
 ### CLI-009: Warm command
 
 - **Intent:** Pre-build all indexes for fast queries
-- **Expected Outcome:** `tldr warm` analyzes project and caches results in Kindling
+- **Expected Outcome:** `distil warm` analyzes project and caches results in Kindling
 - **Scope:** `src/commands/warm.ts`
 - **Non-scope:** Caching implementation
 - **Files:** `src/commands/warm.ts`
 - **Dependencies:** CLI-001, CORE-005
-- **Validation:** `tldr warm . && tldr context main --project .`
+- **Validation:** `distil warm . && distil context main --project .`
 - **Confidence:** high
 - **Risks:** Progress display for large projects
 
@@ -194,7 +194,7 @@ This is the user-facing surface of TLDR. It formats analysis results for human c
 - **Non-scope:** Analysis logic
 - **Files:** `src/format/index.ts`, `src/format/json.ts`, `src/format/text.ts`, `src/config/index.ts`
 - **Dependencies:** CLI-001
-- **Validation:** `tldr extract src/index.ts --json && tldr extract src/index.ts --compact`
+- **Validation:** `distil extract src/index.ts --json && distil extract src/index.ts --compact`
 - **Confidence:** high
 - **Risks:** None significant
 

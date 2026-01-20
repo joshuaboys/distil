@@ -7,7 +7,7 @@
 import { Command } from 'commander';
 import { readdir } from 'fs/promises';
 import { resolve, join, relative } from 'path';
-import { LANGUAGE_EXTENSIONS } from '@edda-tldr/core';
+import { LANGUAGE_EXTENSIONS } from '@edda-distil/core';
 
 export const treeCommand = new Command('tree')
   .description('Show file tree structure')
@@ -58,7 +58,7 @@ const IGNORE_DIRS = new Set([
   '__pycache__',
   '.cache',
   '.kindling',
-  '.tldr',
+  '.distil',
 ]);
 
 const IGNORE_FILES = new Set([

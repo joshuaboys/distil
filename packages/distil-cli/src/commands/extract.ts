@@ -7,7 +7,7 @@
 import { Command } from 'commander';
 import { readFile } from 'fs/promises';
 import { resolve } from 'path';
-import { getParser, type ModuleInfo } from '@edda-tldr/core';
+import { getParser, type ModuleInfo } from '@edda-distil/core';
 
 export const extractCommand = new Command('extract')
   .description('Extract file structure (L1 AST)')

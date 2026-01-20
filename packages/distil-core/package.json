@@ -1,7 +1,7 @@
 {
-  "name": "@edda-tldr/core",
+  "name": "@edda-distil/core",
   "version": "0.1.0",
-  "description": "Core analysis engine for TLDR - token-efficient code analysis for LLMs",
+  "description": "Core analysis engine for Distil - token-efficient code analysis for LLMs",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -57,7 +57,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/EddaCraft/tldr.git",
-    "directory": "packages/tldr-core"
+    "url": "https://github.com/EddaCraft/distil.git",
+    "directory": "packages/distil-core"
   }
 }

@@ -4,8 +4,8 @@
     "types": ["node"]
   },
   "references": [
-    { "path": "./packages/tldr-core" },
-    { "path": "./packages/tldr-cli" }
+    { "path": "./packages/distil-core" },
+    { "path": "./packages/distil-cli" }
   ],
   "files": []
 }

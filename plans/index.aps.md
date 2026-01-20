@@ -1,6 +1,6 @@
 # PLAN_NEXT.md
 
-## TLDR OSS v0.1 – Token-Efficient Code Analysis for LLMs
+## Distil OSS v0.1 – Token-Efficient Code Analysis for LLMs
 
 ### Problem & Success Criteria
 
@@ -8,14 +8,14 @@
 LLMs can't read entire codebases. A 100K-line codebase produces ~400K tokens, exceeding context windows. Even when it fits, LLMs drown in irrelevant details, wasting tokens on code that doesn't matter for the current task.
 
 **Why this work matters**
-TLDR extracts *structure* instead of dumping *text*. It provides 5 layers of code analysis (AST, Call Graph, CFG, DFG, PDG) that give LLMs exactly what they need to understand and edit code correctly—at 95% fewer tokens than raw code.
+Distil extracts *structure* instead of dumping *text*. It provides 5 layers of code analysis (AST, Call Graph, CFG, DFG, PDG) that give LLMs exactly what they need to understand and edit code correctly—at 95% fewer tokens than raw code.
 
 **Non-goals (explicit)**
 
-* TLDR does **not** replace language servers or IDEs
-* TLDR does **not** provide real-time incremental parsing (Salsa-style)
-* TLDR does **not** run as a daemon (uses Kindling for persistence instead)
-* TLDR does **not** include local embedding models (uses external APIs)
+* Distil does **not** replace language servers or IDEs
+* Distil does **not** provide real-time incremental parsing (Salsa-style)
+* Distil does **not** run as a daemon (uses Kindling for persistence instead)
+* Distil does **not** include local embedding models (uses external APIs)
 
 Those concerns are either out of scope or deferred to future versions.
 
@@ -32,13 +32,13 @@ Those concerns are either out of scope or deferred to future versions.
 
 ## System Map (Current)
 
-* `@edda-tldr/core` → depends on → `tree-sitter` (+ optional language parsers)
-* `@edda-tldr/cli` → depends on → `@edda-tldr/core`
+* `@edda-distil/core` → depends on → `tree-sitter` (+ optional language parsers)
+* `@edda-distil/cli` → depends on → `@edda-distil/core`
 
 ### Planned Integrations
 
-* `@edda-tldr/core` → depends on → `@kindling/core` (M2)
-* `@edda-tldr/core` → depends on → `@kindling/store-sqlite` (M2)
+* `@edda-distil/core` → depends on → `@kindling/core` (M2)
+* `@edda-distil/core` → depends on → `@kindling/store-sqlite` (M2)
 
 ---
 
@@ -51,9 +51,9 @@ Those concerns are either out of scope or deferred to future versions.
 * [x] Tree-sitter TypeScript/JavaScript parser integrated
 * [x] L1 AST extraction (functions, classes, imports, signatures)
 * [x] Core types defined and validated
-* [x] CLI `tldr tree` and `tldr extract` available
+* [x] CLI `distil tree` and `distil extract` available
 
-**Target:** `tldr extract <file>` works for TS/JS files ✅
+**Target:** `distil extract <file>` works for TS/JS files ✅
 
 ### M2: L2 Call Graph + Kindling Integration (Planned)
 
@@ -63,7 +63,7 @@ Those concerns are either out of scope or deferred to future versions.
 * [ ] Kindling integration for caching analysis results
 * [ ] Impact analysis command
 
-**Target:** `tldr impact <function>` shows all callers
+**Target:** `distil impact <function>` shows all callers
 
 ### M3: L3-L5 Analysis Layers (Planned)
 
@@ -72,7 +72,7 @@ Those concerns are either out of scope or deferred to future versions.
 * [ ] L5: Program Dependence Graph with backward/forward slicing
 * [ ] `tldr context` command for LLM-ready output
 
-**Target:** `tldr slice <file> <func> <line>` returns relevant lines only
+**Target:** `distil slice <file> <func> <line>` returns relevant lines only
 
 ### M4: Semantic Search + CLI Polish (Planned)
 
@@ -81,7 +81,7 @@ Those concerns are either out of scope or deferred to future versions.
 * [ ] Full CLI command set
 * [ ] Documentation polish (README, examples)
 
-**Target:** `tldr semantic "validate JWT tokens"` finds relevant functions
+**Target:** `distil semantic "validate JWT tokens"` finds relevant functions
 
 ### M5: Multi-Language Support (Planned)
 
@@ -95,9 +95,9 @@ Those concerns are either out of scope or deferred to future versions.
 
 ## Modules
 
-### @edda-tldr/core
+### @edda-distil/core
 
-* **Path:** ./modules/edda-tldr-core.aps.md
+* **Path:** ./modules/edda-distil-core.aps.md
 * **Scope:** CORE
 * **Owner:** @aneki
 * **Status:** In Progress (L1 complete)
@@ -105,25 +105,25 @@ Those concerns are either out of scope or deferred to future versions.
 * **Tags:** analysis, ast, callgraph, cfg, dfg, pdg
 * **Dependencies:** tree-sitter (current), @kindling/core/@kindling/store-sqlite (planned)
 
-### @edda-tldr/cli
+### @edda-distil/cli
 
-* **Path:** ./modules/edda-tldr-cli.aps.md
+* **Path:** ./modules/edda-distil-cli.aps.md
 * **Scope:** CLI
 * **Owner:** @aneki
 * **Status:** In Progress (tree/extract commands)
 * **Priority:** high
 * **Tags:** cli, tooling
-* **Dependencies:** @edda-tldr/core
+* **Dependencies:** @edda-distil/core
 
 ---
 
 ## Decisions
 
-* **D-001:** TLDR uses Kindling for caching, not a custom daemon or file-based cache
+* **D-001:** Distil uses Kindling for caching, not a custom daemon or file-based cache
 * **D-002:** Tree-sitter is the parsing foundation for all language support
 * **D-003:** Analysis layers are composable; higher layers build on lower ones
-* **D-004:** Observation kinds in Kindling are generic (`code.symbol`, `code.callgraph`, etc.); TLDR-specific detail lives in metadata
-* **D-005:** Database location defaults to `.kindling/tldr.db`, configurable via CLI/env/config
+* **D-004:** Observation kinds in Kindling are generic (`code.symbol`, `code.callgraph`, etc.); Distil-specific detail lives in metadata
+* **D-005:** Database location defaults to `.kindling/distil.db`, configurable via CLI/env/config
 * **D-006:** Future language parsers (Python, Rust, C#) are optional peer dependencies
 * **D-007:** Semantic search uses external embedding APIs (OpenAI/Anthropic), not local models
 * **D-008:** TypeScript/JavaScript are the initial supported languages; others are future milestones
@@ -165,5 +165,5 @@ Those concerns are either out of scope or deferred to future versions.
 
 **Implementation (M3+):**
 - Add workspace detection (pnpm-workspace.yaml, package.json workspaces)
-- Add `.tldr/config.json` for complex configurations
+- Add `.distil/config.json` for complex configurations
 - Cache tsconfig parsing per-project

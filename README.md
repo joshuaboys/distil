@@ -1,4 +1,4 @@
-# TLDR: Code Analysis for LLMs
+# Distil: Code Analysis for LLMs
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
@@ -7,11 +7,11 @@
 
 Your codebase is 100K lines. Claude's context window is 200K tokens. Raw code won't fit—and even if it did, the LLM would drown in irrelevant details.
 
-TLDR extracts *structure* instead of dumping *text*. The result: **95% fewer tokens** while preserving everything needed to understand and edit code correctly.
+Distil extracts *structure* instead of dumping *text*. The result: **95% fewer tokens** while preserving everything needed to understand and edit code correctly.
 
 ## How It Works
 
-TLDR builds 5 analysis layers, each answering different questions:
+Distil builds 5 analysis layers, each answering different questions:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -32,30 +32,30 @@ TLDR builds 5 analysis layers, each answering different questions:
 
 ```bash
 # Install
-pnpm add @edda-tldr/cli
+pnpm add @edda-distil/cli
 
 # Show file tree
-tldr tree .
+distil tree .
 
 # Extract file structure (L1)
-tldr extract src/index.ts
+distil extract src/index.ts
 ```
 
 ## Commands
 
 | Command | What It Does | Status |
 |---------|--------------|--------|
-| `tldr tree [path]` | File tree structure | ✅ Available |
-| `tldr extract <file>` | Full file analysis (L1) | ✅ Available |
-| `tldr structure [path]` | Code structure overview | 🔜 Planned |
-| `tldr context <func> --project <path>` | LLM-ready summary | 🔜 Planned |
-| `tldr calls [path]` | Build call graph (L2) | 🔜 Planned |
-| `tldr impact <func> [path]` | Find all callers (L2) | 🔜 Planned |
-| `tldr cfg <file> <func>` | Control flow graph (L3) | 🔜 Planned |
-| `tldr dfg <file> <func>` | Data flow graph (L4) | 🔜 Planned |
-| `tldr slice <file> <func> <line>` | Program slice (L5) | 🔜 Planned |
-| `tldr semantic <query> [path]` | Natural language search | 🔜 Planned |
-| `tldr warm [path]` | Build all indexes | 🔜 Planned |
+| `distil tree [path]` | File tree structure | ✅ Available |
+| `distil extract <file>` | Full file analysis (L1) | ✅ Available |
+| `distil structure [path]` | Code structure overview | 🔜 Planned |
+| `distil context <func> --project <path>` | LLM-ready summary | 🔜 Planned |
+| `distil calls [path]` | Build call graph (L2) | 🔜 Planned |
+| `distil impact <func> [path]` | Find all callers (L2) | 🔜 Planned |
+| `distil cfg <file> <func>` | Control flow graph (L3) | 🔜 Planned |
+| `distil dfg <file> <func>` | Data flow graph (L4) | 🔜 Planned |
+| `distil slice <file> <func> <line>` | Program slice (L5) | 🔜 Planned |
+| `distil semantic <query> [path]` | Natural language search | 🔜 Planned |
+| `distil warm [path]` | Build all indexes | 🔜 Planned |
 
 ## Supported Languages
 
@@ -69,11 +69,11 @@ tldr extract src/index.ts
 
 ## Architecture
 
-TLDR plans to integrate with [Kindling](https://github.com/EddaCraft/kindling) for caching and persistence:
+Distil plans to integrate with [Kindling](https://github.com/EddaCraft/kindling) for caching and persistence:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      TLDR Analysis Engine                    │
+│                      Distil Analysis Engine                    │
 │  L1: AST  →  L2: CallGraph  →  L3: CFG  →  L4: DFG  →  L5   │
 └─────────────────────────────┬───────────────────────────────┘
                               │
@@ -84,15 +84,15 @@ TLDR plans to integrate with [Kindling](https://github.com/EddaCraft/kindling) f
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
-                    .kindling/tldr.db
+                    .kindling/distil.db
 ```
 
 ## Development
 
 ```bash
 # Clone and install
-git clone https://github.com/EddaCraft/tldr.git
-cd tldr
+git clone https://github.com/EddaCraft/distil.git
+cd distil
 pnpm install
 
 # Build
@@ -103,12 +103,12 @@ pnpm test
 
 # Link Kindling locally (during development)
 cd ../kindling && pnpm link --global
-cd ../tldr && pnpm link @kindling/core @kindling/store-sqlite
+cd ../distil && pnpm link @kindling/core @kindling/store-sqlite
 ```
 
 ## Planning
 
-TLDR uses APS docs for roadmap and module planning. Start at [plans/index.aps.md](./plans/index.aps.md).
+Distil uses APS docs for roadmap and module planning. Start at [plans/index.aps.md](./plans/index.aps.md).
 
 ## License
 

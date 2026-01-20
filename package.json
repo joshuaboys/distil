@@ -1,5 +1,5 @@
 {
-  "name": "edda-tldr",
+  "name": "edda-distil",
   "private": true,
   "description": "Token-efficient code analysis for LLMs",
   "scripts": {

@@ -8,7 +8,7 @@ dist/
 # Cache and temp
 .cache/
 .kindling/
-.tldr/
+.distil/
 
 # OS files
 .DS_Store

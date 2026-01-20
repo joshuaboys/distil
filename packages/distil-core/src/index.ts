@@ -1,5 +1,5 @@
 /**
- * @edda-tldr/core
+ * @edda-distil/core
  *
  * Token-efficient code analysis for LLMs.
  *
@@ -12,7 +12,7 @@
  *
  * @example
  * ```typescript
- * import { extractFile, buildCallGraph, getSlice } from '@edda-tldr/core';
+ * import { extractFile, buildCallGraph, getSlice } from '@edda-distil/core';
  *
  * // L1: Extract file structure
  * const moduleInfo = await extractFile('src/auth.ts');
@@ -54,7 +54,7 @@ export { getParser, type LanguageParser } from './parsers/index.js';
 // export { getRelevantContext } from './api/context.js';
 
 // Kindling integration (to be implemented)
-// export { TLDRStore } from './kindling/store.js';
+// export { DistilStore } from './kindling/store.js';
 
 export async function buildCallGraph(projectRoot: string): Promise<ProjectCallGraph> {
   const rootPath = resolve(projectRoot);
@@ -167,7 +167,7 @@ const IGNORE_DIRS = new Set([
   '__pycache__',
   '.cache',
   '.kindling',
-  '.tldr',
+  '.distil',
 ]);
 
 const IGNORE_FILES = new Set(['.DS_Store', 'Thumbs.db', '.gitkeep']);

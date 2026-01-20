@@ -1,10 +1,10 @@
 {
-  "name": "@edda-tldr/cli",
+  "name": "@edda-distil/cli",
   "version": "0.1.0",
-  "description": "CLI for TLDR - token-efficient code analysis for LLMs",
+  "description": "CLI for Distil - token-efficient code analysis for LLMs",
   "type": "module",
   "bin": {
-    "tldr": "./dist/index.js"
+    "distil": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,7 +19,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@edda-tldr/core": "workspace:*",
+    "@edda-distil/core": "workspace:*",
     "commander": "^12.1.0"
   },
   "devDependencies": {
@@ -31,12 +31,12 @@
     "cli",
     "code-analysis",
     "llm",
-    "tldr"
+    "distil"
   ],
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/EddaCraft/tldr.git",
-    "directory": "packages/tldr-cli"
+    "url": "https://github.com/EddaCraft/distil.git",
+    "directory": "packages/distil-cli"
   }
 }

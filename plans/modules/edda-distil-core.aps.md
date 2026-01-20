@@ -1,4 +1,4 @@
-# @edda-tldr/core
+# @edda-distil/core
 
 | Scope | Owner | Priority | Status |
 |-------|-------|----------|--------|
@@ -8,7 +8,7 @@
 
 Provides the 5-layer code analysis engine (AST, Call Graph, CFG, DFG, PDG) with multi-language support via tree-sitter. Integrates with Kindling for caching and persistence of analysis results.
 
-This is the analytical spine of TLDR. It extracts structure from code and produces token-efficient representations for LLM consumption.
+This is the analytical spine of Distil. It extracts structure from code and produces token-efficient representations for LLM consumption.
 
 ## In Scope
 
@@ -23,7 +23,7 @@ This is the analytical spine of TLDR. It extracts structure from code and produc
 
 ## Out of Scope
 
-- CLI commands (edda-tldr-cli)
+- CLI commands (edda-distil-cli)
 - Semantic search / embeddings (future milestone)
 - Language-specific IDE features
 - Real-time incremental parsing
@@ -154,9 +154,9 @@ This is the analytical spine of TLDR. It extracts structure from code and produc
    - `code.dependence` — PDG edges, slices
    - `analysis.metric` — Complexity, coverage
 
-2. **TLDR Metadata Schema:**
+2. **Distil Metadata Schema:**
    ```typescript
-   interface TLDRObservationMeta {
+   interface DistilObservationMeta {
      producer: 'tldr';
      subkind: string;  // e.g., 'tldr.ast.function'
      language: Language;

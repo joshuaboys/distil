@@ -1,26 +1,26 @@
 #!/usr/bin/env node
 /**
- * TLDR CLI
+ * Distil CLI
  *
  * Token-efficient code analysis for LLMs.
  *
  * Usage:
- *   tldr extract <file>           - Extract file structure (L1)
- *   tldr tree [path]              - Show file tree
- *   tldr structure [path]         - Show code structure
- *   tldr context <func> --project - Get LLM-ready context
- *   tldr calls [path]             - Build call graph (L2)
- *   tldr impact <func> [path]     - Find all callers
- *   tldr cfg <file> <func>        - Control flow graph (L3)
- *   tldr dfg <file> <func>        - Data flow graph (L4)
- *   tldr slice <file> <func> <line> - Program slice (L5)
- *   tldr semantic <query>         - Semantic search
- *   tldr warm [path]              - Build all indexes
+ *   distil extract <file>           - Extract file structure (L1)
+ *   distil tree [path]              - Show file tree
+ *   distil structure [path]         - Show code structure
+ *   distil context <func> --project - Get LLM-ready context
+ *   distil calls [path]             - Build call graph (L2)
+ *   distil impact <func> [path]     - Find all callers
+ *   distil cfg <file> <func>        - Control flow graph (L3)
+ *   distil dfg <file> <func>        - Data flow graph (L4)
+ *   distil slice <file> <func> <line> - Program slice (L5)
+ *   distil semantic <query>         - Semantic search
+ *   distil warm [path]              - Build all indexes
  */
 
 import { Command } from 'commander';
 import { resolve } from 'path';
-import { buildCallGraph, VERSION, type ProjectCallGraph } from '@edda-tldr/core';
+import { buildCallGraph, VERSION, type ProjectCallGraph } from '@edda-distil/core';
 
 import { extractCommand } from './commands/extract.js';
 import { treeCommand } from './commands/tree.js';
@@ -51,7 +51,7 @@ const callsCommand = new Command('calls')
 const program = new Command();
 
 program
-  .name('tldr')
+  .name('distil')
   .description('Token-efficient code analysis for LLMs')
   .version(VERSION);
 
