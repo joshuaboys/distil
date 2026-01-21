@@ -205,8 +205,12 @@ This is the user-facing surface of Distil. It formats analysis results for human
 - **D-003:** API keys for semantic search read from env vars first, then config
 - **D-004:** Progress indicators use stderr; output uses stdout (for piping)
 
+## Future Enhancements
+
+- **Interactive function selection:** When `distil impact` matches multiple functions, offer a numbered list for interactive selection instead of requiring the user to re-run with a more specific name.
+- **Global --quiet and --verbose flags:** Add consistent verbosity controls across all commands.
+
 ## Notes
 
 - Keep command implementations thin; delegate to CORE.
 - Test commands with various project sizes to ensure performance.
-- Consider adding --quiet and --verbose global flags.
