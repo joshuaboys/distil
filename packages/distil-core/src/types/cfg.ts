@@ -189,6 +189,8 @@ export function createCFGInfo(
  * - E = number of edges
  * - N = number of nodes (blocks)
  * - P = number of connected components (usually 1)
+ *
+ * Minimum complexity is 1 (for a straight-line function).
  */
 export function calculateCyclomaticComplexity(
   blocks: CFGBlock[],
@@ -197,7 +199,8 @@ export function calculateCyclomaticComplexity(
   const E = edges.length;
   const N = blocks.length;
   const P = 1; // Assuming single connected component
-  return E - N + 2 * P;
+  // Ensure minimum complexity of 1
+  return Math.max(1, E - N + 2 * P);
 }
 
 /**

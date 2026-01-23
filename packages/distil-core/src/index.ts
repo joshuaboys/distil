@@ -50,6 +50,9 @@ export { getParser, type LanguageParser } from './parsers/index.js';
 // export { extractDFG } from './extractors/dfg/index.js';
 // export { extractPDG, getSlice } from './extractors/pdg/index.js';
 
+// Analysis layer extractors
+export { extractCFG, extractDFG, extractPDG } from './extractors.js';
+
 // API exports (to be implemented)
 // export { getRelevantContext } from './api/context.js';
 
