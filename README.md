@@ -1,13 +1,13 @@
-# Distil: Code Analysis for LLMs
+# Distil: Noise Reduction for LLMs
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
 
-**Give LLMs exactly the code they need. Nothing more.**
+Give language models just enough code to reason accurately and no more.
 
-Your codebase is 100K lines. Claude's context window is 200K tokens. Raw code won't fit—and even if it did, the LLM would drown in irrelevant details.
+Modern codebases are massive. Even when a model’s context window is theoretically large enough, shoving raw source into it is a great way to bury the signal under noise.
 
-Distil extracts *structure* instead of dumping *text*. The result: **95% fewer tokens** while preserving everything needed to understand and edit code correctly.
+Distil doesn’t stream files. It surfaces intent, shape, and relationships. By distilling structure instead of text, it reduces context size by **up to 95%** while retaining what actually matters for safe, correct edits.
 
 ## How It Works
 
