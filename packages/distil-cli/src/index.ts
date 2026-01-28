@@ -28,12 +28,14 @@ import {
   extractPDG,
   getComplexityRating,
   VERSION,
-  type ProjectCallGraph,
-  type FunctionLocation,
-  type CallEdge,
-  type CFGInfo,
-  type DFGInfo,
-  type PDGInfo,
+} from '@edda-distil/core';
+import type {
+  ProjectCallGraph,
+  FunctionLocation,
+  CallEdge,
+  CFGInfo,
+  DFGInfo,
+  PDGInfo,
 } from '@edda-distil/core';
 
 import { extractCommand } from './commands/extract.js';
@@ -400,12 +402,6 @@ function printImpactResult(
   }
   console.log('');
 }
-
-// Helper to suppress unused variable warnings in type annotations
-function _used(..._args: unknown[]): void {
-  // No-op
-}
-_used({} as CFGInfo, {} as DFGInfo, {} as PDGInfo);
 
 function printCFG(cfg: CFGInfo, file: string): void {
   const rating = getComplexityRating(cfg.cyclomaticComplexity);

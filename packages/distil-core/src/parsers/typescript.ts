@@ -275,7 +275,7 @@ export class TypeScriptParser implements LanguageParser {
     if (!bodyNode) return null;
 
     // Build CFG
-    const builder = new CFGBuilder(source, filePath, functionName);
+    const builder = new CFGBuilder(filePath, functionName);
     builder.buildFromBody(bodyNode);
 
     return builder.getCFG();
@@ -1096,8 +1096,7 @@ class CFGBuilder {
   private decisionPoints = 0;
   private nestedFunctions = new Map<string, CFGInfo>();
 
-  constructor(_source: string, filePath: string, functionName: string) {
-    void _source; // Unused but kept for API consistency
+  constructor(filePath: string, functionName: string) {
     this.filePath = filePath;
     this.functionName = functionName;
   }
@@ -1637,10 +1636,10 @@ class CFGBuilder {
   }
 
   private extractVarsFromNode(node: TSNode, block: CFGBlock): void {
-    this.traverseForVars(node, block);
+    this.traverseForVars(node, block, false);
   }
 
-  private traverseForVars(node: TSNode, block: CFGBlock): void {
+  private traverseForVars(node: TSNode, block: CFGBlock, inDefPosition: boolean): void {
     // Check for assignments (defines)
     if (node.type === 'assignment_expression') {
       const left = node.children[0];
@@ -1649,6 +1648,15 @@ class CFGBuilder {
           block.defines.push(left.text);
         }
       }
+      // Left side is definition position, right side is use position
+      if (left) {
+        this.traverseForVars(left, block, true);
+      }
+      const right = node.children[2]; // Skip '='
+      if (right) {
+        this.traverseForVars(right, block, false);
+      }
+      return;
     }
 
     // Check for variable declarations (defines)
@@ -1657,20 +1665,21 @@ class CFGBuilder {
       if (nameNode && !block.defines.includes(nameNode.text)) {
         block.defines.push(nameNode.text);
       }
+      // Process initializer as use position (skip the name identifier)
+      for (const child of node.children) {
+        if (child.type !== 'identifier' && child.type !== '=' && child.type !== 'type_annotation') {
+          this.traverseForVars(child, block, false);
+        }
+      }
+      return;
     }
 
     // Check for identifiers (uses) - but not in definition position
     if (node.type === 'identifier') {
-      const parent = this.getParentType(node);
-      if (
-        parent !== 'variable_declarator' &&
-        parent !== 'function_declaration' &&
-        parent !== 'method_definition'
-      ) {
-        if (!block.uses.includes(node.text) && !block.defines.includes(node.text)) {
-          block.uses.push(node.text);
-        }
+      if (!inDefPosition && !block.uses.includes(node.text) && !block.defines.includes(node.text)) {
+        block.uses.push(node.text);
       }
+      return;
     }
 
     // Check for function calls
@@ -1690,16 +1699,10 @@ class CFGBuilder {
       }
     }
 
-    // Recurse
+    // Recurse into children (default: not in definition position)
     for (const child of node.children) {
-      this.traverseForVars(child, block);
+      this.traverseForVars(child, block, inDefPosition);
     }
-  }
-
-  private getParentType(_node: TSNode): string {
-    // Note: tree-sitter nodes don't have direct parent access in our interface
-    // This is a simplification
-    return '';
   }
 
   getCFG(): CFGInfo {
