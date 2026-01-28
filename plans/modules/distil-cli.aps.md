@@ -31,7 +31,7 @@ This is the user-facing surface of Distil. It formats analysis results for human
 
 **Depends on:**
 
-- @edda-distil/core — all analysis functions
+- @distil/core — all analysis functions
 - commander — CLI framework
 - openai — embeddings API (for semantic search)
 

@@ -31,21 +31,21 @@ pnpm test
 pnpm typecheck
 
 # Run tests in a specific package
-pnpm -F @edda-distil/core test
+pnpm -F @distil/core test
 
 # Run a single test file
-pnpm -F @edda-distil/core test src/parsers/typescript.test.ts
+pnpm -F @distil/core test src/parsers/typescript.test.ts
 
 # Watch mode for tests
-pnpm -F @edda-distil/core test:watch
+pnpm -F @distil/core test:watch
 ```
 
 ## Package Structure
 
 This is a pnpm monorepo with two packages:
 
-- **`packages/distil-core`** (`@edda-distil/core`) - Analysis engine with tree-sitter parsers
-- **`packages/distil-cli`** (`@edda-distil/cli`) - Command-line interface using Commander
+- **`packages/distil-core`** (`@distil/core`) - Analysis engine with tree-sitter parsers
+- **`packages/distil-cli`** (`@distil/cli`) - Command-line interface using Commander
 
 The CLI depends on core. Core will eventually depend on `@kindling/core` and `@kindling/store-sqlite` for caching.
 

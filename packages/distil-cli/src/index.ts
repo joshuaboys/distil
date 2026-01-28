@@ -29,7 +29,7 @@ import {
   getComplexityRating,
   getParser,
   VERSION,
-} from '@edda-distil/core';
+} from '@distil/core';
 import type {
   ProjectCallGraph,
   FunctionLocation,
@@ -37,7 +37,7 @@ import type {
   CFGInfo,
   DFGInfo,
   PDGInfo,
-} from '@edda-distil/core';
+} from '@distil/core';
 
 import { extractCommand } from './commands/extract.js';
 import { treeCommand } from './commands/tree.js';
@@ -451,7 +451,17 @@ const program = new Command();
 program
   .name('distil')
   .description('Token-efficient code analysis for LLMs')
-  .version(VERSION);
+  .version(VERSION)
+  .addHelpText('after', `
+Quick start:
+  $ distil tree .                              # See project structure
+  $ distil extract src/index.ts                # Extract file analysis
+  $ distil calls .                             # Build call graph
+  $ distil impact myFunction .                 # Find all callers
+  $ distil cfg src/index.ts myFunction         # Control flow graph
+  $ distil slice src/index.ts myFunction 42    # What affects line 42?
+
+Supported languages: TypeScript, JavaScript`);
 
 // Register commands
 program.addCommand(extractCommand);
@@ -461,6 +471,12 @@ program.addCommand(impactCommand);
 program.addCommand(cfgCommand);
 program.addCommand(dfgCommand);
 program.addCommand(sliceCommand);
+
+// Show help (exit 0) when no args provided
+if (process.argv.length <= 2) {
+  program.outputHelp();
+  process.exit(0);
+}
 
 // Parse arguments
 program.parse();

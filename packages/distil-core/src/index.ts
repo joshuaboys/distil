@@ -1,5 +1,5 @@
 /**
- * @edda-distil/core
+ * @distil/core
  *
  * Token-efficient code analysis for LLMs.
  *
@@ -12,7 +12,7 @@
  *
  * @example
  * ```typescript
- * import { extractFile, buildCallGraph, getSlice } from '@edda-distil/core';
+ * import { extractFile, buildCallGraph, getSlice } from '@distil/core';
  *
  * // L1: Extract file structure
  * const moduleInfo = await extractFile('src/auth.ts');

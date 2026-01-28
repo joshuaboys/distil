@@ -20,7 +20,7 @@ importers:
 
   packages/distil-cli:
     dependencies:
-      '@edda-distil/core':
+      '@distil/core':
         specifier: workspace:*
         version: link:../distil-core
       commander:

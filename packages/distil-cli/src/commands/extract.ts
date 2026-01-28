@@ -7,7 +7,7 @@
 import { Command } from 'commander';
 import { readFile } from 'fs/promises';
 import { resolve } from 'path';
-import { getParser, type ModuleInfo } from '@edda-distil/core';
+import { getParser, LANGUAGE_EXTENSIONS, type ModuleInfo } from '@distil/core';
 
 export const extractCommand = new Command('extract')
   .description('Extract file structure (L1 AST)')
@@ -21,7 +21,10 @@ export const extractCommand = new Command('extract')
 
       const parser = getParser(filePath);
       if (!parser) {
-        console.error(`Error: Unsupported file type: ${file}`);
+        const supported = Object.entries(LANGUAGE_EXTENSIONS)
+          .map(([ext, lang]) => `  ${ext} (${lang})`)
+          .join('\n');
+        console.error(`Unsupported file type: ${file}\n\nSupported extensions:\n${supported}`);
         process.exit(1);
       }
 
@@ -53,8 +56,9 @@ function printModuleInfo(info: ModuleInfo): void {
   if (info.imports.length > 0) {
     console.log(`\nImports (${info.imports.length}):`);
     for (const imp of info.imports.slice(0, 10)) {
-      const names = imp.names.length > 0
-        ? `{ ${imp.names.map((n: { alias: string | null; name: string }) => n.alias ?? n.name).join(', ')} }`
+      const filteredNames = imp.names.filter((n: { name: string }) => n.name !== 'type');
+      const names = filteredNames.length > 0
+        ? `{ ${filteredNames.map((n: { alias: string | null; name: string }) => n.alias ?? n.name).join(', ')} }`
         : '';
       console.log(`   ${imp.module} ${names}`);
     }
@@ -67,8 +71,7 @@ function printModuleInfo(info: ModuleInfo): void {
     console.log(`\nFunctions (${info.functions.length}):`);
     for (const fn of info.functions) {
       const exported = fn.isExported ? '[export] ' : '';
-      const async = fn.isAsync ? 'async ' : '';
-      console.log(`   ${exported}${async}${fn.signature()}`);
+      console.log(`   ${exported}${fn.signature()}`);
     }
   }
 

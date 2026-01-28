@@ -7,7 +7,7 @@
 import { Command } from 'commander';
 import { readdir } from 'fs/promises';
 import { resolve, join, relative } from 'path';
-import { LANGUAGE_EXTENSIONS } from '@edda-distil/core';
+import { LANGUAGE_EXTENSIONS } from '@distil/core';
 
 export const treeCommand = new Command('tree')
   .description('Show file tree structure')

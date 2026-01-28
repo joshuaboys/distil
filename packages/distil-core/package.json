@@ -1,5 +1,5 @@
 {
-  "name": "@edda-distil/core",
+  "name": "@distil/core",
   "version": "0.1.0",
   "description": "Core analysis engine for Distil - token-efficient code analysis for LLMs",
   "type": "module",
@@ -57,7 +57,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/EddaCraft/distil.git",
+    "url": "https://github.com/joshuaboys/distil.git",
     "directory": "packages/distil-core"
   }
 }
