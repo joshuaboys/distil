@@ -1205,9 +1205,14 @@ class CFGBuilder {
 
     const exitBlocks: number[] = [];
 
-    // Process consequence (then branch)
+    // Process consequence (then branch) - find first statement_block or expression statement
+    // that comes after the condition but isn't part of else clause
     const consequence = node.children.find(
-      (c) => c.type === 'statement_block' || (c.type !== 'parenthesized_expression' && c.type !== 'else_clause' && c.type !== 'if' && c.type !== '(' && c.type !== ')')
+      (c) =>
+        c.type === 'statement_block' ||
+        (c.type === 'expression_statement' && c !== condition) ||
+        (c.type === 'return_statement') ||
+        (c.type === 'if_statement' && node.children.indexOf(c) < (node.children.findIndex(x => x.type === 'else_clause') || Infinity))
     );
     if (consequence) {
       const thenEntry = this.createBlock('body', consequence);
@@ -1228,14 +1233,17 @@ class CFGBuilder {
     const elseClause = node.children.find((c) => c.type === 'else_clause');
     if (elseClause) {
       const elseBody = elseClause.children.find(
-        (c) => c.type === 'statement_block' || c.type === 'if_statement' || c.type !== 'else'
+        (c) => c.type === 'statement_block' || c.type === 'if_statement'
       );
       if (elseBody) {
         if (elseBody.type === 'if_statement') {
-          // else if - recurse
-          const elseIfExits = this.processIfStatement(elseBody, [branchBlock.id]);
-          // The edge to else-if is 'false' from this branch
-          // Need to find the first block of else-if and update the edge
+          // else if - create explicit false edge, then recurse
+          // First create a connector block for the else-if branch
+          const elseIfBranchBlock = this.createBlock('branch', elseBody);
+          this.addEdge(branchBlock.id, elseIfBranchBlock.id, 'false', `!(${this.getConditionText(condition)})`);
+
+          // Now process the else-if with the new branch block as predecessor
+          const elseIfExits = this.processIfStatement(elseBody, [elseIfBranchBlock.id]);
           exitBlocks.push(...elseIfExits);
         } else {
           const elseEntry = this.createBlock('body', elseBody);
@@ -1272,23 +1280,32 @@ class CFGBuilder {
     // Extract init, condition, update for for-loops
     let initNode: TSNode | null = null;
     let condNode: TSNode | null = null;
+    let updateNode: TSNode | null = null;
     let body: TSNode | null = null;
 
     if (node.type === 'for_statement') {
       // for (init; cond; update) body
-      let foundFirstSemi = false;
+      // Parse by tracking semicolons to identify init, condition, and update
+      let semiCount = 0;
       for (const child of node.children) {
         if (child.type === ';') {
-          foundFirstSemi = true;
+          semiCount++;
           continue;
         }
-        if (!foundFirstSemi && child.type !== 'for' && child.type !== '(') {
-          initNode = child;
-        } else if (foundFirstSemi && !condNode && child.type !== ')') {
-          condNode = child;
+        if (child.type === 'for' || child.type === '(' || child.type === ')') {
+          continue;
         }
         if (child.type === 'statement_block') {
           body = child;
+          continue;
+        }
+        // Assign based on position relative to semicolons
+        if (semiCount === 0) {
+          initNode = child;
+        } else if (semiCount === 1) {
+          condNode = child;
+        } else if (semiCount === 2) {
+          updateNode = child;
         }
       }
     } else {
@@ -1306,6 +1323,10 @@ class CFGBuilder {
     if (condNode) {
       headerBlock.statements.push(this.getNodeText(condNode));
       this.extractVarsFromNode(condNode, headerBlock);
+    }
+    if (updateNode) {
+      headerBlock.statements.push(this.getNodeText(updateNode));
+      this.extractVarsFromNode(updateNode, headerBlock);
     }
 
     // Connect predecessors to header
@@ -1450,20 +1471,27 @@ class CFGBuilder {
           const stmts = child.children.filter(
             (c) => c.type !== 'case' && c.type !== 'default' && c.type !== ':'
           );
+
+          // Start with the case block itself as the initial exit
+          let caseExits: number[] = [caseBlock.id];
           if (stmts.length > 0) {
             caseBlock.statements = stmts.map((s) => this.getNodeText(s));
             for (const stmt of stmts) {
               this.extractVarsFromNode(stmt, caseBlock);
             }
+            // Build CFG for nested control flow within the case body
+            caseExits = this.processStatements(stmts, [caseBlock.id]);
           }
 
           // Check for break
           const hasBreak = stmts.some((s) => s.type === 'break_statement');
           if (hasBreak) {
-            exitBlocks.push(caseBlock.id);
+            // Cases with a break exit the switch via the exits of the case body
+            exitBlocks.push(...caseExits);
             prevCaseExits = [];
           } else {
-            prevCaseExits = [caseBlock.id];
+            // Cases without a break fall through from the exits of the case body
+            prevCaseExits = caseExits;
           }
         }
       }
@@ -1883,22 +1911,22 @@ class DFGBuilder {
 
     if (builtins.has(node.text)) return;
 
-    const ref = this.createRef(node, type);
-    this.refs.push(ref);
-    this.variables.add(node.text);
+    // createRef already adds to this.refs and this.variables
+    this.createRef(node, type);
   }
 
   private processReturn(node: TSNode): void {
     // Process return value for uses
     for (const child of node.children) {
-      if (child.type !== 'return') {
-        this.traverse(child, false);
+      if (child.type === 'return') continue;
 
-        // Track what variables are returned
-        if (child.type === 'identifier') {
-          const ref = this.createRef(child, 'use');
-          this.returns.push(ref);
-        }
+      if (child.type === 'identifier') {
+        // Create a single ref for the returned identifier and track it
+        const ref = this.createRef(child, 'use');
+        this.returns.push(ref);
+      } else {
+        // For non-identifier return expressions, traverse normally
+        this.traverse(child, false);
       }
     }
   }
@@ -1976,7 +2004,15 @@ class DFGBuilder {
   }
 
   private buildDefUseEdges(): void {
-    // For each use, find reaching definitions
+    // NOTE: A sound reaching-definitions analysis must account for control
+    // flow (for example, mutually exclusive branches in if/else, loops,
+    // early returns, etc.). The simple line-number heuristic previously used
+    // here produced incorrect def-use edges.
+    //
+    // For now, we use a conservative approximation: for each use, we connect
+    // it to the most recent definition of the same variable (by line number).
+    // This may miss some valid edges but avoids false positives.
+
     const uses = this.refs.filter(
       (r) => r.type === 'use' || r.type === 'update' || r.type === 'capture'
     );
@@ -1984,25 +2020,27 @@ class DFGBuilder {
     for (const use of uses) {
       const defs = this.defMap.get(use.name) ?? [];
 
-      // Find definitions that could reach this use
-      // Simple heuristic: definitions before the use line
+      // Find the most recent definition before this use
       const reachingDefs = defs.filter((d) => d.line <= use.line);
+      if (reachingDefs.length === 0) continue;
 
-      for (const def of reachingDefs) {
-        // Check if there's an intervening definition
-        const hasIntervening = defs.some(
-          (d) => d.line > def.line && d.line < use.line
-        );
+      // Sort by line descending and take the most recent
+      reachingDefs.sort((a, b) => b.line - a.line);
+      const mostRecentDef = reachingDefs[0];
+      if (!mostRecentDef) continue;
 
-        const edge: DefUseEdge = {
-          variable: use.name,
-          def,
-          use,
-          isMayReach: hasIntervening,
-          hasInterveningDef: hasIntervening,
-        };
-        this.edges.push(edge);
-      }
+      // Check if there might be other paths (conservative: mark as may-reach
+      // if there are multiple definitions)
+      const isMayReach = reachingDefs.length > 1;
+
+      const edge: DefUseEdge = {
+        variable: use.name,
+        def: mostRecentDef,
+        use,
+        isMayReach,
+        hasInterveningDef: false,
+      };
+      this.edges.push(edge);
     }
   }
 
