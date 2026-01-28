@@ -135,8 +135,8 @@ function printTree(
   isLast: boolean,
   rootPath: string
 ): void {
-  const connector = isLast ? '└── ' : '├── ';
-  const icon = node.type === 'dir' ? '📁' : getFileIcon(node.language);
+  const connector = isLast ? '+-- ' : '|-- ';
+  const icon = node.type === 'dir' ? '[dir]' : getFileIcon(node.language);
   const relPath = relative(rootPath, node.path);
 
   if (relPath) {
@@ -146,7 +146,7 @@ function printTree(
   }
 
   if (node.children) {
-    const childPrefix = prefix + (isLast ? '    ' : '│   ');
+    const childPrefix = prefix + (isLast ? '    ' : '|   ');
     for (let i = 0; i < node.children.length; i++) {
       const child = node.children[i];
       if (child) {
@@ -159,16 +159,16 @@ function printTree(
 function getFileIcon(language?: string): string {
   switch (language) {
     case 'typescript':
-      return '🔷';
+      return '[ts]';
     case 'javascript':
-      return '🟨';
+      return '[js]';
     case 'python':
-      return '🐍';
+      return '[py]';
     case 'rust':
-      return '🦀';
+      return '[rs]';
     case 'csharp':
-      return '🟪';
+      return '[cs]';
     default:
-      return '📄';
+      return '[file]';
   }
 }

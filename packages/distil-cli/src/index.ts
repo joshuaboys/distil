@@ -20,13 +20,14 @@
 
 import { Command } from 'commander';
 import { resolve } from 'path';
-import { readFile } from 'fs/promises';
+import { readFile, access } from 'fs/promises';
 import {
   buildCallGraph,
   extractCFG,
   extractDFG,
   extractPDG,
   getComplexityRating,
+  getParser,
   VERSION,
 } from '@edda-distil/core';
 import type {
@@ -40,6 +41,89 @@ import type {
 
 import { extractCommand } from './commands/extract.js';
 import { treeCommand } from './commands/tree.js';
+
+// Built-in methods to filter from call graph output
+const BUILTIN_METHODS = new Set([
+  // Array methods
+  'push', 'pop', 'shift', 'unshift', 'slice', 'splice', 'concat', 'join',
+  'map', 'filter', 'reduce', 'forEach', 'find', 'findIndex', 'some', 'every',
+  'includes', 'indexOf', 'lastIndexOf', 'sort', 'reverse', 'flat', 'flatMap',
+  'fill', 'copyWithin', 'at', 'from', 'of', 'isArray',
+  // String methods
+  'split', 'trim', 'trimStart', 'trimEnd', 'toLowerCase', 'toUpperCase',
+  'replace', 'replaceAll', 'startsWith', 'endsWith', 'padStart', 'padEnd',
+  'repeat', 'charAt', 'charCodeAt', 'codePointAt', 'substring', 'substr',
+  'match', 'matchAll', 'search', 'localeCompare', 'normalize', 'anchor', 'link',
+  // Object methods
+  'toString', 'valueOf', 'toJSON', 'toFixed', 'toPrecision', 'toLocaleString',
+  'keys', 'values', 'entries', 'fromEntries', 'assign', 'freeze', 'seal',
+  'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable',
+  // Map/Set methods
+  'has', 'get', 'set', 'delete', 'clear', 'add', 'size',
+  // Console methods
+  'log', 'warn', 'error', 'info', 'debug', 'trace', 'dir', 'table', 'time', 'timeEnd',
+  // Promise methods
+  'then', 'catch', 'finally', 'all', 'race', 'allSettled', 'any',
+  // JSON methods
+  'parse', 'stringify',
+  // Global functions
+  'isNaN', 'isFinite', 'parseInt', 'parseFloat', 'encodeURI', 'decodeURI',
+  'encodeURIComponent', 'decodeURIComponent', 'String', 'Number', 'Boolean',
+  // Node fs methods
+  'readFile', 'writeFile', 'readdir', 'stat', 'mkdir', 'rmdir', 'unlink',
+  'access', 'chmod', 'chown', 'copyFile', 'rename', 'appendFile',
+  'isDirectory', 'isFile', 'isSymbolicLink',
+  // Node path methods
+  'resolve', 'join', 'dirname', 'basename', 'extname', 'relative', 'normalize', 'parse',
+  // Process methods
+  'exit', 'cwd', 'chdir', 'env', 'argv', 'nextTick',
+  // Other common
+  'setTimeout', 'setInterval', 'clearTimeout', 'clearInterval', 'setImmediate',
+  'bind', 'call', 'apply', 'signature',
+]);
+
+// Helper to check if file exists
+async function checkFileExists(filePath: string, displayPath: string): Promise<void> {
+  try {
+    await access(filePath);
+  } catch {
+    console.error(`File not found: ${displayPath}`);
+    process.exit(1);
+  }
+}
+
+// Helper to list available functions in a file
+async function listAvailableFunctions(filePath: string): Promise<string[]> {
+  const parser = getParser(filePath);
+  if (!parser) return [];
+
+  try {
+    const source = await readFile(filePath, 'utf-8');
+    const moduleInfo = await parser.extractAST(source, filePath);
+    const functions: string[] = [];
+
+    for (const fn of moduleInfo.functions) {
+      functions.push(fn.name);
+    }
+    for (const cls of moduleInfo.classes) {
+      for (const method of cls.methods) {
+        functions.push(`${cls.name}.${method.name}`);
+      }
+    }
+    return functions;
+  } catch {
+    return [];
+  }
+}
+
+// Fuzzy match function name
+function fuzzyMatchFunction(searchTerm: string, available: string[]): string[] {
+  const term = searchTerm.toLowerCase();
+  return available.filter(fn =>
+    fn.toLowerCase().includes(term) ||
+    fn.toLowerCase() === term
+  );
+}
 
 const callsCommand = new Command('calls')
   .description('Build project call graph (L2)')
@@ -145,10 +229,39 @@ const cfgCommand = new Command('cfg')
   .action(async (file: string, functionName: string, options: { json?: boolean }) => {
     try {
       const filePath = resolve(file);
-      const cfg = await extractCFG(filePath, functionName);
+      await checkFileExists(filePath, file);
+
+      // Get available functions for fuzzy matching
+      const available = await listAvailableFunctions(filePath);
+      const matches = fuzzyMatchFunction(functionName, available);
+
+      let targetFunction = functionName;
+      if (matches.length === 0) {
+        console.error(`Function "${functionName}" not found in ${file}`);
+        if (available.length > 0) {
+          console.error(`\nAvailable functions:`);
+          for (const fn of available.slice(0, 15)) {
+            console.error(`  ${fn}`);
+          }
+          if (available.length > 15) {
+            console.error(`  ... and ${available.length - 15} more`);
+          }
+        }
+        process.exit(1);
+      } else if (matches.length > 1 && !matches.includes(functionName)) {
+        console.error(`Multiple functions match "${functionName}":`);
+        for (const fn of matches.slice(0, 10)) {
+          console.error(`  ${fn}`);
+        }
+        process.exit(1);
+      } else if (matches.length === 1) {
+        targetFunction = matches[0]!;
+      }
+
+      const cfg = await extractCFG(filePath, targetFunction);
 
       if (!cfg) {
-        console.error(`Function "${functionName}" not found in ${file}`);
+        console.error(`Function "${targetFunction}" not found in ${file}`);
         process.exit(1);
       }
 
@@ -173,10 +286,39 @@ const dfgCommand = new Command('dfg')
   .action(async (file: string, functionName: string, options: { json?: boolean }) => {
     try {
       const filePath = resolve(file);
-      const dfg = await extractDFG(filePath, functionName);
+      await checkFileExists(filePath, file);
+
+      // Get available functions for fuzzy matching
+      const available = await listAvailableFunctions(filePath);
+      const matches = fuzzyMatchFunction(functionName, available);
+
+      let targetFunction = functionName;
+      if (matches.length === 0) {
+        console.error(`Function "${functionName}" not found in ${file}`);
+        if (available.length > 0) {
+          console.error(`\nAvailable functions:`);
+          for (const fn of available.slice(0, 15)) {
+            console.error(`  ${fn}`);
+          }
+          if (available.length > 15) {
+            console.error(`  ... and ${available.length - 15} more`);
+          }
+        }
+        process.exit(1);
+      } else if (matches.length > 1 && !matches.includes(functionName)) {
+        console.error(`Multiple functions match "${functionName}":`);
+        for (const fn of matches.slice(0, 10)) {
+          console.error(`  ${fn}`);
+        }
+        process.exit(1);
+      } else if (matches.length === 1) {
+        targetFunction = matches[0]!;
+      }
+
+      const dfg = await extractDFG(filePath, targetFunction);
 
       if (!dfg) {
-        console.error(`Function "${functionName}" not found in ${file}`);
+        console.error(`Function "${targetFunction}" not found in ${file}`);
         process.exit(1);
       }
 
@@ -210,17 +352,56 @@ const sliceCommand = new Command('slice')
     ) => {
       try {
         const filePath = resolve(file);
+        await checkFileExists(filePath, file);
+
         const line = parseInt(lineStr, 10);
         if (Number.isNaN(line) || line < 1) {
           console.error('Line number must be a positive integer');
           process.exit(1);
         }
 
-        const pdg = await extractPDG(filePath, functionName);
+        // Get available functions for fuzzy matching
+        const available = await listAvailableFunctions(filePath);
+        const matches = fuzzyMatchFunction(functionName, available);
+
+        let targetFunction = functionName;
+        if (matches.length === 0) {
+          console.error(`Function "${functionName}" not found in ${file}`);
+          if (available.length > 0) {
+            console.error(`\nAvailable functions:`);
+            for (const fn of available.slice(0, 15)) {
+              console.error(`  ${fn}`);
+            }
+            if (available.length > 15) {
+              console.error(`  ... and ${available.length - 15} more`);
+            }
+          }
+          process.exit(1);
+        } else if (matches.length > 1 && !matches.includes(functionName)) {
+          console.error(`Multiple functions match "${functionName}":`);
+          for (const fn of matches.slice(0, 10)) {
+            console.error(`  ${fn}`);
+          }
+          process.exit(1);
+        } else if (matches.length === 1) {
+          targetFunction = matches[0]!;
+        }
+
+        const pdg = await extractPDG(filePath, targetFunction);
 
         if (!pdg) {
-          console.error(`Function "${functionName}" not found in ${file}`);
+          console.error(`Function "${targetFunction}" not found in ${file}`);
           process.exit(1);
+        }
+
+        // Check if line is within function range (compute from CFG blocks)
+        const blocks = pdg.cfg.blocks;
+        if (blocks.length > 0) {
+          const minLine = Math.min(...blocks.map(b => b.lines[0]));
+          const maxLine = Math.max(...blocks.map(b => b.lines[1]));
+          if (line < minLine || line > maxLine) {
+            console.error(`Warning: Line ${line} is outside function range (${minLine}-${maxLine})`);
+          }
         }
 
         const sliceLines = options.forward
@@ -235,7 +416,7 @@ const sliceCommand = new Command('slice')
           console.log(
             JSON.stringify(
               {
-                function: functionName,
+                function: targetFunction,
                 file,
                 criterion: { line, variable: options.var ?? null },
                 direction: options.forward ? 'forward' : 'backward',
@@ -301,25 +482,31 @@ function formatCallGraph(graph: ProjectCallGraph) {
 }
 
 function printCallGraph(graph: ProjectCallGraph, limit: number): void {
+  // Filter out edges to builtin methods
+  const filteredEdges = graph.edges.filter(edge => {
+    if (edge.calleeLocation) return true; // Resolved calls are always shown
+    return !BUILTIN_METHODS.has(edge.callee);
+  });
+
   console.log(
-    `\n📞 Call Graph (${graph.functions.size} functions, ${graph.edges.length} edges, ${graph.files.length} files)`
+    `\nCall Graph: ${graph.functions.size} functions, ${filteredEdges.length} edges, ${graph.files.length} files`
   );
 
-  if (graph.edges.length === 0) {
+  if (filteredEdges.length === 0) {
     console.log('No call edges found.');
     return;
   }
 
-  const edges = graph.edges.slice(0, limit);
+  const edges = filteredEdges.slice(0, limit);
   console.log('\nEdges:');
   for (const edge of edges) {
     const calleeName = edge.calleeLocation?.qualifiedName ?? edge.callee;
     const unresolved = edge.calleeLocation ? '' : ' (unresolved)';
-    console.log(`  ${edge.caller.qualifiedName} → ${calleeName}${unresolved}`);
+    console.log(`  ${edge.caller.qualifiedName} -> ${calleeName}${unresolved}`);
   }
 
-  if (graph.edges.length > edges.length) {
-    console.log(`\n... and ${graph.edges.length - edges.length} more edges`);
+  if (filteredEdges.length > edges.length) {
+    console.log(`\n... and ${filteredEdges.length - edges.length} more edges`);
   }
 }
 
@@ -363,39 +550,39 @@ function printImpactResult(
   rootPath: string
 ): void {
   const relativePath = target.file.replace(rootPath + '/', '');
-  console.log(`\n🎯 Impact Analysis: ${target.name}`);
+  console.log(`\nImpact Analysis: ${target.name}`);
   console.log(`   ${relativePath}:${target.line}`);
   console.log(`   Qualified: ${target.qualifiedName}`);
-  console.log('─'.repeat(50));
+  console.log('-'.repeat(50));
 
   if (callers.length === 0) {
-    console.log('\n✅ No callers found - this function appears to be unused or is an entry point.');
+    console.log('\nNo callers found - this function appears to be unused or is an entry point.');
     return;
   }
 
   const directCallers = callers.filter(c => c.depth === 1);
   const transitiveCallers = callers.filter(c => c.depth > 1);
 
-  console.log(`\n📞 Direct callers (${directCallers.length}):`);
+  console.log(`\nDirect callers (${directCallers.length}):`);
   for (const caller of directCallers) {
     const callerRelPath = caller.callSite.file.replace(rootPath + '/', '');
     console.log(`   ${caller.caller.qualifiedName}`);
-    console.log(`      └─ ${callerRelPath}:${caller.callSite.line}`);
+    console.log(`      at ${callerRelPath}:${caller.callSite.line}`);
   }
 
   if (depth > 1 && transitiveCallers.length > 0) {
-    console.log(`\n🔗 Transitive callers (${transitiveCallers.length}):`);
+    console.log(`\nTransitive callers (${transitiveCallers.length}):`);
     for (const caller of transitiveCallers) {
       const callerRelPath = caller.callSite.file.replace(rootPath + '/', '');
       const indent = '   ' + '  '.repeat(caller.depth - 1);
-      console.log(`${indent}↖ ${caller.caller.qualifiedName} (depth ${caller.depth})`);
-      console.log(`${indent}  └─ ${callerRelPath}:${caller.callSite.line}`);
+      console.log(`${indent}<- ${caller.caller.qualifiedName} (depth ${caller.depth})`);
+      console.log(`${indent}   at ${callerRelPath}:${caller.callSite.line}`);
     }
   }
 
   // Summary
   const affectedFiles = new Set(callers.map(c => c.callSite.file));
-  console.log(`\n📊 Summary:`);
+  console.log(`\nSummary:`);
   console.log(`   ${callers.length} total callers across ${affectedFiles.size} files`);
   if (depth === 1 && callers.length > 0) {
     console.log(`   Use --depth <n> to see transitive callers`);
@@ -405,21 +592,19 @@ function printImpactResult(
 
 function printCFG(cfg: CFGInfo, file: string): void {
   const rating = getComplexityRating(cfg.cyclomaticComplexity);
-  const ratingEmoji =
-    rating === 'low' ? '🟢' : rating === 'medium' ? '🟡' : rating === 'high' ? '🟠' : '🔴';
 
-  console.log(`\n🔀 Control Flow Graph: ${cfg.functionName}`);
+  console.log(`\nControl Flow Graph: ${cfg.functionName}`);
   console.log(`   File: ${file}`);
-  console.log('─'.repeat(50));
+  console.log('-'.repeat(50));
 
-  console.log(`\n📊 Metrics:`);
-  console.log(`   Cyclomatic Complexity: ${cfg.cyclomaticComplexity} ${ratingEmoji} (${rating})`);
+  console.log(`\nMetrics:`);
+  console.log(`   Cyclomatic Complexity: ${cfg.cyclomaticComplexity} (${rating})`);
   console.log(`   Max Nesting Depth: ${cfg.maxNestingDepth}`);
   console.log(`   Decision Points: ${cfg.decisionPoints}`);
   console.log(`   Basic Blocks: ${cfg.blocks.length}`);
   console.log(`   Edges: ${cfg.edges.length}`);
 
-  console.log(`\n📦 Blocks:`);
+  console.log(`\nBlocks:`);
   for (const block of cfg.blocks) {
     const lines =
       block.lines[0] === block.lines[1]
@@ -433,30 +618,30 @@ function printCFG(cfg: CFGInfo, file: string): void {
     }
   }
 
-  console.log(`\n🔗 Edges:`);
+  console.log(`\nEdges:`);
   for (const edge of cfg.edges) {
     const condition = edge.condition ? ` [${edge.condition}]` : '';
     const backEdge = edge.isBackEdge ? ' (back)' : '';
-    console.log(`   ${edge.from} → ${edge.to} (${edge.type})${condition}${backEdge}`);
+    console.log(`   ${edge.from} -> ${edge.to} (${edge.type})${condition}${backEdge}`);
   }
 
   console.log('');
 }
 
 function printDFG(dfg: DFGInfo, file: string): void {
-  console.log(`\n📊 Data Flow Graph: ${dfg.functionName}`);
+  console.log(`\nData Flow Graph: ${dfg.functionName}`);
   console.log(`   File: ${file}`);
-  console.log('─'.repeat(50));
+  console.log('-'.repeat(50));
 
-  console.log(`\n📋 Variables (${dfg.variables.length}):`);
+  console.log(`\nVariables (${dfg.variables.length}):`);
   console.log(`   ${dfg.variables.join(', ')}`);
 
-  console.log(`\n📥 Parameters (${dfg.parameters.length}):`);
+  console.log(`\nParameters (${dfg.parameters.length}):`);
   for (const param of dfg.parameters) {
     console.log(`   ${param.name} (L${param.line})`);
   }
 
-  console.log(`\n📤 Returns (${dfg.returns.length}):`);
+  console.log(`\nReturns (${dfg.returns.length}):`);
   for (const ret of dfg.returns) {
     console.log(`   ${ret.name} (L${ret.line})`);
   }
@@ -465,16 +650,16 @@ function printDFG(dfg: DFGInfo, file: string): void {
   const uses = dfg.refs.filter((r) => r.type === 'use');
   const updates = dfg.refs.filter((r) => r.type === 'update');
 
-  console.log(`\n📝 References:`);
+  console.log(`\nReferences:`);
   console.log(`   Definitions: ${defs.length}`);
   console.log(`   Uses: ${uses.length}`);
   console.log(`   Updates: ${updates.length}`);
 
-  console.log(`\n🔗 Def-Use Edges (${dfg.edges.length}):`);
+  console.log(`\nDef-Use Edges (${dfg.edges.length}):`);
   const edgesToShow = dfg.edges.slice(0, 15);
   for (const edge of edgesToShow) {
     const mayReach = edge.isMayReach ? ' (may)' : '';
-    console.log(`   ${edge.variable}: L${edge.def.line} → L${edge.use.line}${mayReach}`);
+    console.log(`   ${edge.variable}: L${edge.def.line} -> L${edge.use.line}${mayReach}`);
   }
   if (dfg.edges.length > 15) {
     console.log(`   ... and ${dfg.edges.length - 15} more edges`);
@@ -495,15 +680,15 @@ function printSlice(
   const direction = isForward ? 'Forward' : 'Backward';
   const varStr = variable ? ` on '${variable}'` : '';
 
-  console.log(`\n🔪 ${direction} Slice${varStr}`);
+  console.log(`\n${direction} Slice${varStr}`);
   console.log(`   File: ${file}`);
   console.log(`   Function: ${pdg.functionName}`);
   console.log(`   Criterion: Line ${criterionLine}`);
-  console.log('─'.repeat(50));
+  console.log('-'.repeat(50));
 
   const sortedLines = Array.from(sliceLines).sort((a, b) => a - b);
 
-  console.log(`\n📋 Slice (${sortedLines.length} lines):\n`);
+  console.log(`\nSlice (${sortedLines.length} lines):\n`);
 
   for (const lineNum of sortedLines) {
     const lineIdx = lineNum - 1;
@@ -513,7 +698,7 @@ function printSlice(
     console.log(`${marker} ${lineStr} | ${sourceLine}`);
   }
 
-  console.log(`\n📊 Summary:`);
+  console.log(`\nSummary:`);
   console.log(`   Total lines in slice: ${sortedLines.length}`);
   console.log(`   PDG nodes: ${pdg.nodes.length}`);
   console.log(`   Control dependencies: ${pdg.controlEdgeCount}`);

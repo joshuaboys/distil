@@ -43,15 +43,15 @@ export const extractCommand = new Command('extract')
 
 function printModuleInfo(info: ModuleInfo): void {
   const fileName = info.filePath.split('/').pop() ?? info.filePath;
-  console.log(`\n📄 ${fileName} (${info.language})`);
-  console.log('─'.repeat(50));
+  console.log(`\n${fileName} (${info.language})`);
+  console.log('-'.repeat(50));
 
   if (info.docstring) {
-    console.log(`\n📝 ${info.docstring.slice(0, 100)}${info.docstring.length > 100 ? '...' : ''}`);
+    console.log(`\n${info.docstring.slice(0, 100)}${info.docstring.length > 100 ? '...' : ''}`);
   }
 
   if (info.imports.length > 0) {
-    console.log(`\n📦 Imports (${info.imports.length}):`);
+    console.log(`\nImports (${info.imports.length}):`);
     for (const imp of info.imports.slice(0, 10)) {
       const names = imp.names.length > 0
         ? `{ ${imp.names.map((n: { alias: string | null; name: string }) => n.alias ?? n.name).join(', ')} }`
@@ -64,21 +64,21 @@ function printModuleInfo(info: ModuleInfo): void {
   }
 
   if (info.functions.length > 0) {
-    console.log(`\n⚡ Functions (${info.functions.length}):`);
+    console.log(`\nFunctions (${info.functions.length}):`);
     for (const fn of info.functions) {
-      const exported = fn.isExported ? '📤 ' : '';
+      const exported = fn.isExported ? '[export] ' : '';
       const async = fn.isAsync ? 'async ' : '';
       console.log(`   ${exported}${async}${fn.signature()}`);
     }
   }
 
   if (info.classes.length > 0) {
-    console.log(`\n🏛️  Classes (${info.classes.length}):`);
+    console.log(`\nClasses (${info.classes.length}):`);
     for (const cls of info.classes) {
-      const exported = cls.isExported ? '📤 ' : '';
+      const exported = cls.isExported ? '[export] ' : '';
       console.log(`   ${exported}${cls.signature()}`);
       for (const method of cls.methods.slice(0, 5)) {
-        const vis = method.visibility === 'private' ? '🔒 ' : '';
+        const vis = method.visibility === 'private' ? '[private] ' : '';
         console.log(`      ${vis}${method.name}()`);
       }
       if (cls.methods.length > 5) {
@@ -88,14 +88,14 @@ function printModuleInfo(info: ModuleInfo): void {
   }
 
   if (info.interfaces.length > 0) {
-    console.log(`\n📋 Interfaces (${info.interfaces.length}):`);
+    console.log(`\nInterfaces (${info.interfaces.length}):`);
     for (const iface of info.interfaces) {
       console.log(`   ${iface.name}`);
     }
   }
 
   if (info.typeAliases.length > 0) {
-    console.log(`\n🏷️  Types (${info.typeAliases.length}):`);
+    console.log(`\nTypes (${info.typeAliases.length}):`);
     for (const type of info.typeAliases) {
       console.log(`   ${type.name}`);
     }
