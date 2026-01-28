@@ -296,8 +296,10 @@ describe('TypeScriptParser', () => {
       const pdg = await parser.extractPDG(source, 'slice', 'test.ts');
 
       expect(pdg).not.toBeNull();
+      // Find return line dynamically
+      const lines = source.split('\n');
+      const returnLine = lines.findIndex((l) => l.includes('return z')) + 1;
       // Slice from the return line should include z, x, y definitions
-      const returnLine = 6; // Line with 'return z'
       const sliceLines = pdg?.backwardSlice(returnLine);
       expect(sliceLines?.size).toBeGreaterThan(0);
     });
@@ -314,8 +316,10 @@ describe('TypeScriptParser', () => {
       const pdg = await parser.extractPDG(source, 'forward', 'test.ts');
 
       expect(pdg).not.toBeNull();
+      // Find input line dynamically
+      const lines = source.split('\n');
+      const inputLine = lines.findIndex((l) => l.includes('let a = input')) + 1;
       // Forward slice from input should include dependent lines
-      const inputLine = 3; // Line with 'let a = input'
       const sliceLines = pdg?.forwardSlice(inputLine);
       expect(sliceLines?.size).toBeGreaterThan(0);
     });
