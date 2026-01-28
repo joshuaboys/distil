@@ -2,7 +2,7 @@
 
 | Scope | Owner | Priority | Status |
 |-------|-------|----------|--------|
-| CORE | @aneki | high | In Progress (L1-L2 complete) |
+| CORE | @aneki | high | In Progress (L1-L5 complete, Kindling pending) |
 
 ## Purpose
 
@@ -227,15 +227,140 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Confidence:** high
 - **Risks:** Token budget tuning
 
+### CORE-010: .distilignore support
+
+- **Status:** Planned
+- **Intent:** Allow projects to exclude files/directories from analysis via ignore patterns
+- **Expected Outcome:** `.distilignore` file in project root is respected by all analysis commands; supports glob patterns like `.gitignore`
+- **Scope:** `src/ignore/`
+- **Non-scope:** CLI flag parsing (handled by CLI)
+- **Files:** `src/ignore/index.ts`, `src/ignore/patterns.ts`
+- **Dependencies:** (none)
+- **Validation:** `pnpm test -- ignore`
+- **Confidence:** high
+- **Risks:** None significant
+
+**Implementation Details:**
+
+1. **File format:** Same syntax as `.gitignore` (glob patterns, `#` comments, `!` negation)
+2. **Lookup:** Walk up from analysis target to find nearest `.distilignore`
+3. **Built-in ignores:** Merge with existing `IGNORE_DIRS`/`IGNORE_FILES` sets
+4. **Integration points:**
+   - `collectSourceFiles()` in `index.ts` — filter file collection
+   - `buildCallGraph()` — respect ignores during graph construction
+   - Tree command — respect ignores in directory walking
+
+### CORE-011: Monorepo support
+
+- **Status:** Planned
+- **Intent:** Enable per-package analysis with cross-package call graph resolution
+- **Expected Outcome:** Distil detects monorepo structure (pnpm-workspace.yaml, package.json workspaces) and can analyze individual packages or the full workspace
+- **Scope:** `src/workspace/`
+- **Non-scope:** IDE integration, package manager operations
+- **Files:** `src/workspace/detect.ts`, `src/workspace/resolver.ts`, `src/workspace/index.ts`
+- **Dependencies:** CORE-004
+- **Validation:** `pnpm test -- workspace`
+- **Confidence:** medium
+- **Risks:** Cross-package import resolution complexity
+
+**Implementation Details:**
+
+1. **Workspace detection:**
+   - Detect `pnpm-workspace.yaml`, `package.json` workspaces, `lerna.json`
+   - Build package map: name -> root path
+2. **Cross-package resolution:**
+   - Resolve `import { foo } from '@myorg/utils'` to actual file paths
+   - Use package.json `exports`/`main` fields for entry point resolution
+3. **Scoped analysis:**
+   - `--package <name>` flag to scope analysis to a single package
+   - Default: analyze from current working directory's nearest package root
+4. **Call graph:**
+   - Cross-package edges marked with `crossPackage: true`
+   - Package boundary shown in impact analysis output
+
+### CORE-012: Semantic search backend
+
+- **Status:** Planned
+- **Intent:** Provide embedding-based search over function behaviors and documentation
+- **Expected Outcome:** Functions can be indexed by their behavior (signatures, docstrings, body summaries) and queried with natural language
+- **Scope:** `src/semantic/`
+- **Non-scope:** CLI command (handled by CLI), embedding model implementation
+- **Files:** `src/semantic/index.ts`, `src/semantic/embeddings.ts`, `src/semantic/store.ts`
+- **Dependencies:** CORE-003, CORE-005
+- **Validation:** `pnpm test -- semantic`
+- **Confidence:** medium
+- **Risks:** API key management; embedding quality; cost
+
+**Implementation Details:**
+
+1. **Embedding provider abstraction:**
+   ```typescript
+   interface EmbeddingProvider {
+     embed(texts: string[]): Promise<number[][]>;
+     model: string;
+     dimensions: number;
+   }
+   ```
+2. **Providers:** OpenAI (text-embedding-3-small), Anthropic (when available)
+3. **Indexing strategy:**
+   - Per-function: concatenate signature + docstring + body summary
+   - Store embeddings in Kindling alongside analysis observations
+   - Re-embed only when function content hash changes
+4. **Search:**
+   - Embed query text
+   - Cosine similarity against stored embeddings
+   - Return ranked list of functions with scores
+5. **Storage:**
+   - Embeddings stored in Kindling SQLite (BLOB column)
+   - FTS5 index for keyword fallback when no API key configured
+
+### CORE-013: Index warming
+
+- **Status:** Planned
+- **Intent:** Pre-build all analysis layers for a project so queries are fast
+- **Expected Outcome:** `warm()` function analyzes entire project, stores results in Kindling, reports progress
+- **Scope:** `src/warm/`
+- **Non-scope:** CLI progress display
+- **Files:** `src/warm/index.ts`
+- **Dependencies:** CORE-003, CORE-004, CORE-005, CORE-006, CORE-007, CORE-008
+- **Validation:** `pnpm test -- warm`
+- **Confidence:** high
+- **Risks:** Memory usage for large projects
+
+**Implementation Details:**
+
+1. **Warming stages:**
+   - Stage 1: Collect files, compute content hashes
+   - Stage 2: L1 AST extraction for all files
+   - Stage 3: L2 call graph construction
+   - Stage 4: L3-L5 extraction for all functions
+   - Stage 5: Semantic embeddings (if API key configured)
+2. **Progress callback:**
+   ```typescript
+   interface WarmProgress {
+     stage: string;
+     current: number;
+     total: number;
+     file?: string;
+   }
+   type ProgressCallback = (progress: WarmProgress) => void;
+   ```
+3. **Incremental warming:** Skip files whose content hash hasn't changed
+4. **Concurrency:** Process files in parallel (bounded by available memory)
+
 ## Decisions
 
 - **D-001:** Tree-sitter is the parsing foundation; no fallback to regex or other parsers
 - **D-002:** All analysis results are JSON-serializable for Kindling storage
 - **D-003:** Content hashes (SHA-256) are used for dirty detection
 - **D-004:** Higher layers (CFG, DFG, PDG) are computed on-demand, not eagerly
+- **D-005:** `.distilignore` uses `.gitignore` syntax for familiarity
+- **D-006:** Semantic search uses external embedding APIs; no local models
+- **D-007:** Monorepo detection is automatic; explicit `--package` flag for scoping
 
 ## Notes
 
 - Start with TypeScript/JavaScript. Other languages follow the same parser interface.
 - Keep extractors modular—each layer should be independently testable.
 - Kindling integration is critical for performance; avoid redundant parsing.
+- `.distilignore` should be checked in to version control (like `.gitignore`).

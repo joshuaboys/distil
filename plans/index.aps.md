@@ -39,6 +39,9 @@ Those concerns are either out of scope or deferred to future versions.
 
 * `@distil/core` → depends on → `@kindling/core` (M2)
 * `@distil/core` → depends on → `@kindling/store-sqlite` (M2)
+* `@distil/mcp` → depends on → `@distil/core` (M6)
+* `@distil/mcp` → depends on → `@modelcontextprotocol/sdk` (M6)
+* `@distil/cli` → depends on → `@distil/mcp` (M6, optional)
 
 ---
 
@@ -74,16 +77,38 @@ Those concerns are either out of scope or deferred to future versions.
 
 **Target:** `distil slice <file> <func> <line>` returns relevant lines only ✅
 
-### M4: Semantic Search + CLI Polish (Planned)
+### M4: Ignore Patterns + Monorepo Support (Planned)
+
+* [ ] `.distilignore` file support (`.gitignore` syntax)
+* [ ] Monorepo workspace detection (pnpm, npm, lerna)
+* [ ] Cross-package call graph resolution
+* [ ] `--package` scoping flag
+* [ ] `--no-ignore` override flag
+
+**Target:** Distil works correctly in monorepos and respects project ignore patterns
+
+### M5: Semantic Search + CLI Polish (Planned)
 
 * [ ] External embeddings API integration (OpenAI/Anthropic)
 * [ ] Semantic search over function behaviors
-* [ ] Full CLI command set
-* [ ] Documentation polish (README, examples)
+* [ ] Index warming command with progress display
+* [ ] `distil context` LLM-ready output command
+* [ ] Output formatting system (--json, --compact)
+* [ ] Configuration file support (`.distil/config.json`)
 
 **Target:** `distil semantic "validate JWT tokens"` finds relevant functions
 
-### M5: Multi-Language Support (Planned)
+### M6: MCP Server (Planned)
+
+* [ ] MCP server package (`@distil/mcp`)
+* [ ] Tool definitions for all analysis layers
+* [ ] Resource and prompt definitions
+* [ ] `distil mcp` CLI subcommand
+* [ ] Editor integration testing (Claude Code, Cursor)
+
+**Target:** Editors and agents query Distil analysis via MCP protocol
+
+### M7: Multi-Language Support (Planned)
 
 * [ ] Python language support (all layers)
 * [ ] Rust language support (all layers)
@@ -100,7 +125,7 @@ Those concerns are either out of scope or deferred to future versions.
 * **Path:** ./modules/distil-core.aps.md
 * **Scope:** CORE
 * **Owner:** @aneki
-* **Status:** In Progress (L1-L2 complete)
+* **Status:** In Progress (L1-L5 complete, Kindling pending)
 * **Priority:** high
 * **Tags:** analysis, ast, callgraph, cfg, dfg, pdg
 * **Dependencies:** tree-sitter (current), @kindling/core/@kindling/store-sqlite (planned)
@@ -110,10 +135,20 @@ Those concerns are either out of scope or deferred to future versions.
 * **Path:** ./modules/distil-cli.aps.md
 * **Scope:** CLI
 * **Owner:** @aneki
-* **Status:** In Progress (tree/extract/calls/impact commands)
+* **Status:** In Progress (tree/extract/calls/impact/cfg/dfg/slice commands)
 * **Priority:** high
 * **Tags:** cli, tooling
 * **Dependencies:** @distil/core
+
+### @distil/mcp
+
+* **Path:** ./modules/distil-mcp.aps.md
+* **Scope:** MCP
+* **Owner:** @aneki
+* **Status:** Planned
+* **Priority:** medium
+* **Tags:** mcp, integration, editor
+* **Dependencies:** @distil/core, @modelcontextprotocol/sdk
 
 ---
 
@@ -127,6 +162,9 @@ Those concerns are either out of scope or deferred to future versions.
 * **D-006:** Future language parsers (Python, Rust, C#) are optional peer dependencies
 * **D-007:** Semantic search uses external embedding APIs (OpenAI/Anthropic), not local models
 * **D-008:** TypeScript/JavaScript are the initial supported languages; others are future milestones
+* **D-009:** MCP server uses stdio transport; started via `distil mcp` or configured in editor settings
+* **D-010:** `.distilignore` uses `.gitignore` syntax and is checked into version control
+* **D-011:** Monorepo detection is automatic; `--package` flag for explicit scoping
 
 ---
 

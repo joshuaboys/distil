@@ -2,7 +2,7 @@
 
 | Scope | Owner | Priority | Status |
 |-------|-------|----------|--------|
-| CLI | @aneki | high | In Progress (L1-L2 commands complete) |
+| CLI | @aneki | high | In Progress (L1-L5 commands complete) |
 
 ## Purpose
 
@@ -168,30 +168,54 @@ This is the user-facing surface of Distil. It formats analysis results for human
 
 ### CLI-008: Semantic search command
 
+- **Status:** Planned
 - **Intent:** Enable natural language code search
 - **Expected Outcome:** `distil semantic <query>` finds relevant functions by behavior
-- **Scope:** `src/commands/semantic.ts`, `src/semantic/`
-- **Non-scope:** Embedding model implementation
-- **Files:** `src/commands/semantic.ts`, `src/semantic/embeddings.ts`, `src/semantic/index.ts`
-- **Dependencies:** CLI-001, CORE-003, CORE-004
+- **Scope:** `src/commands/semantic.ts`
+- **Non-scope:** Embedding logic (CORE-012)
+- **Files:** `src/commands/semantic.ts`
+- **Dependencies:** CLI-001, CORE-012
 - **Validation:** `OPENAI_API_KEY=xxx distil semantic "validate JWT"`
 - **Confidence:** medium
 - **Risks:** API key management; rate limiting
 
+**Implementation Details:**
+
+1. **API key resolution:** `--api-key` flag > `OPENAI_API_KEY` env var > `.distil/config.json`
+2. **Output:** Ranked list of functions with similarity scores
+3. **Options:**
+   - `--limit <n>` — max results (default: 10)
+   - `--threshold <n>` — minimum similarity score (default: 0.5)
+   - `--provider <name>` — embedding provider (default: openai)
+   - `--json` — structured output
+4. **First-run experience:** If no API key found, show clear setup instructions
+
 ### CLI-009: Warm command
 
+- **Status:** Planned
 - **Intent:** Pre-build all indexes for fast queries
 - **Expected Outcome:** `distil warm` analyzes project and caches results in Kindling
 - **Scope:** `src/commands/warm.ts`
-- **Non-scope:** Caching implementation
+- **Non-scope:** Caching implementation (CORE-005), warming logic (CORE-013)
 - **Files:** `src/commands/warm.ts`
-- **Dependencies:** CLI-001, CORE-005
+- **Dependencies:** CLI-001, CORE-005, CORE-013
 - **Validation:** `distil warm . && distil context main --project .`
 - **Confidence:** high
 - **Risks:** Progress display for large projects
 
+**Implementation Details:**
+
+1. **Progress display:** Spinner with stage name, file count, current file
+2. **Output to stderr:** Progress on stderr, summary on stdout (for piping)
+3. **Options:**
+   - `--layers <list>` — comma-separated layers to warm (default: all)
+   - `--no-semantic` — skip semantic indexing even if API key available
+   - `--json` — output summary as JSON
+4. **Summary:** Total files, functions, edges, time elapsed, cache hits/misses
+
 ### CLI-010: Output formatting and configuration
 
+- **Status:** Planned
 - **Intent:** Support multiple output formats and configuration
 - **Expected Outcome:** --json, --compact flags work; config file respected
 - **Scope:** `src/format/`, `src/config/`
@@ -202,19 +226,55 @@ This is the user-facing surface of Distil. It formats analysis results for human
 - **Confidence:** high
 - **Risks:** None significant
 
+### CLI-011: .distilignore CLI integration
+
+- **Status:** Planned
+- **Intent:** Ensure all CLI commands respect .distilignore patterns
+- **Expected Outcome:** Files matching .distilignore patterns are excluded from all output
+- **Scope:** Integration between CLI commands and CORE-010 ignore logic
+- **Non-scope:** Ignore pattern implementation (CORE-010)
+- **Files:** `src/index.ts` (update all commands to pass ignore context)
+- **Dependencies:** CLI-001, CORE-010
+- **Validation:** Create `.distilignore` with a pattern; verify `distil tree`, `distil calls`, `distil extract` respect it
+- **Confidence:** high
+- **Risks:** None significant
+
+**Implementation Details:**
+
+1. **Global option:** `--no-ignore` flag to disable .distilignore
+2. **Feedback:** `distil tree` marks ignored directories distinctly (or omits them)
+3. **Init command:** Consider `distil init` that creates a starter `.distilignore`
+
+### CLI-012: MCP server subcommand
+
+- **Status:** Planned
+- **Intent:** Start MCP server from CLI for editor integration
+- **Expected Outcome:** `distil mcp` starts stdio MCP server
+- **Scope:** `src/commands/mcp.ts`
+- **Non-scope:** MCP server implementation (@distil/mcp)
+- **Files:** `src/commands/mcp.ts`
+- **Dependencies:** CLI-001, MCP-001
+- **Validation:** `distil mcp` starts server; editor connects
+- **Confidence:** high
+- **Risks:** None significant
+
 ## Decisions
 
 - **D-001:** Commander.js is the CLI framework (mature, widely used)
 - **D-002:** Default output is human-readable; --json for programmatic use
 - **D-003:** API keys for semantic search read from env vars first, then config
 - **D-004:** Progress indicators use stderr; output uses stdout (for piping)
+- **D-005:** `.distilignore` is respected by default; `--no-ignore` to override
 
 ## Future Enhancements
 
 - **Interactive function selection:** When `distil impact` matches multiple functions, offer a numbered list for interactive selection instead of requiring the user to re-run with a more specific name.
 - **Global --quiet and --verbose flags:** Add consistent verbosity controls across all commands.
+- **`distil init` command:** Generate starter `.distilignore` and `.distil/config.json`.
+- **`distil watch` command:** Watch for file changes and re-analyze incrementally.
 
 ## Notes
 
 - Keep command implementations thin; delegate to CORE.
 - Test commands with various project sizes to ensure performance.
+- MCP subcommand should be lightweight; import @distil/mcp lazily to avoid startup cost when not used.
