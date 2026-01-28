@@ -1,8 +1,8 @@
-# @edda-distil/cli
+# @distil/cli
 
 | Scope | Owner | Priority | Status |
 |-------|-------|----------|--------|
-| CLI | @aneki | high | In Progress |
+| CLI | @aneki | high | In Progress (L1-L2 commands complete) |
 
 ## Purpose
 
@@ -22,8 +22,8 @@ This is the user-facing surface of Distil. It formats analysis results for human
 
 ## Out of Scope
 
-- Analysis implementation (edda-distil-core)
-- Kindling persistence (edda-distil-core handles this)
+- Analysis implementation (distil-core)
+- Kindling persistence (distil-core handles this)
 - MCP server (future consideration)
 - Editor integrations
 
@@ -114,17 +114,19 @@ This is the user-facing surface of Distil. It formats analysis results for human
 - **Confidence:** high
 - **Risks:** None significant
 
-### CLI-004: Call graph commands (calls, impact)
+### CLI-004: Call graph commands (calls, impact) ✅
 
+- **Status:** Complete
 - **Intent:** Expose L2 call graph via CLI
 - **Expected Outcome:** `distil calls` builds call graph; `distil impact <func>` shows callers
-- **Scope:** `src/commands/calls.ts`, `src/commands/impact.ts`
+- **Scope:** `src/index.ts` (commands defined inline)
 - **Non-scope:** Call graph construction logic
-- **Files:** `src/commands/calls.ts`, `src/commands/impact.ts`
+- **Files:** `src/index.ts`
 - **Dependencies:** CLI-001, CORE-004
 - **Validation:** `distil calls . && distil impact main .`
 - **Confidence:** high
 - **Risks:** None significant
+- **Completed:** Both commands working with JSON output, fuzzy matching, and transitive caller support
 
 ### CLI-005: Context command
 
@@ -138,25 +140,27 @@ This is the user-facing surface of Distil. It formats analysis results for human
 - **Confidence:** high
 - **Risks:** Token budget display accuracy
 
-### CLI-006: CFG and DFG commands
+### CLI-006: CFG and DFG commands 🔄
 
+- **Status:** In Review (PR #1)
 - **Intent:** Expose L3/L4 analysis via CLI
 - **Expected Outcome:** `distil cfg` shows control flow; `distil dfg` shows data flow
-- **Scope:** `src/commands/cfg.ts`, `src/commands/dfg.ts`
+- **Scope:** `src/index.ts` (commands defined inline)
 - **Non-scope:** CFG/DFG extraction logic
-- **Files:** `src/commands/cfg.ts`, `src/commands/dfg.ts`
+- **Files:** `src/index.ts`
 - **Dependencies:** CLI-001, CORE-006, CORE-007
 - **Validation:** `distil cfg src/index.ts main && distil dfg src/index.ts main`
 - **Confidence:** high
 - **Risks:** None significant
 
-### CLI-007: Slice command
+### CLI-007: Slice command 🔄
 
+- **Status:** In Review (PR #1)
 - **Intent:** Expose L5 program slicing via CLI
 - **Expected Outcome:** `distil slice <file> <func> <line>` shows relevant lines
-- **Scope:** `src/commands/slice.ts`
+- **Scope:** `src/index.ts` (command defined inline)
 - **Non-scope:** Slicing logic
-- **Files:** `src/commands/slice.ts`
+- **Files:** `src/index.ts`
 - **Dependencies:** CLI-001, CORE-008
 - **Validation:** `distil slice src/index.ts main 42`
 - **Confidence:** high

@@ -1,85 +1,79 @@
-# Distil: Noise Reduction for LLMs
+# Distil
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
+Token-efficient code analysis for LLMs.
 
-Give language models just enough code to reason accurately and no more.
+Modern codebases are massive. Even when a model's context window is large enough, dumping raw source buries signal under noise. Distil extracts *structure* instead of text, reducing context by **~95%** while preserving what matters for accurate reasoning.
 
-Modern codebases are massive. Even when a model’s context window is theoretically large enough, shoving raw source into it is a great way to bury the signal under noise.
-
-Distil doesn’t stream files. It surfaces intent, shape, and relationships. By distilling structure instead of text, it reduces context size by **up to 95%** while retaining what actually matters for safe, correct edits.
-
-## How It Works
-
-Distil builds 5 analysis layers, each answering different questions:
+## Analysis Layers
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Layer 5: Program Dependence  → "What affects line 42?"      │
-│ Layer 4: Data Flow           → "Where does this value go?"  │
-│ Layer 3: Control Flow        → "How complex is this?"       │
-│ Layer 2: Call Graph          → "Who calls this function?"   │
-│ Layer 1: AST                 → "What functions exist?"      │
+│ L5: Program Dependence  → "What affects line 42?"           │
+│ L4: Data Flow           → "Where does this value go?"       │
+│ L3: Control Flow        → "How complex is this function?"   │
+│ L2: Call Graph          → "Who calls this? What breaks?"    │
+│ L1: AST                 → "What functions/classes exist?"   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Why layers?** Different tasks need different depth:
-- Browsing code? Layer 1 (structure) is enough
-- Refactoring? Layer 2 (call graph) shows what breaks
-- Debugging null? Layer 5 (slice) shows only relevant lines
+Different tasks need different depth:
+- **Browsing code?** L1 (structure) is enough
+- **Refactoring?** L2 (call graph) shows impact
+- **Debugging?** L5 (slice) shows only relevant lines
 
-## Quick Start
+## Installation
 
 ```bash
-# Install
-pnpm add @edda-distil/cli
-
-# Show file tree
-distil tree .
-
-# Extract file structure (L1)
-distil extract src/index.ts
+pnpm add @distil/cli
 ```
 
 ## Commands
 
-| Command | What It Does | Status |
-|---------|--------------|--------|
-| `distil tree [path]` | File tree structure | ✅ Available |
-| `distil extract <file>` | Full file analysis (L1) | ✅ Available |
-| `distil structure [path]` | Code structure overview | 🔜 Planned |
-| `distil context <func> --project <path>` | LLM-ready summary | 🔜 Planned |
-| `distil calls [path]` | Build call graph (L2) | 🔜 Planned |
-| `distil impact <func> [path]` | Find all callers (L2) | 🔜 Planned |
-| `distil cfg <file> <func>` | Control flow graph (L3) | 🔜 Planned |
-| `distil dfg <file> <func>` | Data flow graph (L4) | 🔜 Planned |
-| `distil slice <file> <func> <line>` | Program slice (L5) | 🔜 Planned |
-| `distil semantic <query> [path]` | Natural language search | 🔜 Planned |
-| `distil warm [path]` | Build all indexes | 🔜 Planned |
+| Command | Description | Layer |
+|---------|-------------|-------|
+| `distil tree [path]` | File tree structure | - |
+| `distil extract <file>` | Functions, classes, imports | L1 |
+| `distil calls [path]` | Build project call graph | L2 |
+| `distil impact <func> [path]` | Find all callers of a function | L2 |
+
+### Examples
+
+```bash
+# Show project structure
+distil tree .
+
+# Extract file analysis
+distil extract src/index.ts
+
+# Build call graph for a project
+distil calls .
+
+# Find what calls a function (with transitive callers)
+distil impact validateToken --depth 3
+```
 
 ## Supported Languages
 
-| Language | Status |
-|----------|--------|
-| TypeScript | ✅ Supported |
-| JavaScript | ✅ Supported |
-| Python | 🔜 Planned |
-| Rust | 🔜 Planned |
-| C# | 🔜 Planned |
+| Language | L1 | L2 | L3-L5 |
+|----------|----|----|-------|
+| TypeScript | ✅ | ✅ | in review ([PR #1](https://github.com/joshuaboys/distil/pull/1)) |
+| JavaScript | ✅ | ✅ | in review ([PR #1](https://github.com/joshuaboys/distil/pull/1)) |
+| Python | planned | - | - |
+| Rust | planned | - | - |
 
 ## Architecture
 
-Distil plans to integrate with [Kindling](https://github.com/EddaCraft/kindling) for caching and persistence:
+Distil will integrate with [Kindling](https://github.com/anthropics/kindling) for caching and persistence:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      Distil Analysis Engine                    │
-│  L1: AST  →  L2: CallGraph  →  L3: CFG  →  L4: DFG  →  L5   │
+│                    Distil Analysis Engine                   │
+│  L1: AST  →  L2: CallGraph  →  L3: CFG  →  L4: DFG  →  L5  │
 └─────────────────────────────┬───────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Kindling Persistence                      │
+│                    Kindling Persistence                     │
 │  SQLite + FTS5  •  Observation storage  •  Fast retrieval   │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -90,30 +84,25 @@ Distil plans to integrate with [Kindling](https://github.com/EddaCraft/kindling)
 ## Development
 
 ```bash
-# Clone and install
-git clone https://github.com/EddaCraft/distil.git
+git clone https://github.com/joshuaboys/distil.git
 cd distil
 pnpm install
-
-# Build
 pnpm build
-
-# Test
 pnpm test
+```
 
-# Link Kindling locally (during development)
-cd ../kindling && pnpm link --global
-cd ../distil && pnpm link @kindling/core @kindling/store-sqlite
+### Package Structure
+
+```
+packages/
+├── distil-core   # Analysis engine (tree-sitter parsers)
+└── distil-cli    # Command-line interface
 ```
 
 ## Planning
 
-Distil uses APS docs for roadmap and module planning. Start at [plans/index.aps.md](./plans/index.aps.md).
+Roadmap and module specs are in `plans/` using APS format. Start at [plans/index.aps.md](./plans/index.aps.md).
 
 ## License
 
-Apache 2.0 - See [LICENSE](./LICENSE) for details.
-
----
-
-**Built by [EddaCraft](https://github.com/EddaCraft)**
+Apache 2.0

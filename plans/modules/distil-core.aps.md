@@ -1,8 +1,8 @@
-# @edda-distil/core
+# @distil/core
 
 | Scope | Owner | Priority | Status |
 |-------|-------|----------|--------|
-| CORE | @aneki | high | In Progress |
+| CORE | @aneki | high | In Progress (L1-L2 complete) |
 
 ## Purpose
 
@@ -23,7 +23,7 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 
 ## Out of Scope
 
-- CLI commands (edda-distil-cli)
+- CLI commands (distil-cli)
 - Semantic search / embeddings (future milestone)
 - Language-specific IDE features
 - Real-time incremental parsing
@@ -58,7 +58,7 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 ## Acceptance Criteria
 
 - [x] L1: Extract functions, classes, imports from TS/JS files
-- [ ] L2: Build project-wide call graph with forward/backward edges
+- [x] L2: Build project-wide call graph with forward/backward edges
 - [ ] L3: Extract CFG with basic blocks and cyclomatic complexity
 - [ ] L4: Extract DFG with variable definitions and uses
 - [ ] L5: Compute program slices (backward and forward)
@@ -118,17 +118,19 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Risks:** Complex TypeScript syntax edge cases
 - **Completed:** Extracts functions, classes, methods, imports, exports, parameters, types
 
-### CORE-004: L2 Call graph extractor
+### CORE-004: L2 Call graph extractor ✅
 
+- **Status:** Complete
 - **Intent:** Build cross-file call relationships for impact analysis
 - **Expected Outcome:** `buildCallGraph()` returns forward and backward edges; `getImpact()` finds all callers
-- **Scope:** `src/extractors/callgraph/`
+- **Scope:** `src/callgraph/`
 - **Non-scope:** CFG, DFG, PDG
-- **Files:** `src/extractors/callgraph/index.ts`, `src/extractors/callgraph/typescript.ts`
+- **Files:** `src/callgraph/index.ts`, `src/callgraph/types.ts`
 - **Dependencies:** CORE-001, CORE-003
-- **Validation:** `pnpm test -- callgraph`
-- **Confidence:** medium
+- **Validation:** `pnpm test`
+- **Confidence:** high
 - **Risks:** Import resolution complexity; dynamic calls
+- **Completed:** Cross-file call graph with forward/backward indexes, impact analysis via CLI
 
 ### CORE-005: Kindling integration layer 🔄
 
@@ -174,39 +176,42 @@ This is the analytical spine of Distil. It extracts structure from code and prod
    - Re-analyze only when hash changes
    - Cascading invalidation for call graph edges
 
-### CORE-006: L3 CFG extractor
+### CORE-006: L3 CFG extractor 🔄
 
+- **Status:** In Review (PR #1)
 - **Intent:** Extract control flow graphs with complexity metrics
 - **Expected Outcome:** `extractCFG()` returns basic blocks, edges, and cyclomatic complexity
-- **Scope:** `src/extractors/cfg/`
+- **Scope:** `src/parsers/typescript.ts` (CFGBuilder class)
 - **Non-scope:** DFG, PDG
-- **Files:** `src/extractors/cfg/index.ts`, `src/extractors/cfg/typescript.ts`
+- **Files:** `src/parsers/typescript.ts`, `src/types/cfg.ts`
 - **Dependencies:** CORE-001, CORE-002
-- **Validation:** `pnpm test -- cfg`
+- **Validation:** `pnpm test`
 - **Confidence:** medium
 - **Risks:** Complex control flow patterns (try/catch, async/await)
 
-### CORE-007: L4 DFG extractor
+### CORE-007: L4 DFG extractor 🔄
 
+- **Status:** In Review (PR #1)
 - **Intent:** Track variable definitions and uses for data flow analysis
 - **Expected Outcome:** `extractDFG()` returns variable refs and def-use chains
-- **Scope:** `src/extractors/dfg/`
+- **Scope:** `src/parsers/typescript.ts` (DFGBuilder class)
 - **Non-scope:** PDG, slicing
-- **Files:** `src/extractors/dfg/index.ts`, `src/extractors/dfg/typescript.ts`
+- **Files:** `src/parsers/typescript.ts`, `src/types/dfg.ts`
 - **Dependencies:** CORE-001, CORE-002
-- **Validation:** `pnpm test -- dfg`
+- **Validation:** `pnpm test`
 - **Confidence:** medium
 - **Risks:** Scope analysis complexity; destructuring patterns
 
-### CORE-008: L5 PDG extractor and slicing
+### CORE-008: L5 PDG extractor and slicing 🔄
 
+- **Status:** In Review (PR #1)
 - **Intent:** Combine control and data dependencies for program slicing
-- **Expected Outcome:** `extractPDG()` returns unified dependence graph; `getSlice()` computes backward/forward slices
-- **Scope:** `src/extractors/pdg/`
+- **Expected Outcome:** `extractPDG()` returns unified dependence graph; `backwardSlice()`/`forwardSlice()` compute slices
+- **Scope:** `src/parsers/typescript.ts`, `src/types/pdg.ts`
 - **Non-scope:** (none)
-- **Files:** `src/extractors/pdg/index.ts`, `src/extractors/pdg/typescript.ts`
+- **Files:** `src/parsers/typescript.ts`, `src/types/pdg.ts`, `src/extractors.ts`
 - **Dependencies:** CORE-006, CORE-007
-- **Validation:** `pnpm test -- pdg`
+- **Validation:** `pnpm test`
 - **Confidence:** medium
 - **Risks:** Slicing precision for complex functions
 

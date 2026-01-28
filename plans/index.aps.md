@@ -32,13 +32,13 @@ Those concerns are either out of scope or deferred to future versions.
 
 ## System Map (Current)
 
-* `@edda-distil/core` → depends on → `tree-sitter` (+ optional language parsers)
-* `@edda-distil/cli` → depends on → `@edda-distil/core`
+* `@distil/core` → depends on → `tree-sitter` (+ optional language parsers)
+* `@distil/cli` → depends on → `@distil/core`
 
 ### Planned Integrations
 
-* `@edda-distil/core` → depends on → `@kindling/core` (M2)
-* `@edda-distil/core` → depends on → `@kindling/store-sqlite` (M2)
+* `@distil/core` → depends on → `@kindling/core` (M2)
+* `@distil/core` → depends on → `@kindling/store-sqlite` (M2)
 
 ---
 
@@ -55,24 +55,26 @@ Those concerns are either out of scope or deferred to future versions.
 
 **Target:** `distil extract <file>` works for TS/JS files ✅
 
-### M2: L2 Call Graph + Kindling Integration (Planned)
+### M2: L2 Call Graph + Kindling Integration (In Progress)
 
-* [ ] Cross-file call graph construction
-* [ ] Forward edges (what does this function call?)
-* [ ] Backward edges (what calls this function?)
+* [x] Cross-file call graph construction
+* [x] Forward edges (what does this function call?)
+* [x] Backward edges (what calls this function?)
 * [ ] Kindling integration for caching analysis results
-* [ ] Impact analysis command
+* [x] Impact analysis command
 
-**Target:** `distil impact <function>` shows all callers
+**Target:** `distil impact <function>` shows all callers ✅
 
-### M3: L3-L5 Analysis Layers (Planned)
+### M3: L3-L5 Analysis Layers (In Review - PR #1)
 
 * [ ] L3: Control Flow Graph extraction with cyclomatic complexity
 * [ ] L4: Data Flow Graph with def-use chains
 * [ ] L5: Program Dependence Graph with backward/forward slicing
-* [ ] `tldr context` command for LLM-ready output
+* [ ] `distil cfg`, `distil dfg`, `distil slice` commands
 
 **Target:** `distil slice <file> <func> <line>` returns relevant lines only
+
+**Note:** Implementation complete in PR #1, pending merge.
 
 ### M4: Semantic Search + CLI Polish (Planned)
 
@@ -95,25 +97,25 @@ Those concerns are either out of scope or deferred to future versions.
 
 ## Modules
 
-### @edda-distil/core
+### @distil/core
 
-* **Path:** ./modules/edda-distil-core.aps.md
+* **Path:** ./modules/distil-core.aps.md
 * **Scope:** CORE
 * **Owner:** @aneki
-* **Status:** In Progress (L1 complete)
+* **Status:** In Progress (L1-L2 complete)
 * **Priority:** high
 * **Tags:** analysis, ast, callgraph, cfg, dfg, pdg
 * **Dependencies:** tree-sitter (current), @kindling/core/@kindling/store-sqlite (planned)
 
-### @edda-distil/cli
+### @distil/cli
 
-* **Path:** ./modules/edda-distil-cli.aps.md
+* **Path:** ./modules/distil-cli.aps.md
 * **Scope:** CLI
 * **Owner:** @aneki
-* **Status:** In Progress (tree/extract commands)
+* **Status:** In Progress (tree/extract/calls/impact commands)
 * **Priority:** high
 * **Tags:** cli, tooling
-* **Dependencies:** @edda-distil/core
+* **Dependencies:** @distil/core
 
 ---
 
