@@ -59,9 +59,9 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 
 - [x] L1: Extract functions, classes, imports from TS/JS files
 - [x] L2: Build project-wide call graph with forward/backward edges
-- [ ] L3: Extract CFG with basic blocks and cyclomatic complexity
-- [ ] L4: Extract DFG with variable definitions and uses
-- [ ] L5: Compute program slices (backward and forward)
+- [x] L3: Extract CFG with basic blocks and cyclomatic complexity
+- [x] L4: Extract DFG with variable definitions and uses
+- [x] L5: Compute program slices (backward and forward)
 - [ ] Kindling integration caches all analysis results
 - [ ] Dirty detection via content hashes avoids redundant analysis
 - [ ] Context output reduces tokens by 80%+ vs raw code
@@ -176,9 +176,9 @@ This is the analytical spine of Distil. It extracts structure from code and prod
    - Re-analyze only when hash changes
    - Cascading invalidation for call graph edges
 
-### CORE-006: L3 CFG extractor 🔄
+### CORE-006: L3 CFG extractor ✅
 
-- **Status:** In Review (PR #1)
+- **Status:** Complete
 - **Intent:** Extract control flow graphs with complexity metrics
 - **Expected Outcome:** `extractCFG()` returns basic blocks, edges, and cyclomatic complexity
 - **Scope:** `src/parsers/typescript.ts` (CFGBuilder class)
@@ -186,12 +186,12 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Files:** `src/parsers/typescript.ts`, `src/types/cfg.ts`
 - **Dependencies:** CORE-001, CORE-002
 - **Validation:** `pnpm test`
-- **Confidence:** medium
-- **Risks:** Complex control flow patterns (try/catch, async/await)
+- **Confidence:** high
+- **Completed:** CFG extraction with if/else, loops, switch, try/catch, cyclomatic complexity
 
-### CORE-007: L4 DFG extractor 🔄
+### CORE-007: L4 DFG extractor ✅
 
-- **Status:** In Review (PR #1)
+- **Status:** Complete
 - **Intent:** Track variable definitions and uses for data flow analysis
 - **Expected Outcome:** `extractDFG()` returns variable refs and def-use chains
 - **Scope:** `src/parsers/typescript.ts` (DFGBuilder class)
@@ -199,12 +199,12 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Files:** `src/parsers/typescript.ts`, `src/types/dfg.ts`
 - **Dependencies:** CORE-001, CORE-002
 - **Validation:** `pnpm test`
-- **Confidence:** medium
-- **Risks:** Scope analysis complexity; destructuring patterns
+- **Confidence:** high
+- **Completed:** DFG extraction with parameters, definitions, uses, updates, closures
 
-### CORE-008: L5 PDG extractor and slicing 🔄
+### CORE-008: L5 PDG extractor and slicing ✅
 
-- **Status:** In Review (PR #1)
+- **Status:** Complete
 - **Intent:** Combine control and data dependencies for program slicing
 - **Expected Outcome:** `extractPDG()` returns unified dependence graph; `backwardSlice()`/`forwardSlice()` compute slices
 - **Scope:** `src/parsers/typescript.ts`, `src/types/pdg.ts`
@@ -212,8 +212,8 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Files:** `src/parsers/typescript.ts`, `src/types/pdg.ts`, `src/extractors.ts`
 - **Dependencies:** CORE-006, CORE-007
 - **Validation:** `pnpm test`
-- **Confidence:** medium
-- **Risks:** Slicing precision for complex functions
+- **Confidence:** high
+- **Completed:** PDG combines CFG+DFG, backward/forward slicing implemented
 
 ### CORE-009: Context generation API
 

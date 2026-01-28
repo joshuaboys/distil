@@ -140,9 +140,9 @@ This is the user-facing surface of Distil. It formats analysis results for human
 - **Confidence:** high
 - **Risks:** Token budget display accuracy
 
-### CLI-006: CFG and DFG commands 🔄
+### CLI-006: CFG and DFG commands ✅
 
-- **Status:** In Review (PR #1)
+- **Status:** Complete
 - **Intent:** Expose L3/L4 analysis via CLI
 - **Expected Outcome:** `distil cfg` shows control flow; `distil dfg` shows data flow
 - **Scope:** `src/index.ts` (commands defined inline)
@@ -151,11 +151,11 @@ This is the user-facing surface of Distil. It formats analysis results for human
 - **Dependencies:** CLI-001, CORE-006, CORE-007
 - **Validation:** `distil cfg src/index.ts main && distil dfg src/index.ts main`
 - **Confidence:** high
-- **Risks:** None significant
+- **Completed:** Both commands with human-readable and JSON output
 
-### CLI-007: Slice command 🔄
+### CLI-007: Slice command ✅
 
-- **Status:** In Review (PR #1)
+- **Status:** Complete
 - **Intent:** Expose L5 program slicing via CLI
 - **Expected Outcome:** `distil slice <file> <func> <line>` shows relevant lines
 - **Scope:** `src/index.ts` (command defined inline)
@@ -164,7 +164,7 @@ This is the user-facing surface of Distil. It formats analysis results for human
 - **Dependencies:** CLI-001, CORE-008
 - **Validation:** `distil slice src/index.ts main 42`
 - **Confidence:** high
-- **Risks:** None significant
+- **Completed:** Backward and forward slicing with source context display
 
 ### CLI-008: Semantic search command
 

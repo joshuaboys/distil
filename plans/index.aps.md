@@ -65,16 +65,14 @@ Those concerns are either out of scope or deferred to future versions.
 
 **Target:** `distil impact <function>` shows all callers ✅
 
-### M3: L3-L5 Analysis Layers (In Review - PR #1)
+### M3: L3-L5 Analysis Layers (Complete)
 
-* [ ] L3: Control Flow Graph extraction with cyclomatic complexity
-* [ ] L4: Data Flow Graph with def-use chains
-* [ ] L5: Program Dependence Graph with backward/forward slicing
-* [ ] `distil cfg`, `distil dfg`, `distil slice` commands
+* [x] L3: Control Flow Graph extraction with cyclomatic complexity
+* [x] L4: Data Flow Graph with def-use chains
+* [x] L5: Program Dependence Graph with backward/forward slicing
+* [x] `distil cfg`, `distil dfg`, `distil slice` commands
 
-**Target:** `distil slice <file> <func> <line>` returns relevant lines only
-
-**Note:** Implementation complete in PR #1, pending merge.
+**Target:** `distil slice <file> <func> <line>` returns relevant lines only ✅
 
 ### M4: Semantic Search + CLI Polish (Planned)
 

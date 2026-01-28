@@ -35,6 +35,9 @@ pnpm add @distil/cli
 | `distil extract <file>` | Functions, classes, imports | L1 |
 | `distil calls [path]` | Build project call graph | L2 |
 | `distil impact <func> [path]` | Find all callers of a function | L2 |
+| `distil cfg <file> <func>` | Control flow graph with complexity | L3 |
+| `distil dfg <file> <func>` | Data flow graph with def-use chains | L4 |
+| `distil slice <file> <func> <line>` | Program slice (backward/forward) | L5 |
 
 ### Examples
 
@@ -50,14 +53,23 @@ distil calls .
 
 # Find what calls a function (with transitive callers)
 distil impact validateToken --depth 3
+
+# Analyze control flow complexity
+distil cfg src/auth.ts validateToken
+
+# Show data flow for a function
+distil dfg src/auth.ts validateToken
+
+# Get program slice affecting line 42
+distil slice src/auth.ts validateToken 42
 ```
 
 ## Supported Languages
 
 | Language | L1 | L2 | L3-L5 |
 |----------|----|----|-------|
-| TypeScript | ✅ | ✅ | in review ([PR #1](https://github.com/joshuaboys/distil/pull/1)) |
-| JavaScript | ✅ | ✅ | in review ([PR #1](https://github.com/joshuaboys/distil/pull/1)) |
+| TypeScript | ✅ | ✅ | ✅ |
+| JavaScript | ✅ | ✅ | ✅ |
 | Python | planned | - | - |
 | Rust | planned | - | - |
 
