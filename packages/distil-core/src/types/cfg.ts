@@ -7,23 +7,23 @@
  * - Cyclomatic complexity
  */
 
-import type { SourceRange } from './common.js';
+import type { SourceRange } from "./common.js";
 
 /**
  * Type of basic block
  */
 export type BlockType =
-  | 'entry' // Function entry point
-  | 'exit' // Function exit point
-  | 'body' // Regular code block
-  | 'branch' // If/switch decision point
-  | 'loop_header' // Loop condition check
-  | 'loop_body' // Loop body
-  | 'try' // Try block
-  | 'catch' // Catch block
-  | 'finally' // Finally block
-  | 'return' // Return statement
-  | 'throw'; // Throw statement
+  | "entry" // Function entry point
+  | "exit" // Function exit point
+  | "body" // Regular code block
+  | "branch" // If/switch decision point
+  | "loop_header" // Loop condition check
+  | "loop_body" // Loop body
+  | "try" // Try block
+  | "catch" // Catch block
+  | "finally" // Finally block
+  | "return" // Return statement
+  | "throw"; // Throw statement
 
 /**
  * A basic block in the CFG
@@ -56,17 +56,17 @@ export interface CFGBlock {
  * Type of control flow edge
  */
 export type EdgeType =
-  | 'unconditional' // Always taken
-  | 'true' // Condition is true
-  | 'false' // Condition is false
-  | 'case' // Switch case
-  | 'default' // Switch default
-  | 'break' // Break statement
-  | 'continue' // Continue statement
-  | 'return' // Return edge
-  | 'throw' // Exception edge
-  | 'back_edge' // Loop back edge
-  | 'fallthrough'; // Implicit fallthrough
+  | "unconditional" // Always taken
+  | "true" // Condition is true
+  | "false" // Condition is false
+  | "case" // Switch case
+  | "default" // Switch default
+  | "break" // Break statement
+  | "continue" // Continue statement
+  | "return" // Return edge
+  | "throw" // Exception edge
+  | "back_edge" // Loop back edge
+  | "fallthrough"; // Implicit fallthrough
 
 /**
  * An edge in the CFG
@@ -132,21 +132,17 @@ export const COMPLEXITY_THRESHOLDS = {
 /**
  * Get complexity rating
  */
-export function getComplexityRating(
-  complexity: number
-): 'low' | 'medium' | 'high' | 'very_high' {
-  if (complexity <= COMPLEXITY_THRESHOLDS.LOW) return 'low';
-  if (complexity <= COMPLEXITY_THRESHOLDS.MEDIUM) return 'medium';
-  if (complexity <= COMPLEXITY_THRESHOLDS.HIGH) return 'high';
-  return 'very_high';
+export function getComplexityRating(complexity: number): "low" | "medium" | "high" | "very_high" {
+  if (complexity <= COMPLEXITY_THRESHOLDS.LOW) return "low";
+  if (complexity <= COMPLEXITY_THRESHOLDS.MEDIUM) return "medium";
+  if (complexity <= COMPLEXITY_THRESHOLDS.HIGH) return "high";
+  return "very_high";
 }
 
 /**
  * Create CFGInfo with helper methods
  */
-export function createCFGInfo(
-  data: Omit<CFGInfo, 'toJSON'>
-): CFGInfo {
+export function createCFGInfo(data: Omit<CFGInfo, "toJSON">): CFGInfo {
   return {
     ...data,
     toJSON(): Record<string, unknown> {
@@ -172,10 +168,7 @@ export function createCFGInfo(
         maxNestingDepth: this.maxNestingDepth,
         decisionPoints: this.decisionPoints,
         nestedFunctions: Object.fromEntries(
-          Array.from(this.nestedFunctions.entries()).map(([k, v]) => [
-            k,
-            v.toJSON(),
-          ])
+          Array.from(this.nestedFunctions.entries()).map(([k, v]) => [k, v.toJSON()]),
         ),
       };
     },
@@ -192,10 +185,7 @@ export function createCFGInfo(
  *
  * Minimum complexity is 1 (for a straight-line function).
  */
-export function calculateCyclomaticComplexity(
-  blocks: CFGBlock[],
-  edges: CFGEdge[]
-): number {
+export function calculateCyclomaticComplexity(blocks: CFGBlock[], edges: CFGEdge[]): number {
   const E = edges.length;
   const N = blocks.length;
   const P = 1; // Assuming single connected component
@@ -207,10 +197,7 @@ export function calculateCyclomaticComplexity(
  * Find all paths from entry to exit (for testing/coverage)
  * Warning: Can be exponential for complex functions
  */
-export function findAllPaths(
-  cfg: CFGInfo,
-  maxPaths: number = 100
-): number[][] {
+export function findAllPaths(cfg: CFGInfo, maxPaths: number = 100): number[][] {
   const paths: number[][] = [];
   const visited = new Set<string>();
 
@@ -218,7 +205,7 @@ export function findAllPaths(
     if (paths.length >= maxPaths) return;
 
     path.push(current);
-    const pathKey = path.join(',');
+    const pathKey = path.join(",");
 
     // Avoid infinite loops (back edges)
     if (visited.has(pathKey)) {

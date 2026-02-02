@@ -5,7 +5,7 @@
  * Implements all analysis layers (L1-L5).
  */
 
-import type { LanguageParser } from './base.js';
+import type { LanguageParser } from "./base.js";
 import type {
   Language,
   ModuleInfo,
@@ -29,12 +29,12 @@ import type {
   TypeAliasInfo,
   VariableInfo,
   SourceRange,
-} from '../types/index.js';
-import { createFunctionInfo, createClassInfo } from '../types/ast.js';
-import { computeContentHash } from '../types/common.js';
-import { createCFGInfo, calculateCyclomaticComplexity } from '../types/cfg.js';
-import { createDFGInfo } from '../types/dfg.js';
-import { buildPDG } from '../types/pdg.js';
+} from "../types/index.js";
+import { createFunctionInfo, createClassInfo } from "../types/ast.js";
+import { computeContentHash } from "../types/common.js";
+import { createCFGInfo, calculateCyclomaticComplexity } from "../types/cfg.js";
+import { createDFGInfo } from "../types/dfg.js";
+import { buildPDG } from "../types/pdg.js";
 
 // Tree-sitter types (simplified for compatibility)
 interface TSNode {
@@ -68,15 +68,15 @@ async function initTreeSitter(): Promise<void> {
   if (ParserClass !== null) return;
 
   try {
-    const treeSitter = await import('tree-sitter');
+    const treeSitter = await import("tree-sitter");
     ParserClass = treeSitter.default as unknown as new () => TSParser;
 
-    const tsLang = await import('tree-sitter-typescript');
+    const tsLang = await import("tree-sitter-typescript");
     TypeScriptLanguage = (tsLang.default as { typescript: unknown }).typescript;
     TSXLanguage = (tsLang.default as { tsx: unknown }).tsx;
   } catch (error) {
     throw new Error(
-      `Failed to load tree-sitter: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to load tree-sitter: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
@@ -85,13 +85,13 @@ async function initTreeSitter(): Promise<void> {
  * TypeScript/JavaScript parser implementation
  */
 export class TypeScriptParser implements LanguageParser {
-  readonly language: Language = 'typescript';
-  readonly extensions = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'] as const;
+  readonly language: Language = "typescript";
+  readonly extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"] as const;
 
   private parser: TSParser | null = null;
 
   canHandle(filePath: string): boolean {
-    const ext = filePath.slice(filePath.lastIndexOf('.'));
+    const ext = filePath.slice(filePath.lastIndexOf("."));
     return this.extensions.includes(ext as (typeof this.extensions)[number]);
   }
 
@@ -99,7 +99,7 @@ export class TypeScriptParser implements LanguageParser {
     await initTreeSitter();
 
     if (!ParserClass) {
-      throw new Error('Tree-sitter not initialized');
+      throw new Error("Tree-sitter not initialized");
     }
 
     if (!this.parser) {
@@ -107,8 +107,8 @@ export class TypeScriptParser implements LanguageParser {
     }
 
     // Choose language based on extension
-    const ext = filePath.slice(filePath.lastIndexOf('.'));
-    const lang = ext === '.tsx' || ext === '.jsx' ? TSXLanguage : TypeScriptLanguage;
+    const ext = filePath.slice(filePath.lastIndexOf("."));
+    const lang = ext === ".tsx" || ext === ".jsx" ? TSXLanguage : TypeScriptLanguage;
     this.parser.setLanguage(lang);
 
     return this.parser;
@@ -130,47 +130,47 @@ export class TypeScriptParser implements LanguageParser {
 
     // Get module-level docstring (first comment)
     const firstChild = root.firstChild;
-    if (firstChild?.type === 'comment') {
+    if (firstChild?.type === "comment") {
       docstring = this.extractDocstring(firstChild.text);
     }
 
     // Traverse the AST
     for (const child of root.children) {
       switch (child.type) {
-        case 'import_statement':
+        case "import_statement":
           imports.push(this.parseImport(child));
           break;
 
-        case 'export_statement':
+        case "export_statement":
           this.parseExport(child, exports, functions, classes, variables);
           break;
 
-        case 'function_declaration':
-        case 'generator_function_declaration':
+        case "function_declaration":
+        case "generator_function_declaration":
           functions.push(this.parseFunction(child, false, false));
           break;
 
-        case 'class_declaration':
+        case "class_declaration":
           classes.push(this.parseClass(child, false));
           break;
 
-        case 'interface_declaration':
+        case "interface_declaration":
           interfaces.push(this.parseInterface(child));
           break;
 
-        case 'type_alias_declaration':
+        case "type_alias_declaration":
           typeAliases.push(this.parseTypeAlias(child));
           break;
 
-        case 'lexical_declaration':
-        case 'variable_declaration':
+        case "lexical_declaration":
+        case "variable_declaration":
           variables.push(...this.parseVariableDeclaration(child, false));
           break;
 
-        case 'expression_statement': {
+        case "expression_statement": {
           // Handle arrow functions assigned to variables at top level
           const expr = child.firstChild;
-          if (expr?.type === 'assignment_expression') {
+          if (expr?.type === "assignment_expression") {
             const fn = this.tryParseArrowFunction(expr, false);
             if (fn) functions.push(fn);
           }
@@ -227,7 +227,7 @@ export class TypeScriptParser implements LanguageParser {
       },
       toCompact() {
         return {
-          file: filePath.split('/').pop(),
+          file: filePath.split("/").pop(),
           functions: this.functions.map((f) => f.signature()),
           classes: this.classes.map((c) => ({
             name: c.name,
@@ -241,10 +241,7 @@ export class TypeScriptParser implements LanguageParser {
     return moduleInfo;
   }
 
-  async extractCalls(
-    source: string,
-    filePath: string
-  ): Promise<Map<string, string[]>> {
+  async extractCalls(source: string, filePath: string): Promise<Map<string, string[]>> {
     const parser = await this.getParser(filePath);
     const tree = parser.parse(source);
     const root = tree.rootNode;
@@ -260,7 +257,7 @@ export class TypeScriptParser implements LanguageParser {
   async extractCFG(
     source: string,
     functionName: string,
-    filePath: string
+    filePath: string,
   ): Promise<CFGInfo | null> {
     const parser = await this.getParser(filePath);
     const tree = parser.parse(source);
@@ -284,7 +281,7 @@ export class TypeScriptParser implements LanguageParser {
   async extractDFG(
     source: string,
     functionName: string,
-    filePath: string
+    filePath: string,
   ): Promise<DFGInfo | null> {
     const parser = await this.getParser(filePath);
     const tree = parser.parse(source);
@@ -302,7 +299,7 @@ export class TypeScriptParser implements LanguageParser {
     const builder = new DFGBuilder(filePath, functionName);
 
     // Extract parameters as initial definitions
-    const params = funcNode.children.find((c) => c.type === 'formal_parameters');
+    const params = funcNode.children.find((c) => c.type === "formal_parameters");
     if (params) {
       builder.extractParameters(params);
     }
@@ -316,7 +313,7 @@ export class TypeScriptParser implements LanguageParser {
   async extractPDG(
     source: string,
     functionName: string,
-    filePath: string
+    filePath: string,
   ): Promise<PDGInfo | null> {
     // PDG requires both CFG and DFG
     const cfg = await this.extractCFG(source, functionName, filePath);
@@ -340,20 +337,20 @@ export class TypeScriptParser implements LanguageParser {
 
   private extractDocstring(text: string): string | null {
     // Handle JSDoc comments
-    if (text.startsWith('/**')) {
+    if (text.startsWith("/**")) {
       return text
         .slice(3, -2)
-        .split('\n')
-        .map((line) => line.replace(/^\s*\*\s?/, ''))
-        .join('\n')
+        .split("\n")
+        .map((line) => line.replace(/^\s*\*\s?/, ""))
+        .join("\n")
         .trim();
     }
     // Handle single-line comments
-    if (text.startsWith('//')) {
+    if (text.startsWith("//")) {
       return text.slice(2).trim();
     }
     // Handle multi-line comments
-    if (text.startsWith('/*')) {
+    if (text.startsWith("/*")) {
       return text.slice(2, -2).trim();
     }
     return null;
@@ -361,7 +358,7 @@ export class TypeScriptParser implements LanguageParser {
 
   private parseImport(node: TSNode): ImportInfo {
     const importInfo: ImportInfo = {
-      module: '',
+      module: "",
       names: [],
       isFrom: true,
       isTypeOnly: false,
@@ -370,11 +367,11 @@ export class TypeScriptParser implements LanguageParser {
     };
 
     for (const child of node.children) {
-      if (child.type === 'string') {
+      if (child.type === "string") {
         importInfo.module = child.text.slice(1, -1); // Remove quotes
-      } else if (child.type === 'import_clause') {
+      } else if (child.type === "import_clause") {
         this.parseImportClause(child, importInfo);
-      } else if (child.type === 'type') {
+      } else if (child.type === "type") {
         importInfo.isTypeOnly = true;
       }
     }
@@ -384,26 +381,26 @@ export class TypeScriptParser implements LanguageParser {
 
   private parseImportClause(node: TSNode, importInfo: ImportInfo): void {
     for (const child of node.children) {
-      if (child.type === 'identifier') {
+      if (child.type === "identifier") {
         // Default import
         importInfo.names.push({
-          name: 'default',
+          name: "default",
           alias: child.text,
           isDefault: true,
           isNamespace: false,
           isTypeOnly: false,
         });
-      } else if (child.type === 'namespace_import') {
+      } else if (child.type === "namespace_import") {
         // import * as x
-        const alias = child.firstNamedChild?.text ?? '';
+        const alias = child.firstNamedChild?.text ?? "";
         importInfo.names.push({
-          name: '*',
+          name: "*",
           alias,
           isDefault: false,
           isNamespace: true,
           isTypeOnly: false,
         });
-      } else if (child.type === 'named_imports') {
+      } else if (child.type === "named_imports") {
         // import { x, y as z }
         this.parseNamedImports(child, importInfo);
       }
@@ -412,14 +409,14 @@ export class TypeScriptParser implements LanguageParser {
 
   private parseNamedImports(node: TSNode, importInfo: ImportInfo): void {
     for (const child of node.children) {
-      if (child.type === 'import_specifier') {
+      if (child.type === "import_specifier") {
         const parts = child.children;
-        const name = parts[0]?.text ?? '';
+        const name = parts[0]?.text ?? "";
         let alias: string | null = null;
 
         // Check for "as" alias
         for (let i = 0; i < parts.length; i++) {
-          if (parts[i]?.text === 'as' && parts[i + 1]) {
+          if (parts[i]?.text === "as" && parts[i + 1]) {
             alias = parts[i + 1]?.text ?? null;
             break;
           }
@@ -441,15 +438,18 @@ export class TypeScriptParser implements LanguageParser {
     exports: ExportInfo[],
     functions: FunctionInfo[],
     classes: ClassInfo[],
-    variables: VariableInfo[]
+    variables: VariableInfo[],
   ): void {
     const children = node.children;
     let isDefault = false;
 
     for (const child of children) {
-      if (child.type === 'default') {
+      if (child.type === "default") {
         isDefault = true;
-      } else if (child.type === 'function_declaration' || child.type === 'generator_function_declaration') {
+      } else if (
+        child.type === "function_declaration" ||
+        child.type === "generator_function_declaration"
+      ) {
         const fn = this.parseFunction(child, true, isDefault);
         functions.push(fn);
         exports.push({
@@ -461,7 +461,7 @@ export class TypeScriptParser implements LanguageParser {
           isTypeOnly: false,
           lineNumber: fn.lineNumber,
         });
-      } else if (child.type === 'class_declaration') {
+      } else if (child.type === "class_declaration") {
         const cls = this.parseClass(child, true);
         classes.push(cls);
         exports.push({
@@ -473,7 +473,7 @@ export class TypeScriptParser implements LanguageParser {
           isTypeOnly: false,
           lineNumber: cls.lineNumber,
         });
-      } else if (child.type === 'lexical_declaration' || child.type === 'variable_declaration') {
+      } else if (child.type === "lexical_declaration" || child.type === "variable_declaration") {
         const vars = this.parseVariableDeclaration(child, true);
         variables.push(...vars);
         for (const v of vars) {
@@ -491,27 +491,23 @@ export class TypeScriptParser implements LanguageParser {
     }
   }
 
-  private parseFunction(
-    node: TSNode,
-    isExported: boolean,
-    isDefault: boolean
-  ): FunctionInfo {
-    let name = '';
+  private parseFunction(node: TSNode, isExported: boolean, isDefault: boolean): FunctionInfo {
+    let name = "";
     let params: ParameterInfo[] = [];
     let returnType: string | null = null;
     const docstring: string | null = null;
     let isAsync = false;
-    const isGenerator = node.type === 'generator_function_declaration';
+    const isGenerator = node.type === "generator_function_declaration";
     const decorators: DecoratorInfo[] = [];
 
     for (const child of node.children) {
-      if (child.type === 'async') {
+      if (child.type === "async") {
         isAsync = true;
-      } else if (child.type === 'identifier') {
+      } else if (child.type === "identifier") {
         name = child.text;
-      } else if (child.type === 'formal_parameters') {
+      } else if (child.type === "formal_parameters") {
         params = this.parseParameters(child);
-      } else if (child.type === 'type_annotation') {
+      } else if (child.type === "type_annotation") {
         returnType = child.text.slice(1).trim(); // Remove leading ':'
       }
     }
@@ -525,7 +521,7 @@ export class TypeScriptParser implements LanguageParser {
       isAsync,
       isGenerator,
       isExported,
-      exportType: isDefault ? 'default' : isExported ? 'named' : 'none',
+      exportType: isDefault ? "default" : isExported ? "named" : "none",
       decorators,
       lineNumber: node.startPosition.row + 1,
       range: this.getNodeRange(node),
@@ -539,9 +535,9 @@ export class TypeScriptParser implements LanguageParser {
 
     for (const child of node.children) {
       if (
-        child.type === 'required_parameter' ||
-        child.type === 'optional_parameter' ||
-        child.type === 'rest_parameter'
+        child.type === "required_parameter" ||
+        child.type === "optional_parameter" ||
+        child.type === "rest_parameter"
       ) {
         const param = this.parseParameter(child);
         if (param) params.push(param);
@@ -552,18 +548,18 @@ export class TypeScriptParser implements LanguageParser {
   }
 
   private parseParameter(node: TSNode): ParameterInfo | null {
-    let name = '';
+    let name = "";
     let type: string | null = null;
     let defaultValue: string | null = null;
-    const isRest = node.type === 'rest_parameter';
-    const isOptional = node.type === 'optional_parameter';
+    const isRest = node.type === "rest_parameter";
+    const isOptional = node.type === "optional_parameter";
 
     for (const child of node.children) {
-      if (child.type === 'identifier') {
+      if (child.type === "identifier") {
         name = child.text;
-      } else if (child.type === 'type_annotation') {
+      } else if (child.type === "type_annotation") {
         type = child.text.slice(1).trim();
-      } else if (child.type === '=') {
+      } else if (child.type === "=") {
         // Next child is the default value
         const idx = node.children.indexOf(child);
         const nextChild = node.children[idx + 1];
@@ -585,7 +581,7 @@ export class TypeScriptParser implements LanguageParser {
   }
 
   private parseClass(node: TSNode, isExported: boolean): ClassInfo {
-    let name = '';
+    let name = "";
     const bases: string[] = [];
     const implementsList: string[] = [];
     const docstring: string | null = null;
@@ -595,26 +591,26 @@ export class TypeScriptParser implements LanguageParser {
     let isAbstract = false;
 
     for (const child of node.children) {
-      if (child.type === 'identifier' || child.type === 'type_identifier') {
+      if (child.type === "identifier" || child.type === "type_identifier") {
         name = child.text;
-      } else if (child.type === 'extends_clause') {
+      } else if (child.type === "extends_clause") {
         // Parse base classes
         for (const c of child.children) {
-          if (c.type === 'identifier' || c.type === 'generic_type') {
+          if (c.type === "identifier" || c.type === "generic_type") {
             bases.push(c.text);
           }
         }
-      } else if (child.type === 'implements_clause') {
+      } else if (child.type === "implements_clause") {
         // Parse interfaces
         for (const c of child.children) {
-          if (c.type === 'identifier' || c.type === 'generic_type') {
+          if (c.type === "identifier" || c.type === "generic_type") {
             implementsList.push(c.text);
           }
         }
-      } else if (child.type === 'class_body') {
+      } else if (child.type === "class_body") {
         // Parse members
         this.parseClassBody(child, methods, properties);
-      } else if (child.type === 'abstract') {
+      } else if (child.type === "abstract") {
         isAbstract = true;
       }
     }
@@ -627,7 +623,7 @@ export class TypeScriptParser implements LanguageParser {
       methods,
       properties,
       isExported,
-      exportType: isExported ? 'named' : 'none',
+      exportType: isExported ? "named" : "none",
       isAbstract,
       decorators,
       lineNumber: node.startPosition.row + 1,
@@ -635,18 +631,14 @@ export class TypeScriptParser implements LanguageParser {
     });
   }
 
-  private parseClassBody(
-    node: TSNode,
-    methods: FunctionInfo[],
-    properties: PropertyInfo[]
-  ): void {
+  private parseClassBody(node: TSNode, methods: FunctionInfo[], properties: PropertyInfo[]): void {
     for (const child of node.children) {
-      if (child.type === 'method_definition') {
+      if (child.type === "method_definition") {
         const method = this.parseMethod(child);
         if (method) methods.push(method);
       } else if (
-        child.type === 'public_field_definition' ||
-        child.type === 'private_field_definition'
+        child.type === "public_field_definition" ||
+        child.type === "private_field_definition"
       ) {
         const prop = this.parseProperty(child);
         if (prop) properties.push(prop);
@@ -655,33 +647,36 @@ export class TypeScriptParser implements LanguageParser {
   }
 
   private parseMethod(node: TSNode): FunctionInfo | null {
-    let name = '';
+    let name = "";
     let params: ParameterInfo[] = [];
     let returnType: string | null = null;
     let isAsync = false;
     let isGenerator = false;
     let isStatic = false;
-    let visibility: 'public' | 'private' | 'protected' = 'public';
+    let visibility: "public" | "private" | "protected" = "public";
     const decorators: DecoratorInfo[] = [];
 
     for (const child of node.children) {
-      if (child.type === 'async') {
+      if (child.type === "async") {
         isAsync = true;
-      } else if (child.type === 'static') {
+      } else if (child.type === "static") {
         isStatic = true;
-      } else if (child.type === 'property_identifier' || child.type === 'private_property_identifier') {
+      } else if (
+        child.type === "property_identifier" ||
+        child.type === "private_property_identifier"
+      ) {
         name = child.text;
-        if (child.type === 'private_property_identifier') {
-          visibility = 'private';
+        if (child.type === "private_property_identifier") {
+          visibility = "private";
         }
-      } else if (child.type === 'formal_parameters') {
+      } else if (child.type === "formal_parameters") {
         params = this.parseParameters(child);
-      } else if (child.type === 'type_annotation') {
+      } else if (child.type === "type_annotation") {
         returnType = child.text.slice(1).trim();
-      } else if (child.type === '*') {
+      } else if (child.type === "*") {
         isGenerator = true;
-      } else if (child.type === 'accessibility_modifier') {
-        visibility = child.text as 'public' | 'private' | 'protected';
+      } else if (child.type === "accessibility_modifier") {
+        visibility = child.text as "public" | "private" | "protected";
       }
     }
 
@@ -696,7 +691,7 @@ export class TypeScriptParser implements LanguageParser {
       isAsync,
       isGenerator,
       isExported: false,
-      exportType: 'none',
+      exportType: "none",
       decorators,
       lineNumber: node.startPosition.row + 1,
       range: this.getNodeRange(node),
@@ -706,28 +701,28 @@ export class TypeScriptParser implements LanguageParser {
   }
 
   private parseProperty(node: TSNode): PropertyInfo | null {
-    let name = '';
+    let name = "";
     let type: string | null = null;
-    let visibility: 'public' | 'private' | 'protected' = 'public';
+    let visibility: "public" | "private" | "protected" = "public";
     let isStatic = false;
     let isReadonly = false;
     let isOptional = false;
 
     for (const child of node.children) {
-      if (child.type === 'property_identifier' || child.type === 'private_property_identifier') {
+      if (child.type === "property_identifier" || child.type === "private_property_identifier") {
         name = child.text;
-        if (child.type === 'private_property_identifier') {
-          visibility = 'private';
+        if (child.type === "private_property_identifier") {
+          visibility = "private";
         }
-      } else if (child.type === 'type_annotation') {
+      } else if (child.type === "type_annotation") {
         type = child.text.slice(1).trim();
-      } else if (child.type === 'static') {
+      } else if (child.type === "static") {
         isStatic = true;
-      } else if (child.type === 'readonly') {
+      } else if (child.type === "readonly") {
         isReadonly = true;
-      } else if (child.type === 'accessibility_modifier') {
-        visibility = child.text as 'public' | 'private' | 'protected';
-      } else if (child.type === '?') {
+      } else if (child.type === "accessibility_modifier") {
+        visibility = child.text as "public" | "private" | "protected";
+      } else if (child.type === "?") {
         isOptional = true;
       }
     }
@@ -748,13 +743,13 @@ export class TypeScriptParser implements LanguageParser {
   }
 
   private parseInterface(node: TSNode): InterfaceInfo {
-    let name = '';
+    let name = "";
     const extendsList: string[] = [];
     const methods: FunctionInfo[] = [];
     const properties: PropertyInfo[] = [];
 
     for (const child of node.children) {
-      if (child.type === 'identifier' || child.type === 'type_identifier') {
+      if (child.type === "identifier" || child.type === "type_identifier") {
         name = child.text;
       }
     }
@@ -772,13 +767,13 @@ export class TypeScriptParser implements LanguageParser {
   }
 
   private parseTypeAlias(node: TSNode): TypeAliasInfo {
-    let name = '';
-    let definition = '';
+    let name = "";
+    let definition = "";
 
     for (const child of node.children) {
-      if (child.type === 'identifier' || child.type === 'type_identifier') {
+      if (child.type === "identifier" || child.type === "type_identifier") {
         name = child.text;
-      } else if (child.type.includes('type')) {
+      } else if (child.type.includes("type")) {
         definition = child.text;
       }
     }
@@ -792,19 +787,21 @@ export class TypeScriptParser implements LanguageParser {
     };
   }
 
-  private parseVariableDeclaration(
-    node: TSNode,
-    isExported: boolean
-  ): VariableInfo[] {
+  private parseVariableDeclaration(node: TSNode, isExported: boolean): VariableInfo[] {
     const variables: VariableInfo[] = [];
 
-    let kind: 'const' | 'let' | 'var' = 'const';
+    let kind: "const" | "let" | "var" = "const";
 
     for (const child of node.children) {
-      if (child.type === 'const' || child.type === 'let' || child.type === 'var') {
-        kind = child.type as 'const' | 'let' | 'var';
-      } else if (child.type === 'variable_declarator') {
-        const varInfo = this.parseVariableDeclarator(child, kind, isExported, node.startPosition.row + 1);
+      if (child.type === "const" || child.type === "let" || child.type === "var") {
+        kind = child.type as "const" | "let" | "var";
+      } else if (child.type === "variable_declarator") {
+        const varInfo = this.parseVariableDeclarator(
+          child,
+          kind,
+          isExported,
+          node.startPosition.row + 1,
+        );
         if (varInfo) variables.push(varInfo);
       }
     }
@@ -814,17 +811,17 @@ export class TypeScriptParser implements LanguageParser {
 
   private parseVariableDeclarator(
     node: TSNode,
-    kind: 'const' | 'let' | 'var',
+    kind: "const" | "let" | "var",
     isExported: boolean,
-    lineNumber: number
+    lineNumber: number,
   ): VariableInfo | null {
-    let name = '';
+    let name = "";
     let type: string | null = null;
 
     for (const child of node.children) {
-      if (child.type === 'identifier') {
+      if (child.type === "identifier") {
         name = child.text;
-      } else if (child.type === 'type_annotation') {
+      } else if (child.type === "type_annotation") {
         type = child.text.slice(1).trim();
       }
     }
@@ -840,10 +837,7 @@ export class TypeScriptParser implements LanguageParser {
     };
   }
 
-  private tryParseArrowFunction(
-    _node: TSNode,
-    _isExported: boolean
-  ): FunctionInfo | null {
+  private tryParseArrowFunction(_node: TSNode, _isExported: boolean): FunctionInfo | null {
     // TODO: Parse arrow functions assigned to variables
     return null;
   }
@@ -853,7 +847,7 @@ export class TypeScriptParser implements LanguageParser {
    */
   private findFunctionNode(root: TSNode, functionName: string): TSNode | null {
     // Check for Class.method format
-    const parts = functionName.split('.');
+    const parts = functionName.split(".");
     if (parts.length === 2) {
       const [className, methodName] = parts;
       return this.findMethodNode(root, className!, methodName!);
@@ -865,23 +859,20 @@ export class TypeScriptParser implements LanguageParser {
   }
 
   private searchForFunction(node: TSNode, functionName: string): TSNode | null {
-    if (
-      node.type === 'function_declaration' ||
-      node.type === 'generator_function_declaration'
-    ) {
+    if (node.type === "function_declaration" || node.type === "generator_function_declaration") {
       for (const child of node.children) {
-        if (child.type === 'identifier' && child.text === functionName) {
+        if (child.type === "identifier" && child.text === functionName) {
           return node;
         }
       }
     }
 
     // Check for exported functions
-    if (node.type === 'export_statement') {
+    if (node.type === "export_statement") {
       for (const child of node.children) {
         if (
-          child.type === 'function_declaration' ||
-          child.type === 'generator_function_declaration'
+          child.type === "function_declaration" ||
+          child.type === "generator_function_declaration"
         ) {
           const result = this.searchForFunction(child, functionName);
           if (result) return result;
@@ -890,11 +881,11 @@ export class TypeScriptParser implements LanguageParser {
     }
 
     // Check for arrow functions assigned to variables
-    if (node.type === 'lexical_declaration' || node.type === 'variable_declaration') {
+    if (node.type === "lexical_declaration" || node.type === "variable_declaration") {
       for (const child of node.children) {
-        if (child.type === 'variable_declarator') {
-          const nameNode = child.children.find((c) => c.type === 'identifier');
-          const valueNode = child.children.find((c) => c.type === 'arrow_function');
+        if (child.type === "variable_declarator") {
+          const nameNode = child.children.find((c) => c.type === "identifier");
+          const valueNode = child.children.find((c) => c.type === "arrow_function");
           if (nameNode?.text === functionName && valueNode) {
             return valueNode;
           }
@@ -911,25 +902,21 @@ export class TypeScriptParser implements LanguageParser {
     return null;
   }
 
-  private findMethodNode(
-    root: TSNode,
-    className: string,
-    methodName: string
-  ): TSNode | null {
+  private findMethodNode(root: TSNode, className: string, methodName: string): TSNode | null {
     // Find class
     const classNode = this.findClassNode(root, className);
     if (!classNode) return null;
 
     // Find class body
-    const classBody = classNode.children.find((c) => c.type === 'class_body');
+    const classBody = classNode.children.find((c) => c.type === "class_body");
     if (!classBody) return null;
 
     // Find method
     for (const child of classBody.children) {
-      if (child.type === 'method_definition') {
+      if (child.type === "method_definition") {
         for (const mc of child.children) {
           if (
-            (mc.type === 'property_identifier' || mc.type === 'private_property_identifier') &&
+            (mc.type === "property_identifier" || mc.type === "private_property_identifier") &&
             mc.text === methodName
           ) {
             return child;
@@ -942,10 +929,10 @@ export class TypeScriptParser implements LanguageParser {
   }
 
   private findClassNode(node: TSNode, className: string): TSNode | null {
-    if (node.type === 'class_declaration') {
+    if (node.type === "class_declaration") {
       for (const child of node.children) {
         if (
-          (child.type === 'identifier' || child.type === 'type_identifier') &&
+          (child.type === "identifier" || child.type === "type_identifier") &&
           child.text === className
         ) {
           return node;
@@ -954,9 +941,9 @@ export class TypeScriptParser implements LanguageParser {
     }
 
     // Check exports
-    if (node.type === 'export_statement') {
+    if (node.type === "export_statement") {
       for (const child of node.children) {
-        if (child.type === 'class_declaration') {
+        if (child.type === "class_declaration") {
           const result = this.findClassNode(child, className);
           if (result) return result;
         }
@@ -976,19 +963,19 @@ export class TypeScriptParser implements LanguageParser {
    */
   private findFunctionBody(funcNode: TSNode): TSNode | null {
     for (const child of funcNode.children) {
-      if (child.type === 'statement_block') {
+      if (child.type === "statement_block") {
         return child;
       }
       // Arrow functions might have expression body
       if (
-        funcNode.type === 'arrow_function' &&
-        child.type !== 'formal_parameters' &&
-        child.type !== '=>' &&
-        child.type !== 'identifier' &&
-        !child.type.includes('parameter')
+        funcNode.type === "arrow_function" &&
+        child.type !== "formal_parameters" &&
+        child.type !== "=>" &&
+        child.type !== "identifier" &&
+        !child.type.includes("parameter")
       ) {
         // Could be an expression body or a block
-        if (child.type === 'statement_block') {
+        if (child.type === "statement_block") {
           return child;
         }
         // Expression body - wrap in conceptual block
@@ -1002,12 +989,12 @@ export class TypeScriptParser implements LanguageParser {
     node: TSNode,
     currentFunction: string | null,
     calls: Map<string, string[]>,
-    currentClass: string | null
+    currentClass: string | null,
   ): void {
-    if (node.type === 'class_declaration') {
+    if (node.type === "class_declaration") {
       let className = currentClass;
       for (const child of node.children) {
-        if (child.type === 'identifier' || child.type === 'type_identifier') {
+        if (child.type === "identifier" || child.type === "type_identifier") {
           className = child.text;
           break;
         }
@@ -1021,14 +1008,14 @@ export class TypeScriptParser implements LanguageParser {
 
     // Track current function context
     if (
-      node.type === 'function_declaration' ||
-      node.type === 'method_definition' ||
-      node.type === 'arrow_function'
+      node.type === "function_declaration" ||
+      node.type === "method_definition" ||
+      node.type === "arrow_function"
     ) {
       // Find function name
       let funcName = currentFunction;
       for (const child of node.children) {
-        if (child.type === 'identifier' || child.type === 'property_identifier') {
+        if (child.type === "identifier" || child.type === "property_identifier") {
           funcName = child.text;
           break;
         }
@@ -1036,7 +1023,7 @@ export class TypeScriptParser implements LanguageParser {
 
       if (funcName) {
         const qualifiedName =
-          node.type === 'method_definition' && currentClass
+          node.type === "method_definition" && currentClass
             ? `${currentClass}.${funcName}`
             : funcName;
 
@@ -1053,15 +1040,15 @@ export class TypeScriptParser implements LanguageParser {
     }
 
     // Record function calls
-    if (node.type === 'call_expression' && currentFunction) {
+    if (node.type === "call_expression" && currentFunction) {
       const callee = node.firstNamedChild;
       if (callee) {
-        let calleeName = '';
-        if (callee.type === 'identifier') {
+        let calleeName = "";
+        if (callee.type === "identifier") {
           calleeName = callee.text;
-        } else if (callee.type === 'member_expression') {
+        } else if (callee.type === "member_expression") {
           // Get the method name (last part)
-          const prop = callee.children.find((c) => c.type === 'property_identifier');
+          const prop = callee.children.find((c) => c.type === "property_identifier");
           if (prop) calleeName = prop.text;
         }
 
@@ -1089,7 +1076,13 @@ class CFGBuilder {
   private filePath: string;
   private functionName: string;
   private blocks: CFGBlock[] = [];
-  private edges: Array<{ from: number; to: number; type: EdgeType; condition: string | null; isBackEdge: boolean }> = [];
+  private edges: Array<{
+    from: number;
+    to: number;
+    type: EdgeType;
+    condition: string | null;
+    isBackEdge: boolean;
+  }> = [];
   private blockId = 0;
   private currentNestingDepth = 0;
   private maxNestingDepth = 0;
@@ -1103,25 +1096,25 @@ class CFGBuilder {
 
   buildFromBody(bodyNode: TSNode): void {
     // Create entry block
-    const entryBlock = this.createBlock('entry', bodyNode);
+    const entryBlock = this.createBlock("entry", bodyNode);
 
     // Process the body
-    if (bodyNode.type === 'statement_block') {
+    if (bodyNode.type === "statement_block") {
       const exitBlocks = this.processStatements(bodyNode.children, [entryBlock.id]);
       // Create exit block and connect
-      const exitBlock = this.createBlock('exit', bodyNode);
+      const exitBlock = this.createBlock("exit", bodyNode);
       for (const blockId of exitBlocks) {
-        this.addEdge(blockId, exitBlock.id, 'unconditional');
+        this.addEdge(blockId, exitBlock.id, "unconditional");
       }
     } else {
       // Expression body (arrow function)
-      const exprBlock = this.createBlock('return', bodyNode);
+      const exprBlock = this.createBlock("return", bodyNode);
       exprBlock.statements = [this.getNodeText(bodyNode)];
       this.extractVarsFromNode(bodyNode, exprBlock);
-      this.addEdge(entryBlock.id, exprBlock.id, 'unconditional');
+      this.addEdge(entryBlock.id, exprBlock.id, "unconditional");
 
-      const exitBlock = this.createBlock('exit', bodyNode);
-      this.addEdge(exprBlock.id, exitBlock.id, 'return');
+      const exitBlock = this.createBlock("exit", bodyNode);
+      this.addEdge(exprBlock.id, exitBlock.id, "return");
     }
   }
 
@@ -1139,44 +1132,39 @@ class CFGBuilder {
   }
 
   private isIgnoredNode(node: TSNode): boolean {
-    return (
-      node.type === '{' ||
-      node.type === '}' ||
-      node.type === ';' ||
-      node.type === 'comment'
-    );
+    return node.type === "{" || node.type === "}" || node.type === ";" || node.type === "comment";
   }
 
   private processStatement(node: TSNode, predecessors: number[]): number[] {
     switch (node.type) {
-      case 'if_statement':
+      case "if_statement":
         return this.processIfStatement(node, predecessors);
 
-      case 'for_statement':
-      case 'for_in_statement':
-      case 'for_of_statement':
+      case "for_statement":
+      case "for_in_statement":
+      case "for_of_statement":
         return this.processForStatement(node, predecessors);
 
-      case 'while_statement':
+      case "while_statement":
         return this.processWhileStatement(node, predecessors);
 
-      case 'do_statement':
+      case "do_statement":
         return this.processDoWhileStatement(node, predecessors);
 
-      case 'switch_statement':
+      case "switch_statement":
         return this.processSwitchStatement(node, predecessors);
 
-      case 'try_statement':
+      case "try_statement":
         return this.processTryStatement(node, predecessors);
 
-      case 'return_statement':
+      case "return_statement":
         return this.processReturnStatement(node, predecessors);
 
-      case 'throw_statement':
+      case "throw_statement":
         return this.processThrowStatement(node, predecessors);
 
-      case 'break_statement':
-      case 'continue_statement':
+      case "break_statement":
+      case "continue_statement":
         // These will be handled by loop/switch context
         return this.processBreakContinue(node, predecessors);
 
@@ -1191,8 +1179,8 @@ class CFGBuilder {
     this.maxNestingDepth = Math.max(this.maxNestingDepth, this.currentNestingDepth);
 
     // Create branch block for the condition
-    const branchBlock = this.createBlock('branch', node);
-    const condition = node.children.find((c) => c.type === 'parenthesized_expression');
+    const branchBlock = this.createBlock("branch", node);
+    const condition = node.children.find((c) => c.type === "parenthesized_expression");
     if (condition) {
       branchBlock.statements = [this.getNodeText(condition)];
       this.extractVarsFromNode(condition, branchBlock);
@@ -1200,7 +1188,7 @@ class CFGBuilder {
 
     // Connect predecessors to branch
     for (const predId of predecessors) {
-      this.addEdge(predId, branchBlock.id, 'unconditional');
+      this.addEdge(predId, branchBlock.id, "unconditional");
     }
 
     const exitBlocks: number[] = [];
@@ -1209,17 +1197,19 @@ class CFGBuilder {
     // that comes after the condition but isn't part of else clause
     const consequence = node.children.find(
       (c) =>
-        c.type === 'statement_block' ||
-        (c.type === 'expression_statement' && c !== condition) ||
-        (c.type === 'return_statement') ||
-        (c.type === 'if_statement' && node.children.indexOf(c) < (node.children.findIndex(x => x.type === 'else_clause') || Infinity))
+        c.type === "statement_block" ||
+        (c.type === "expression_statement" && c !== condition) ||
+        c.type === "return_statement" ||
+        (c.type === "if_statement" &&
+          node.children.indexOf(c) <
+            (node.children.findIndex((x) => x.type === "else_clause") || Infinity)),
     );
     if (consequence) {
-      const thenEntry = this.createBlock('body', consequence);
-      this.addEdge(branchBlock.id, thenEntry.id, 'true', this.getConditionText(condition));
+      const thenEntry = this.createBlock("body", consequence);
+      this.addEdge(branchBlock.id, thenEntry.id, "true", this.getConditionText(condition));
 
       let thenExits: number[];
-      if (consequence.type === 'statement_block') {
+      if (consequence.type === "statement_block") {
         thenExits = this.processStatements(consequence.children, [thenEntry.id]);
       } else {
         thenEntry.statements = [this.getNodeText(consequence)];
@@ -1230,27 +1220,37 @@ class CFGBuilder {
     }
 
     // Process alternative (else branch)
-    const elseClause = node.children.find((c) => c.type === 'else_clause');
+    const elseClause = node.children.find((c) => c.type === "else_clause");
     if (elseClause) {
       const elseBody = elseClause.children.find(
-        (c) => c.type === 'statement_block' || c.type === 'if_statement'
+        (c) => c.type === "statement_block" || c.type === "if_statement",
       );
       if (elseBody) {
-        if (elseBody.type === 'if_statement') {
+        if (elseBody.type === "if_statement") {
           // else if - create explicit false edge, then recurse
           // First create a connector block for the else-if branch
-          const elseIfBranchBlock = this.createBlock('branch', elseBody);
-          this.addEdge(branchBlock.id, elseIfBranchBlock.id, 'false', `!(${this.getConditionText(condition)})`);
+          const elseIfBranchBlock = this.createBlock("branch", elseBody);
+          this.addEdge(
+            branchBlock.id,
+            elseIfBranchBlock.id,
+            "false",
+            `!(${this.getConditionText(condition)})`,
+          );
 
           // Now process the else-if with the new branch block as predecessor
           const elseIfExits = this.processIfStatement(elseBody, [elseIfBranchBlock.id]);
           exitBlocks.push(...elseIfExits);
         } else {
-          const elseEntry = this.createBlock('body', elseBody);
-          this.addEdge(branchBlock.id, elseEntry.id, 'false', `!(${this.getConditionText(condition)})`);
+          const elseEntry = this.createBlock("body", elseBody);
+          this.addEdge(
+            branchBlock.id,
+            elseEntry.id,
+            "false",
+            `!(${this.getConditionText(condition)})`,
+          );
 
           let elseExits: number[];
-          if (elseBody.type === 'statement_block') {
+          if (elseBody.type === "statement_block") {
             elseExits = this.processStatements(elseBody.children, [elseEntry.id]);
           } else {
             elseEntry.statements = [this.getNodeText(elseBody)];
@@ -1275,7 +1275,7 @@ class CFGBuilder {
     this.maxNestingDepth = Math.max(this.maxNestingDepth, this.currentNestingDepth);
 
     // Create header block for loop condition
-    const headerBlock = this.createBlock('loop_header', node);
+    const headerBlock = this.createBlock("loop_header", node);
 
     // Extract init, condition, update for for-loops
     let initNode: TSNode | null = null;
@@ -1283,19 +1283,19 @@ class CFGBuilder {
     let updateNode: TSNode | null = null;
     let body: TSNode | null = null;
 
-    if (node.type === 'for_statement') {
+    if (node.type === "for_statement") {
       // for (init; cond; update) body
       // Parse by tracking semicolons to identify init, condition, and update
       let semiCount = 0;
       for (const child of node.children) {
-        if (child.type === ';') {
+        if (child.type === ";") {
           semiCount++;
           continue;
         }
-        if (child.type === 'for' || child.type === '(' || child.type === ')') {
+        if (child.type === "for" || child.type === "(" || child.type === ")") {
           continue;
         }
-        if (child.type === 'statement_block') {
+        if (child.type === "statement_block") {
           body = child;
           continue;
         }
@@ -1310,10 +1310,12 @@ class CFGBuilder {
       }
     } else {
       // for-in / for-of
-      condNode = node.children.find(
-        (c) => c.type !== 'for' && c.type !== '(' && c.type !== ')' && c.type !== 'statement_block'
-      ) ?? null;
-      body = node.children.find((c) => c.type === 'statement_block') ?? null;
+      condNode =
+        node.children.find(
+          (c) =>
+            c.type !== "for" && c.type !== "(" && c.type !== ")" && c.type !== "statement_block",
+        ) ?? null;
+      body = node.children.find((c) => c.type === "statement_block") ?? null;
     }
 
     if (initNode) {
@@ -1331,20 +1333,20 @@ class CFGBuilder {
 
     // Connect predecessors to header
     for (const predId of predecessors) {
-      this.addEdge(predId, headerBlock.id, 'unconditional');
+      this.addEdge(predId, headerBlock.id, "unconditional");
     }
 
     // Process body
     const exitBlocks: number[] = [];
     if (body) {
-      const bodyEntry = this.createBlock('loop_body', body);
-      this.addEdge(headerBlock.id, bodyEntry.id, 'true', this.getNodeText(condNode));
+      const bodyEntry = this.createBlock("loop_body", body);
+      this.addEdge(headerBlock.id, bodyEntry.id, "true", this.getNodeText(condNode));
 
       const bodyExits = this.processStatements(body.children, [bodyEntry.id]);
 
       // Back edge to header
       for (const exitId of bodyExits) {
-        this.addEdge(exitId, headerBlock.id, 'back_edge', null, true);
+        this.addEdge(exitId, headerBlock.id, "back_edge", null, true);
       }
     }
 
@@ -1360,25 +1362,25 @@ class CFGBuilder {
     this.currentNestingDepth++;
     this.maxNestingDepth = Math.max(this.maxNestingDepth, this.currentNestingDepth);
 
-    const headerBlock = this.createBlock('loop_header', node);
-    const condition = node.children.find((c) => c.type === 'parenthesized_expression');
+    const headerBlock = this.createBlock("loop_header", node);
+    const condition = node.children.find((c) => c.type === "parenthesized_expression");
     if (condition) {
       headerBlock.statements = [this.getNodeText(condition)];
       this.extractVarsFromNode(condition, headerBlock);
     }
 
     for (const predId of predecessors) {
-      this.addEdge(predId, headerBlock.id, 'unconditional');
+      this.addEdge(predId, headerBlock.id, "unconditional");
     }
 
-    const body = node.children.find((c) => c.type === 'statement_block');
+    const body = node.children.find((c) => c.type === "statement_block");
     if (body) {
-      const bodyEntry = this.createBlock('loop_body', body);
-      this.addEdge(headerBlock.id, bodyEntry.id, 'true', this.getConditionText(condition));
+      const bodyEntry = this.createBlock("loop_body", body);
+      this.addEdge(headerBlock.id, bodyEntry.id, "true", this.getConditionText(condition));
 
       const bodyExits = this.processStatements(body.children, [bodyEntry.id]);
       for (const exitId of bodyExits) {
-        this.addEdge(exitId, headerBlock.id, 'back_edge', null, true);
+        this.addEdge(exitId, headerBlock.id, "back_edge", null, true);
       }
     }
 
@@ -1392,11 +1394,11 @@ class CFGBuilder {
     this.maxNestingDepth = Math.max(this.maxNestingDepth, this.currentNestingDepth);
 
     // Body executes first
-    const body = node.children.find((c) => c.type === 'statement_block');
-    const bodyEntry = this.createBlock('loop_body', body ?? node);
+    const body = node.children.find((c) => c.type === "statement_block");
+    const bodyEntry = this.createBlock("loop_body", body ?? node);
 
     for (const predId of predecessors) {
-      this.addEdge(predId, bodyEntry.id, 'unconditional');
+      this.addEdge(predId, bodyEntry.id, "unconditional");
     }
 
     let bodyExits: number[] = [bodyEntry.id];
@@ -1405,19 +1407,19 @@ class CFGBuilder {
     }
 
     // Then check condition
-    const condition = node.children.find((c) => c.type === 'parenthesized_expression');
-    const headerBlock = this.createBlock('loop_header', node);
+    const condition = node.children.find((c) => c.type === "parenthesized_expression");
+    const headerBlock = this.createBlock("loop_header", node);
     if (condition) {
       headerBlock.statements = [this.getNodeText(condition)];
       this.extractVarsFromNode(condition, headerBlock);
     }
 
     for (const exitId of bodyExits) {
-      this.addEdge(exitId, headerBlock.id, 'unconditional');
+      this.addEdge(exitId, headerBlock.id, "unconditional");
     }
 
     // Back edge to body
-    this.addEdge(headerBlock.id, bodyEntry.id, 'back_edge', this.getConditionText(condition), true);
+    this.addEdge(headerBlock.id, bodyEntry.id, "back_edge", this.getConditionText(condition), true);
 
     this.currentNestingDepth--;
     return [headerBlock.id];
@@ -1427,49 +1429,44 @@ class CFGBuilder {
     this.currentNestingDepth++;
     this.maxNestingDepth = Math.max(this.maxNestingDepth, this.currentNestingDepth);
 
-    const branchBlock = this.createBlock('branch', node);
-    const value = node.children.find((c) => c.type === 'parenthesized_expression');
+    const branchBlock = this.createBlock("branch", node);
+    const value = node.children.find((c) => c.type === "parenthesized_expression");
     if (value) {
       branchBlock.statements = [this.getNodeText(value)];
       this.extractVarsFromNode(value, branchBlock);
     }
 
     for (const predId of predecessors) {
-      this.addEdge(predId, branchBlock.id, 'unconditional');
+      this.addEdge(predId, branchBlock.id, "unconditional");
     }
 
-    const switchBody = node.children.find((c) => c.type === 'switch_body');
+    const switchBody = node.children.find((c) => c.type === "switch_body");
     const exitBlocks: number[] = [];
 
     if (switchBody) {
       let prevCaseExits: number[] = [];
 
       for (const child of switchBody.children) {
-        if (child.type === 'switch_case' || child.type === 'switch_default') {
+        if (child.type === "switch_case" || child.type === "switch_default") {
           this.decisionPoints++;
 
-          const isDefault = child.type === 'switch_default';
-          const caseBlock = this.createBlock('body', child);
+          const isDefault = child.type === "switch_default";
+          const caseBlock = this.createBlock("body", child);
 
           // Edge from branch to case
           const caseLabel = isDefault
-            ? 'default'
-            : child.children.find((c) => c.type !== 'case' && c.type !== ':')?.text ?? 'case';
-          this.addEdge(
-            branchBlock.id,
-            caseBlock.id,
-            isDefault ? 'default' : 'case',
-            caseLabel
-          );
+            ? "default"
+            : (child.children.find((c) => c.type !== "case" && c.type !== ":")?.text ?? "case");
+          this.addEdge(branchBlock.id, caseBlock.id, isDefault ? "default" : "case", caseLabel);
 
           // Fallthrough from previous case
           for (const prevId of prevCaseExits) {
-            this.addEdge(prevId, caseBlock.id, 'fallthrough');
+            this.addEdge(prevId, caseBlock.id, "fallthrough");
           }
 
           // Process case statements
           const stmts = child.children.filter(
-            (c) => c.type !== 'case' && c.type !== 'default' && c.type !== ':'
+            (c) => c.type !== "case" && c.type !== "default" && c.type !== ":",
           );
 
           // Start with the case block itself as the initial exit
@@ -1484,7 +1481,7 @@ class CFGBuilder {
           }
 
           // Check for break
-          const hasBreak = stmts.some((s) => s.type === 'break_statement');
+          const hasBreak = stmts.some((s) => s.type === "break_statement");
           if (hasBreak) {
             // Cases with a break exit the switch via the exits of the case body
             exitBlocks.push(...caseExits);
@@ -1511,11 +1508,11 @@ class CFGBuilder {
     const exitBlocks: number[] = [];
 
     // Try block
-    const tryBody = node.children.find((c) => c.type === 'statement_block');
+    const tryBody = node.children.find((c) => c.type === "statement_block");
     if (tryBody) {
-      const tryBlock = this.createBlock('try', tryBody);
+      const tryBlock = this.createBlock("try", tryBody);
       for (const predId of predecessors) {
-        this.addEdge(predId, tryBlock.id, 'unconditional');
+        this.addEdge(predId, tryBlock.id, "unconditional");
       }
 
       const tryExits = this.processStatements(tryBody.children, [tryBlock.id]);
@@ -1523,16 +1520,16 @@ class CFGBuilder {
     }
 
     // Catch clause
-    const catchClause = node.children.find((c) => c.type === 'catch_clause');
+    const catchClause = node.children.find((c) => c.type === "catch_clause");
     if (catchClause) {
-      const catchBody = catchClause.children.find((c) => c.type === 'statement_block');
+      const catchBody = catchClause.children.find((c) => c.type === "statement_block");
       if (catchBody) {
-        const catchBlock = this.createBlock('catch', catchBody);
+        const catchBlock = this.createBlock("catch", catchBody);
         // Exception edge from try
         if (tryBody) {
-          const tryBlockId = this.blocks.find((b) => b.type === 'try')?.id;
+          const tryBlockId = this.blocks.find((b) => b.type === "try")?.id;
           if (tryBlockId !== undefined) {
-            this.addEdge(tryBlockId, catchBlock.id, 'throw');
+            this.addEdge(tryBlockId, catchBlock.id, "throw");
           }
         }
         const catchExits = this.processStatements(catchBody.children, [catchBlock.id]);
@@ -1541,17 +1538,17 @@ class CFGBuilder {
     }
 
     // Finally clause
-    const finallyClause = node.children.find((c) => c.type === 'finally_clause');
+    const finallyClause = node.children.find((c) => c.type === "finally_clause");
     if (finallyClause) {
-      const finallyBody = finallyClause.children.find((c) => c.type === 'statement_block');
+      const finallyBody = finallyClause.children.find((c) => c.type === "statement_block");
       if (finallyBody) {
-        const finallyBlock = this.createBlock('finally', finallyBody);
+        const finallyBlock = this.createBlock("finally", finallyBody);
         // Connect all exits to finally
         const currentExits = [...exitBlocks];
         exitBlocks.length = 0;
 
         for (const exitId of currentExits) {
-          this.addEdge(exitId, finallyBlock.id, 'unconditional');
+          this.addEdge(exitId, finallyBlock.id, "unconditional");
         }
 
         const finallyExits = this.processStatements(finallyBody.children, [finallyBlock.id]);
@@ -1564,12 +1561,12 @@ class CFGBuilder {
   }
 
   private processReturnStatement(node: TSNode, predecessors: number[]): number[] {
-    const returnBlock = this.createBlock('return', node);
+    const returnBlock = this.createBlock("return", node);
     returnBlock.statements = [this.getNodeText(node)];
     this.extractVarsFromNode(node, returnBlock);
 
     for (const predId of predecessors) {
-      this.addEdge(predId, returnBlock.id, 'unconditional');
+      this.addEdge(predId, returnBlock.id, "unconditional");
     }
 
     // Return doesn't flow to next statement
@@ -1577,12 +1574,12 @@ class CFGBuilder {
   }
 
   private processThrowStatement(node: TSNode, predecessors: number[]): number[] {
-    const throwBlock = this.createBlock('throw', node);
+    const throwBlock = this.createBlock("throw", node);
     throwBlock.statements = [this.getNodeText(node)];
     this.extractVarsFromNode(node, throwBlock);
 
     for (const predId of predecessors) {
-      this.addEdge(predId, throwBlock.id, 'unconditional');
+      this.addEdge(predId, throwBlock.id, "unconditional");
     }
 
     // Throw doesn't flow to next statement
@@ -1590,12 +1587,12 @@ class CFGBuilder {
   }
 
   private processBreakContinue(node: TSNode, predecessors: number[]): number[] {
-    const blockType = node.type === 'break_statement' ? 'body' : 'body';
+    const blockType = node.type === "break_statement" ? "body" : "body";
     const block = this.createBlock(blockType, node);
     block.statements = [this.getNodeText(node)];
 
     for (const predId of predecessors) {
-      this.addEdge(predId, block.id, 'unconditional');
+      this.addEdge(predId, block.id, "unconditional");
     }
 
     // These don't flow normally - handled by loop/switch context
@@ -1603,12 +1600,12 @@ class CFGBuilder {
   }
 
   private processBasicStatement(node: TSNode, predecessors: number[]): number[] {
-    const block = this.createBlock('body', node);
+    const block = this.createBlock("body", node);
     block.statements = [this.getNodeText(node)];
     this.extractVarsFromNode(node, block);
 
     for (const predId of predecessors) {
-      this.addEdge(predId, block.id, 'unconditional');
+      this.addEdge(predId, block.id, "unconditional");
     }
 
     return [block.id];
@@ -1637,7 +1634,7 @@ class CFGBuilder {
     to: number,
     type: EdgeType,
     condition: string | null = null,
-    isBackEdge: boolean = false
+    isBackEdge: boolean = false,
   ): void {
     this.edges.push({
       from,
@@ -1649,15 +1646,15 @@ class CFGBuilder {
   }
 
   private getNodeText(node: TSNode | null | undefined): string {
-    if (!node) return '';
+    if (!node) return "";
     return node.text.trim();
   }
 
   private getConditionText(node: TSNode | null | undefined): string {
-    if (!node) return '';
+    if (!node) return "";
     // Remove outer parens
     let text = node.text.trim();
-    if (text.startsWith('(') && text.endsWith(')')) {
+    if (text.startsWith("(") && text.endsWith(")")) {
       text = text.slice(1, -1);
     }
     return text;
@@ -1669,9 +1666,9 @@ class CFGBuilder {
 
   private traverseForVars(node: TSNode, block: CFGBlock, inDefPosition: boolean): void {
     // Check for assignments (defines)
-    if (node.type === 'assignment_expression') {
+    if (node.type === "assignment_expression") {
       const left = node.children[0];
-      if (left?.type === 'identifier') {
+      if (left?.type === "identifier") {
         if (!block.defines.includes(left.text)) {
           block.defines.push(left.text);
         }
@@ -1688,14 +1685,14 @@ class CFGBuilder {
     }
 
     // Check for variable declarations (defines)
-    if (node.type === 'variable_declarator') {
-      const nameNode = node.children.find((c) => c.type === 'identifier');
+    if (node.type === "variable_declarator") {
+      const nameNode = node.children.find((c) => c.type === "identifier");
       if (nameNode && !block.defines.includes(nameNode.text)) {
         block.defines.push(nameNode.text);
       }
       // Process initializer as use position (skip the name identifier)
       for (const child of node.children) {
-        if (child.type !== 'identifier' && child.type !== '=' && child.type !== 'type_annotation') {
+        if (child.type !== "identifier" && child.type !== "=" && child.type !== "type_annotation") {
           this.traverseForVars(child, block, false);
         }
       }
@@ -1703,7 +1700,7 @@ class CFGBuilder {
     }
 
     // Check for identifiers (uses) - but not in definition position
-    if (node.type === 'identifier') {
+    if (node.type === "identifier") {
       if (!inDefPosition && !block.uses.includes(node.text) && !block.defines.includes(node.text)) {
         block.uses.push(node.text);
       }
@@ -1711,14 +1708,14 @@ class CFGBuilder {
     }
 
     // Check for function calls
-    if (node.type === 'call_expression') {
+    if (node.type === "call_expression") {
       const callee = node.firstChild;
       if (callee) {
-        let calleeName = '';
-        if (callee.type === 'identifier') {
+        let calleeName = "";
+        if (callee.type === "identifier") {
           calleeName = callee.text;
-        } else if (callee.type === 'member_expression') {
-          const prop = callee.children.find((c) => c.type === 'property_identifier');
+        } else if (callee.type === "member_expression") {
+          const prop = callee.children.find((c) => c.type === "property_identifier");
           if (prop) calleeName = prop.text;
         }
         if (calleeName && !block.calls.includes(calleeName)) {
@@ -1734,9 +1731,9 @@ class CFGBuilder {
   }
 
   getCFG(): CFGInfo {
-    const entryBlock = this.blocks.find((b) => b.type === 'entry')?.id ?? 0;
+    const entryBlock = this.blocks.find((b) => b.type === "entry")?.id ?? 0;
     const exitBlocks = this.blocks
-      .filter((b) => b.type === 'exit' || b.type === 'return' || b.type === 'throw')
+      .filter((b) => b.type === "exit" || b.type === "return" || b.type === "throw")
       .map((b) => b.id);
 
     // If no explicit exit blocks, use blocks with no outgoing edges
@@ -1789,13 +1786,13 @@ class DFGBuilder {
   extractParameters(paramsNode: TSNode): void {
     for (const child of paramsNode.children) {
       if (
-        child.type === 'required_parameter' ||
-        child.type === 'optional_parameter' ||
-        child.type === 'rest_parameter'
+        child.type === "required_parameter" ||
+        child.type === "optional_parameter" ||
+        child.type === "rest_parameter"
       ) {
-        const nameNode = child.children.find((c) => c.type === 'identifier');
+        const nameNode = child.children.find((c) => c.type === "identifier");
         if (nameNode) {
-          const ref = this.createRef(nameNode, 'param');
+          const ref = this.createRef(nameNode, "param");
           this.parameters.push(ref);
           this.addDefinition(nameNode.text, ref);
         }
@@ -1810,32 +1807,32 @@ class DFGBuilder {
 
   private traverse(node: TSNode, inAssignmentLHS: boolean): void {
     switch (node.type) {
-      case 'lexical_declaration':
-      case 'variable_declaration':
+      case "lexical_declaration":
+      case "variable_declaration":
         this.processVariableDeclaration(node);
         break;
 
-      case 'assignment_expression':
+      case "assignment_expression":
         this.processAssignment(node);
         break;
 
-      case 'update_expression':
+      case "update_expression":
         this.processUpdate(node);
         break;
 
-      case 'identifier':
+      case "identifier":
         // Only process as use if not in definition position
         if (!inAssignmentLHS) {
-          this.processIdentifier(node, 'use');
+          this.processIdentifier(node, "use");
         }
         break;
 
-      case 'return_statement':
+      case "return_statement":
         this.processReturn(node);
         break;
 
-      case 'arrow_function':
-      case 'function_expression':
+      case "arrow_function":
+      case "function_expression":
         // Nested function - captures variables from outer scope
         this.processNestedFunction(node);
         return; // Don't recurse into nested functions normally
@@ -1850,17 +1847,14 @@ class DFGBuilder {
 
   private processVariableDeclaration(node: TSNode): void {
     for (const child of node.children) {
-      if (child.type === 'variable_declarator') {
-        const nameNode = child.children.find((c) => c.type === 'identifier');
+      if (child.type === "variable_declarator") {
+        const nameNode = child.children.find((c) => c.type === "identifier");
         const valueNode = child.children.find(
-          (c) =>
-            c.type !== 'identifier' &&
-            c.type !== '=' &&
-            c.type !== 'type_annotation'
+          (c) => c.type !== "identifier" && c.type !== "=" && c.type !== "type_annotation",
         );
 
         if (nameNode) {
-          const ref = this.createRef(nameNode, 'def');
+          const ref = this.createRef(nameNode, "def");
           this.addDefinition(nameNode.text, ref);
         }
 
@@ -1878,8 +1872,8 @@ class DFGBuilder {
     const right = children[2]; // Skip '='
 
     // Left side is a definition
-    if (left?.type === 'identifier') {
-      const ref = this.createRef(left, 'def');
+    if (left?.type === "identifier") {
+      const ref = this.createRef(left, "def");
       this.addDefinition(left.text, ref);
     } else if (left) {
       // Could be member expression, etc. - traverse but mark as LHS
@@ -1894,9 +1888,9 @@ class DFGBuilder {
 
   private processUpdate(node: TSNode): void {
     // x++ or ++x is both a use and a def
-    const operand = node.children.find((c) => c.type === 'identifier');
+    const operand = node.children.find((c) => c.type === "identifier");
     if (operand) {
-      const ref = this.createRef(operand, 'update');
+      const ref = this.createRef(operand, "update");
       this.addDefinition(operand.text, ref);
     }
   }
@@ -1904,9 +1898,24 @@ class DFGBuilder {
   private processIdentifier(node: TSNode, type: RefType): void {
     // Skip keywords and built-ins
     const builtins = new Set([
-      'true', 'false', 'null', 'undefined', 'this', 'super',
-      'console', 'Math', 'Object', 'Array', 'String', 'Number',
-      'Boolean', 'Error', 'Promise', 'JSON', 'Date', 'RegExp',
+      "true",
+      "false",
+      "null",
+      "undefined",
+      "this",
+      "super",
+      "console",
+      "Math",
+      "Object",
+      "Array",
+      "String",
+      "Number",
+      "Boolean",
+      "Error",
+      "Promise",
+      "JSON",
+      "Date",
+      "RegExp",
     ]);
 
     if (builtins.has(node.text)) return;
@@ -1918,11 +1927,11 @@ class DFGBuilder {
   private processReturn(node: TSNode): void {
     // Process return value for uses
     for (const child of node.children) {
-      if (child.type === 'return') continue;
+      if (child.type === "return") continue;
 
-      if (child.type === 'identifier') {
+      if (child.type === "identifier") {
         // Create a single ref for the returned identifier and track it
-        const ref = this.createRef(child, 'use');
+        const ref = this.createRef(child, "use");
         this.returns.push(ref);
       } else {
         // For non-identifier return expressions, traverse normally
@@ -1937,16 +1946,16 @@ class DFGBuilder {
     const nestedDefs = new Set<string>();
 
     const collectVars = (n: TSNode): void => {
-      if (n.type === 'identifier') {
+      if (n.type === "identifier") {
         nestedVars.add(n.text);
       }
-      if (n.type === 'variable_declarator') {
-        const nameNode = n.children.find((c) => c.type === 'identifier');
+      if (n.type === "variable_declarator") {
+        const nameNode = n.children.find((c) => c.type === "identifier");
         if (nameNode) nestedDefs.add(nameNode.text);
       }
-      if (n.type === 'formal_parameters') {
+      if (n.type === "formal_parameters") {
         for (const c of n.children) {
-          const nameNode = c.children?.find((cc) => cc.type === 'identifier');
+          const nameNode = c.children?.find((cc) => cc.type === "identifier");
           if (nameNode) nestedDefs.add(nameNode.text);
         }
       }
@@ -1962,7 +1971,7 @@ class DFGBuilder {
       if (!nestedDefs.has(v) && this.variables.has(v)) {
         const ref: VarRef = {
           name: v,
-          type: 'capture',
+          type: "capture",
           line: node.startPosition.row + 1,
           column: node.startPosition.column,
           location: {
@@ -1971,7 +1980,7 @@ class DFGBuilder {
           },
           scope: this.currentScope,
           isInClosure: true,
-          expression: 'closure capture',
+          expression: "closure capture",
         };
         this.refs.push(ref);
       }
@@ -2014,7 +2023,7 @@ class DFGBuilder {
     // This may miss some valid edges but avoids false positives.
 
     const uses = this.refs.filter(
-      (r) => r.type === 'use' || r.type === 'update' || r.type === 'capture'
+      (r) => r.type === "use" || r.type === "update" || r.type === "capture",
     );
 
     for (const use of uses) {

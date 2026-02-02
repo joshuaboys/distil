@@ -1,8 +1,8 @@
 # @distil/cli
 
-| Scope | Owner | Priority | Status |
-|-------|-------|----------|--------|
-| CLI | @aneki | high | In Progress (L1-L5 commands complete) |
+| Scope | Owner  | Priority | Status                                |
+| ----- | ------ | -------- | ------------------------------------- |
+| CLI   | @aneki | high     | In Progress (L1-L5 commands complete) |
 
 ## Purpose
 
@@ -67,11 +67,11 @@ This is the user-facing surface of Distil. It formats analysis results for human
 
 ## Risks & Mitigations
 
-| Risk | Mitigation |
-|------|------------|
-| API key management for semantic search | Support env vars, config file, and CLI flag |
-| Large output overwhelming terminal | Default to compact format; --full for verbose |
-| Slow commands for large projects | Progress indicators; caching via Kindling |
+| Risk                                   | Mitigation                                    |
+| -------------------------------------- | --------------------------------------------- |
+| API key management for semantic search | Support env vars, config file, and CLI flag   |
+| Large output overwhelming terminal     | Default to compact format; --full for verbose |
+| Slow commands for large projects       | Progress indicators; caching via Kindling     |
 
 ## Tasks
 

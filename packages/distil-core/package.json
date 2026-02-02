@@ -31,7 +31,6 @@
     "tree-sitter-typescript": "^0.23.2",
     "ignore": "^7.0.3"
   },
-
   "optionalDependencies": {
     "tree-sitter-python": "^0.23.6",
     "tree-sitter-rust": "^0.23.2",

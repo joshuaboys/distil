@@ -2,7 +2,7 @@
 
 Token-efficient code analysis for LLMs.
 
-Modern codebases are massive. Even when a model's context window is large enough, dumping raw source buries signal under noise. Distil extracts *structure* instead of text, reducing context by **~95%** while preserving what matters for accurate reasoning.
+Modern codebases are massive. Even when a model's context window is large enough, dumping raw source buries signal under noise. Distil extracts _structure_ instead of text, reducing context by **~95%** while preserving what matters for accurate reasoning.
 
 ## How It Works
 
@@ -75,25 +75,25 @@ distil slice src/auth.ts validateToken 42 --forward
 
 ## Commands
 
-| Command | Layer | Description |
-|---------|-------|-------------|
-| `distil tree [path]` | - | File tree structure |
-| `distil extract <file>` | L1 | Functions, classes, imports, signatures |
-| `distil calls [path]` | L2 | Build project call graph |
-| `distil impact <func> [path]` | L2 | Find all callers of a function |
-| `distil cfg <file> <func>` | L3 | Control flow graph with complexity |
-| `distil dfg <file> <func>` | L4 | Data flow graph with def-use chains |
-| `distil slice <file> <func> <line>` | L5 | Program slice (backward/forward) |
+| Command                             | Layer | Description                             |
+| ----------------------------------- | ----- | --------------------------------------- |
+| `distil tree [path]`                | -     | File tree structure                     |
+| `distil extract <file>`             | L1    | Functions, classes, imports, signatures |
+| `distil calls [path]`               | L2    | Build project call graph                |
+| `distil impact <func> [path]`       | L2    | Find all callers of a function          |
+| `distil cfg <file> <func>`          | L3    | Control flow graph with complexity      |
+| `distil dfg <file> <func>`          | L4    | Data flow graph with def-use chains     |
+| `distil slice <file> <func> <line>` | L5    | Program slice (backward/forward)        |
 
 All commands support `--json` for programmatic use. Function names use fuzzy matching.
 
 ## Supported Languages
 
-| Language | L1 | L2 | L3-L5 |
-|----------|----|----|-------|
-| TypeScript/JavaScript | yes | yes | yes |
-| Python | planned | - | - |
-| Rust | planned | - | - |
+| Language              | L1      | L2  | L3-L5 |
+| --------------------- | ------- | --- | ----- |
+| TypeScript/JavaScript | yes     | yes | yes   |
+| Python                | planned | -   | -     |
+| Rust                  | planned | -   | -     |
 
 ## Architecture
 

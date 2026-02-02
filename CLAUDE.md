@@ -4,9 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Distil is a token-efficient code analysis tool for LLMs. It extracts code *structure* instead of dumping raw text, achieving ~95% token reduction while preserving everything needed to understand and edit code.
+Distil is a token-efficient code analysis tool for LLMs. It extracts code _structure_ instead of dumping raw text, achieving ~95% token reduction while preserving everything needed to understand and edit code.
 
 The tool provides 5 analysis layers:
+
 - **L1: AST** - Functions, classes, imports, signatures
 - **L2: Call Graph** - Forward/backward edges, impact analysis
 - **L3: CFG** - Control flow, cyclomatic complexity
@@ -58,6 +59,7 @@ Parsers implement the `LanguageParser` interface in `packages/distil-core/src/pa
 The `TypeScriptParser` class (`packages/distil-core/src/parsers/typescript.ts`) handles both TypeScript and JavaScript files (.ts, .tsx, .js, .jsx, .mjs, .cjs). It uses tree-sitter for parsing with lazy initialization.
 
 Key types are in `packages/distil-core/src/types/`:
+
 - `ast.ts` - L1 types (ModuleInfo, FunctionInfo, ClassInfo, etc.)
 - `callgraph.ts`, `cfg.ts`, `dfg.ts`, `pdg.ts` - L2-L5 types (stubs)
 - `common.ts` - Shared types (Language, SourceRange, etc.)
@@ -65,6 +67,7 @@ Key types are in `packages/distil-core/src/types/`:
 ### CLI Commands
 
 Commands are in `packages/distil-cli/src/commands/`. Currently implemented:
+
 - `extract` - Extract file structure (L1)
 - `tree` - Show file tree
 

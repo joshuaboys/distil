@@ -7,17 +7,17 @@
  * - Def-use chains
  */
 
-import type { SourceLocation } from './common.js';
+import type { SourceLocation } from "./common.js";
 
 /**
  * Type of variable reference
  */
 export type RefType =
-  | 'def' // Variable definition (assignment)
-  | 'use' // Variable use (read)
-  | 'update' // Variable update (read + write, e.g., x++)
-  | 'param' // Function parameter (implicit def)
-  | 'capture'; // Closure capture
+  | "def" // Variable definition (assignment)
+  | "use" // Variable use (read)
+  | "update" // Variable update (read + write, e.g., x++)
+  | "param" // Function parameter (implicit def)
+  | "capture"; // Closure capture
 
 /**
  * A variable reference (definition or use)
@@ -125,7 +125,7 @@ export interface DFGInfo {
  * Create DFGInfo with helper methods
  */
 export function createDFGInfo(
-  data: Omit<DFGInfo, 'toJSON' | 'getDefinitions' | 'getUses' | 'getUsesOfDefinition'>
+  data: Omit<DFGInfo, "toJSON" | "getDefinitions" | "getUses" | "getUsesOfDefinition">,
 ): DFGInfo {
   return {
     ...data,
@@ -153,21 +153,18 @@ export function createDFGInfo(
 
     getDefinitions(varName: string): VarRef[] {
       return this.refs.filter(
-        (r) => r.name === varName && (r.type === 'def' || r.type === 'param')
+        (r) => r.name === varName && (r.type === "def" || r.type === "param"),
       );
     },
 
     getUses(varName: string): VarRef[] {
-      return this.refs.filter((r) => r.name === varName && r.type === 'use');
+      return this.refs.filter((r) => r.name === varName && r.type === "use");
     },
 
     getUsesOfDefinition(def: VarRef): VarRef[] {
       return this.edges
         .filter(
-          (e) =>
-            e.variable === def.name &&
-            e.def.line === def.line &&
-            e.def.column === def.column
+          (e) => e.variable === def.name && e.def.line === def.line && e.def.column === def.column,
         )
         .map((e) => e.use);
     },
@@ -177,7 +174,7 @@ export function createDFGInfo(
 /**
  * Data flow analysis direction
  */
-export type FlowDirection = 'forward' | 'backward';
+export type FlowDirection = "forward" | "backward";
 
 /**
  * Common data flow analysis framework
@@ -197,11 +194,7 @@ export interface DataFlowAnalysis<T> {
  * Check if a variable is tainted (flows from untrusted source)
  * Simplified taint tracking
  */
-export function isTainted(
-  dfg: DFGInfo,
-  varName: string,
-  taintedSources: Set<string>
-): boolean {
+export function isTainted(dfg: DFGInfo, varName: string, taintedSources: Set<string>): boolean {
   const visited = new Set<string>();
 
   function trace(name: string): boolean {
@@ -211,13 +204,11 @@ export function isTainted(
     if (taintedSources.has(name)) return true;
 
     // Find all edges where this variable is used
-    const uses = dfg.refs.filter((r) => r.name === name && r.type === 'use');
+    const uses = dfg.refs.filter((r) => r.name === name && r.type === "use");
 
     for (const use of uses) {
       // Find definitions that reach this use
-      const reachingEdges = dfg.edges.filter(
-        (e) => e.variable === name && e.use.line === use.line
-      );
+      const reachingEdges = dfg.edges.filter((e) => e.variable === name && e.use.line === use.line);
 
       for (const edge of reachingEdges) {
         // Check if the definition comes from a tainted source

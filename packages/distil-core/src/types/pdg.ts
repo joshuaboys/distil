@@ -7,8 +7,8 @@
  * - Program slicing
  */
 
-import type { CFGInfo } from './cfg.js';
-import type { DFGInfo } from './dfg.js';
+import type { CFGInfo } from "./cfg.js";
+import type { DFGInfo } from "./dfg.js";
 // VarRef and SourceLocation are available but not currently used
 // import type { VarRef } from './dfg.js';
 // import type { SourceLocation } from './common.js';
@@ -17,10 +17,10 @@ import type { DFGInfo } from './dfg.js';
  * Type of dependence
  */
 export type DependenceType =
-  | 'control' // Control dependence (branch affects execution)
-  | 'data' // Data dependence (def-use relationship)
-  | 'anti' // Anti-dependence (use before def of same var)
-  | 'output'; // Output dependence (def before def of same var)
+  | "control" // Control dependence (branch affects execution)
+  | "data" // Data dependence (def-use relationship)
+  | "anti" // Anti-dependence (use before def of same var)
+  | "output"; // Output dependence (def before def of same var)
 
 /**
  * A node in the PDG (represents a statement/expression)
@@ -33,7 +33,7 @@ export interface PDGNode {
   /** Statement text (simplified) */
   statement: string;
   /** Node type */
-  type: 'entry' | 'statement' | 'predicate' | 'exit';
+  type: "entry" | "statement" | "predicate" | "exit";
   /** Variables defined */
   defines: string[];
   /** Variables used */
@@ -116,7 +116,7 @@ export interface SliceResult {
     variable: string | null;
   };
   /** Slice direction */
-  direction: 'backward' | 'forward';
+  direction: "backward" | "forward";
   /** Nodes included in slice */
   nodes: PDGNode[];
   /** Edges traversed */
@@ -131,7 +131,7 @@ export interface SliceResult {
  * Create PDGInfo with helper methods
  */
 export function createPDGInfo(
-  data: Omit<PDGInfo, 'toJSON' | 'toCompact' | 'backwardSlice' | 'forwardSlice'>
+  data: Omit<PDGInfo, "toJSON" | "toCompact" | "backwardSlice" | "forwardSlice">,
 ): PDGInfo {
   return {
     ...data,
@@ -189,11 +189,7 @@ export function createPDGInfo(
  * A backward slice includes all statements that could affect
  * the value of a variable at a given program point.
  */
-export function computeBackwardSlice(
-  pdg: PDGInfo,
-  line: number,
-  variable?: string
-): Set<number> {
+export function computeBackwardSlice(pdg: PDGInfo, line: number, variable?: string): Set<number> {
   const slice = new Set<number>();
   const visited = new Set<number>();
 
@@ -221,7 +217,7 @@ export function computeBackwardSlice(
 
     for (const edge of incomingEdges) {
       // For data dependencies, only follow if we care about the variable
-      if (edge.type === 'data' && variable && edge.variable !== variable) {
+      if (edge.type === "data" && variable && edge.variable !== variable) {
         // But also follow if source defines a variable we use
         const sourceNode = pdg.nodes.find((n) => n.id === edge.from);
         if (!sourceNode?.defines.some((d) => node.uses.includes(d))) {
@@ -245,11 +241,7 @@ export function computeBackwardSlice(
  * A forward slice includes all statements that could be affected
  * by a change at a given program point.
  */
-export function computeForwardSlice(
-  pdg: PDGInfo,
-  line: number,
-  variable?: string
-): Set<number> {
+export function computeForwardSlice(pdg: PDGInfo, line: number, variable?: string): Set<number> {
   const slice = new Set<number>();
   const visited = new Set<number>();
 
@@ -277,7 +269,7 @@ export function computeForwardSlice(
 
     for (const edge of outgoingEdges) {
       // For data dependencies, only follow if we care about the variable
-      if (edge.type === 'data' && variable && edge.variable !== variable) {
+      if (edge.type === "data" && variable && edge.variable !== variable) {
         continue;
       }
       traverse(edge.to);
@@ -306,15 +298,15 @@ export function buildPDG(cfg: CFGInfo, dfg: DFGInfo): PDGInfo {
     const node: PDGNode = {
       id: nodeId,
       line: block.lines[0],
-      statement: block.statements.join('; '),
+      statement: block.statements.join("; "),
       type:
-        block.type === 'entry'
-          ? 'entry'
-          : block.type === 'branch' || block.type === 'loop_header'
-            ? 'predicate'
+        block.type === "entry"
+          ? "entry"
+          : block.type === "branch" || block.type === "loop_header"
+            ? "predicate"
             : cfg.exitBlocks.includes(block.id)
-              ? 'exit'
-              : 'statement',
+              ? "exit"
+              : "statement",
       defines: block.defines,
       uses: block.uses,
       cfgBlockId: block.id,
@@ -330,7 +322,7 @@ export function buildPDG(cfg: CFGInfo, dfg: DFGInfo): PDGInfo {
   // - There's a path from X to Y where X determines if Y executes
   let controlEdgeCount = 0;
   for (const block of cfg.blocks) {
-    if (block.type === 'branch' || block.type === 'loop_header') {
+    if (block.type === "branch" || block.type === "loop_header") {
       const predicateNodeId = blockToNode.get(block.id);
       if (predicateNodeId === undefined) continue;
 
@@ -342,7 +334,7 @@ export function buildPDG(cfg: CFGInfo, dfg: DFGInfo): PDGInfo {
           edges.push({
             from: predicateNodeId,
             to: targetNodeId,
-            type: 'control',
+            type: "control",
             variable: null,
             label: edge.condition ?? edge.type,
           });
@@ -357,17 +349,17 @@ export function buildPDG(cfg: CFGInfo, dfg: DFGInfo): PDGInfo {
   for (const dfgEdge of dfg.edges) {
     // Find nodes for def and use
     const defNode = nodes.find(
-      (n) => n.line === dfgEdge.def.line && n.defines.includes(dfgEdge.variable)
+      (n) => n.line === dfgEdge.def.line && n.defines.includes(dfgEdge.variable),
     );
     const useNode = nodes.find(
-      (n) => n.line === dfgEdge.use.line && n.uses.includes(dfgEdge.variable)
+      (n) => n.line === dfgEdge.use.line && n.uses.includes(dfgEdge.variable),
     );
 
     if (defNode && useNode && defNode.id !== useNode.id) {
       edges.push({
         from: defNode.id,
         to: useNode.id,
-        type: 'data',
+        type: "data",
         variable: dfgEdge.variable,
         label: `${dfgEdge.variable}: ${dfgEdge.def.line}→${dfgEdge.use.line}`,
       });

@@ -8,40 +8,40 @@
 LLMs can't read entire codebases. A 100K-line codebase produces ~400K tokens, exceeding context windows. Even when it fits, LLMs drown in irrelevant details, wasting tokens on code that doesn't matter for the current task.
 
 **Why this work matters**
-Distil extracts *structure* instead of dumping *text*. It provides 5 layers of code analysis (AST, Call Graph, CFG, DFG, PDG) that give LLMs exactly what they need to understand and edit code correctly—at 95% fewer tokens than raw code.
+Distil extracts _structure_ instead of dumping _text_. It provides 5 layers of code analysis (AST, Call Graph, CFG, DFG, PDG) that give LLMs exactly what they need to understand and edit code correctly—at 95% fewer tokens than raw code.
 
 **Non-goals (explicit)**
 
-* Distil does **not** replace language servers or IDEs
-* Distil does **not** provide real-time incremental parsing (Salsa-style)
-* Distil does **not** run as a daemon (uses Kindling for persistence instead)
-* Distil does **not** include local embedding models (uses external APIs)
+- Distil does **not** replace language servers or IDEs
+- Distil does **not** provide real-time incremental parsing (Salsa-style)
+- Distil does **not** run as a daemon (uses Kindling for persistence instead)
+- Distil does **not** include local embedding models (uses external APIs)
 
 Those concerns are either out of scope or deferred to future versions.
 
 **Success Criteria**
 
-* A developer can get LLM-ready context for any function with a single command
-* Token usage is reduced by 80%+ compared to raw file reads
-* Call graph analysis enables safe refactoring with impact visibility
-* Program slicing isolates only the code affecting a specific line
-* The project integrates cleanly with Kindling for caching and persistence
-* The project is safe to open-source under Apache-2.0
+- A developer can get LLM-ready context for any function with a single command
+- Token usage is reduced by 80%+ compared to raw file reads
+- Call graph analysis enables safe refactoring with impact visibility
+- Program slicing isolates only the code affecting a specific line
+- The project integrates cleanly with Kindling for caching and persistence
+- The project is safe to open-source under Apache-2.0
 
 ---
 
 ## System Map (Current)
 
-* `@distil/core` → depends on → `tree-sitter` (+ optional language parsers)
-* `@distil/cli` → depends on → `@distil/core`
+- `@distil/core` → depends on → `tree-sitter` (+ optional language parsers)
+- `@distil/cli` → depends on → `@distil/core`
 
 ### Planned Integrations
 
-* `@distil/core` → depends on → `@kindling/core` (M2)
-* `@distil/core` → depends on → `@kindling/store-sqlite` (M2)
-* `@distil/mcp` → depends on → `@distil/core` (M6)
-* `@distil/mcp` → depends on → `@modelcontextprotocol/sdk` (M6)
-* `@distil/cli` → depends on → `@distil/mcp` (M6, optional)
+- `@distil/core` → depends on → `@kindling/core` (M2)
+- `@distil/core` → depends on → `@kindling/store-sqlite` (M2)
+- `@distil/mcp` → depends on → `@distil/core` (M6)
+- `@distil/mcp` → depends on → `@modelcontextprotocol/sdk` (M6)
+- `@distil/cli` → depends on → `@distil/mcp` (M6, optional)
 
 ---
 
@@ -49,70 +49,70 @@ Those concerns are either out of scope or deferred to future versions.
 
 ### M1: Project Scaffolding + L1 AST (Complete)
 
-* [x] Public repository created
-* [x] Package boundaries enforced (core / cli)
-* [x] Tree-sitter TypeScript/JavaScript parser integrated
-* [x] L1 AST extraction (functions, classes, imports, signatures)
-* [x] Core types defined and validated
-* [x] CLI `distil tree` and `distil extract` available
+- [x] Public repository created
+- [x] Package boundaries enforced (core / cli)
+- [x] Tree-sitter TypeScript/JavaScript parser integrated
+- [x] L1 AST extraction (functions, classes, imports, signatures)
+- [x] Core types defined and validated
+- [x] CLI `distil tree` and `distil extract` available
 
 **Target:** `distil extract <file>` works for TS/JS files ✅
 
 ### M2: L2 Call Graph + Kindling Integration (In Progress)
 
-* [x] Cross-file call graph construction
-* [x] Forward edges (what does this function call?)
-* [x] Backward edges (what calls this function?)
-* [ ] Kindling integration for caching analysis results
-* [x] Impact analysis command
+- [x] Cross-file call graph construction
+- [x] Forward edges (what does this function call?)
+- [x] Backward edges (what calls this function?)
+- [ ] Kindling integration for caching analysis results
+- [x] Impact analysis command
 
 **Target:** `distil impact <function>` shows all callers ✅
 
 ### M3: L3-L5 Analysis Layers (Complete)
 
-* [x] L3: Control Flow Graph extraction with cyclomatic complexity
-* [x] L4: Data Flow Graph with def-use chains
-* [x] L5: Program Dependence Graph with backward/forward slicing
-* [x] `distil cfg`, `distil dfg`, `distil slice` commands
+- [x] L3: Control Flow Graph extraction with cyclomatic complexity
+- [x] L4: Data Flow Graph with def-use chains
+- [x] L5: Program Dependence Graph with backward/forward slicing
+- [x] `distil cfg`, `distil dfg`, `distil slice` commands
 
 **Target:** `distil slice <file> <func> <line>` returns relevant lines only ✅
 
 ### M4: Ignore Patterns + Monorepo Support (Planned)
 
-* [ ] `.distilignore` file support (`.gitignore` syntax)
-* [ ] Monorepo workspace detection (pnpm, npm, lerna)
-* [ ] Cross-package call graph resolution
-* [ ] `--package` scoping flag
-* [ ] `--no-ignore` override flag
+- [ ] `.distilignore` file support (`.gitignore` syntax)
+- [ ] Monorepo workspace detection (pnpm, npm, lerna)
+- [ ] Cross-package call graph resolution
+- [ ] `--package` scoping flag
+- [ ] `--no-ignore` override flag
 
 **Target:** Distil works correctly in monorepos and respects project ignore patterns
 
 ### M5: Semantic Search + CLI Polish (Planned)
 
-* [ ] External embeddings API integration (OpenAI/Anthropic)
-* [ ] Semantic search over function behaviors
-* [ ] Index warming command with progress display
-* [ ] `distil context` LLM-ready output command
-* [ ] Output formatting system (--json, --compact)
-* [ ] Configuration file support (`.distil/config.json`)
+- [ ] External embeddings API integration (OpenAI/Anthropic)
+- [ ] Semantic search over function behaviors
+- [ ] Index warming command with progress display
+- [ ] `distil context` LLM-ready output command
+- [ ] Output formatting system (--json, --compact)
+- [ ] Configuration file support (`.distil/config.json`)
 
 **Target:** `distil semantic "validate JWT tokens"` finds relevant functions
 
 ### M6: MCP Server (Planned)
 
-* [ ] MCP server package (`@distil/mcp`)
-* [ ] Tool definitions for all analysis layers
-* [ ] Resource and prompt definitions
-* [ ] `distil mcp` CLI subcommand
-* [ ] Editor integration testing (Claude Code, Cursor)
+- [ ] MCP server package (`@distil/mcp`)
+- [ ] Tool definitions for all analysis layers
+- [ ] Resource and prompt definitions
+- [ ] `distil mcp` CLI subcommand
+- [ ] Editor integration testing (Claude Code, Cursor)
 
 **Target:** Editors and agents query Distil analysis via MCP protocol
 
 ### M7: Multi-Language Support (Planned)
 
-* [ ] Python language support (all layers)
-* [ ] Rust language support (all layers)
-* [ ] C# language support (all layers)
+- [ ] Python language support (all layers)
+- [ ] Rust language support (all layers)
+- [ ] C# language support (all layers)
 
 **Target:** Full parity for Python, Rust, C# alongside TypeScript/JavaScript
 
@@ -122,55 +122,55 @@ Those concerns are either out of scope or deferred to future versions.
 
 ### @distil/core
 
-* **Path:** ./modules/distil-core.aps.md
-* **Scope:** CORE
-* **Owner:** @aneki
-* **Status:** In Progress (L1-L5 complete, Kindling pending)
-* **Priority:** high
-* **Tags:** analysis, ast, callgraph, cfg, dfg, pdg
-* **Dependencies:** tree-sitter (current), @kindling/core/@kindling/store-sqlite (planned)
+- **Path:** ./modules/distil-core.aps.md
+- **Scope:** CORE
+- **Owner:** @aneki
+- **Status:** In Progress (L1-L5 complete, Kindling pending)
+- **Priority:** high
+- **Tags:** analysis, ast, callgraph, cfg, dfg, pdg
+- **Dependencies:** tree-sitter (current), @kindling/core/@kindling/store-sqlite (planned)
 
 ### @distil/cli
 
-* **Path:** ./modules/distil-cli.aps.md
-* **Scope:** CLI
-* **Owner:** @aneki
-* **Status:** In Progress (tree/extract/calls/impact/cfg/dfg/slice commands)
-* **Priority:** high
-* **Tags:** cli, tooling
-* **Dependencies:** @distil/core
+- **Path:** ./modules/distil-cli.aps.md
+- **Scope:** CLI
+- **Owner:** @aneki
+- **Status:** In Progress (tree/extract/calls/impact/cfg/dfg/slice commands)
+- **Priority:** high
+- **Tags:** cli, tooling
+- **Dependencies:** @distil/core
 
 ### @distil/mcp
 
-* **Path:** ./modules/distil-mcp.aps.md
-* **Scope:** MCP
-* **Owner:** @aneki
-* **Status:** Planned
-* **Priority:** medium
-* **Tags:** mcp, integration, editor
-* **Dependencies:** @distil/core, @modelcontextprotocol/sdk
+- **Path:** ./modules/distil-mcp.aps.md
+- **Scope:** MCP
+- **Owner:** @aneki
+- **Status:** Planned
+- **Priority:** medium
+- **Tags:** mcp, integration, editor
+- **Dependencies:** @distil/core, @modelcontextprotocol/sdk
 
 ---
 
 ## Decisions
 
-* **D-001:** Distil uses Kindling for caching, not a custom daemon or file-based cache
-* **D-002:** Tree-sitter is the parsing foundation for all language support
-* **D-003:** Analysis layers are composable; higher layers build on lower ones
-* **D-004:** Observation kinds in Kindling are generic (`code.symbol`, `code.callgraph`, etc.); Distil-specific detail lives in metadata
-* **D-005:** Database location defaults to `.kindling/distil.db`, configurable via CLI/env/config
-* **D-006:** Future language parsers (Python, Rust, C#) are optional peer dependencies
-* **D-007:** Semantic search uses external embedding APIs (OpenAI/Anthropic), not local models
-* **D-008:** TypeScript/JavaScript are the initial supported languages; others are future milestones
-* **D-009:** MCP server uses stdio transport; started via `distil mcp` or configured in editor settings
-* **D-010:** `.distilignore` uses `.gitignore` syntax and is checked into version control
-* **D-011:** Monorepo detection is automatic; `--package` flag for explicit scoping
+- **D-001:** Distil uses Kindling for caching, not a custom daemon or file-based cache
+- **D-002:** Tree-sitter is the parsing foundation for all language support
+- **D-003:** Analysis layers are composable; higher layers build on lower ones
+- **D-004:** Observation kinds in Kindling are generic (`code.symbol`, `code.callgraph`, etc.); Distil-specific detail lives in metadata
+- **D-005:** Database location defaults to `.kindling/distil.db`, configurable via CLI/env/config
+- **D-006:** Future language parsers (Python, Rust, C#) are optional peer dependencies
+- **D-007:** Semantic search uses external embedding APIs (OpenAI/Anthropic), not local models
+- **D-008:** TypeScript/JavaScript are the initial supported languages; others are future milestones
+- **D-009:** MCP server uses stdio transport; started via `distil mcp` or configured in editor settings
+- **D-010:** `.distilignore` uses `.gitignore` syntax and is checked into version control
+- **D-011:** Monorepo detection is automatic; `--package` flag for explicit scoping
 
 ---
 
 ## Open Questions
 
-*No open questions at this time.*
+_No open questions at this time._
 
 ---
 
@@ -181,6 +181,7 @@ Those concerns are either out of scope or deferred to future versions.
 **Decision:** Treat JSX/TSX as variants of JS/TS, not distinct languages.
 
 **Rationale:**
+
 - Tree-sitter already handles this via grammar switching (TSX grammar for .tsx/.jsx)
 - Simpler API with unified `typescript`/`javascript` language identifiers
 - Matches industry standard tooling behavior
@@ -193,15 +194,18 @@ Those concerns are either out of scope or deferred to future versions.
 **Decision:** Use nearest tsconfig.json heuristic with explicit override support.
 
 **Rationale:**
+
 - Works naturally for most monorepo structures
 - Explicit `--project` flag covers edge cases
 - Avoids over-engineering for M1-M2
 
 **Implementation (M1-M2):**
+
 - Find nearest `tsconfig.json` walking up from file
 - Add `--project <path>` CLI flag for explicit override
 
 **Implementation (M3+):**
+
 - Add workspace detection (pnpm-workspace.yaml, package.json workspaces)
 - Add `.distil/config.json` for complex configurations
 - Cache tsconfig parsing per-project

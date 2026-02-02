@@ -5,10 +5,10 @@
  * CFG, DFG, and PDG from source files.
  */
 
-import { readFile } from 'fs/promises';
-import { resolve } from 'path';
-import { getParser } from './parsers/index.js';
-import type { CFGInfo, DFGInfo, PDGInfo } from './types/index.js';
+import { readFile } from "fs/promises";
+import { resolve } from "path";
+import { getParser } from "./parsers/index.js";
+import type { CFGInfo, DFGInfo, PDGInfo } from "./types/index.js";
 
 /**
  * Extract Control Flow Graph (L3) for a function
@@ -23,17 +23,14 @@ import type { CFGInfo, DFGInfo, PDGInfo } from './types/index.js';
  * console.log(`Complexity: ${cfg?.cyclomaticComplexity}`);
  * ```
  */
-export async function extractCFG(
-  filePath: string,
-  functionName: string
-): Promise<CFGInfo | null> {
+export async function extractCFG(filePath: string, functionName: string): Promise<CFGInfo | null> {
   const absPath = resolve(filePath);
   const parser = getParser(absPath);
   if (!parser) {
     throw new Error(`No parser available for file: ${filePath}`);
   }
 
-  const source = await readFile(absPath, 'utf-8');
+  const source = await readFile(absPath, "utf-8");
   return parser.extractCFG(source, functionName, absPath);
 }
 
@@ -50,17 +47,14 @@ export async function extractCFG(
  * console.log(`Variables: ${dfg?.variables.join(', ')}`);
  * ```
  */
-export async function extractDFG(
-  filePath: string,
-  functionName: string
-): Promise<DFGInfo | null> {
+export async function extractDFG(filePath: string, functionName: string): Promise<DFGInfo | null> {
   const absPath = resolve(filePath);
   const parser = getParser(absPath);
   if (!parser) {
     throw new Error(`No parser available for file: ${filePath}`);
   }
 
-  const source = await readFile(absPath, 'utf-8');
+  const source = await readFile(absPath, "utf-8");
   return parser.extractDFG(source, functionName, absPath);
 }
 
@@ -78,16 +72,13 @@ export async function extractDFG(
  * const slice = pdg?.backwardSlice(42, 'token');
  * ```
  */
-export async function extractPDG(
-  filePath: string,
-  functionName: string
-): Promise<PDGInfo | null> {
+export async function extractPDG(filePath: string, functionName: string): Promise<PDGInfo | null> {
   const absPath = resolve(filePath);
   const parser = getParser(absPath);
   if (!parser) {
     throw new Error(`No parser available for file: ${filePath}`);
   }
 
-  const source = await readFile(absPath, 'utf-8');
+  const source = await readFile(absPath, "utf-8");
   return parser.extractPDG(source, functionName, absPath);
 }

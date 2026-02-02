@@ -61,7 +61,7 @@ export interface CallEdge {
   /** Is this a dynamic call (can't statically resolve) */
   isDynamic: boolean;
   /** Call type */
-  callType: 'direct' | 'method' | 'constructor' | 'callback' | 'dynamic';
+  callType: "direct" | "method" | "constructor" | "callback" | "dynamic";
 }
 
 /**
@@ -149,9 +149,7 @@ export interface CallGraphStats {
 /**
  * Create empty project call graph
  */
-export function createProjectCallGraph(
-  projectRoot: string
-): ProjectCallGraph {
+export function createProjectCallGraph(projectRoot: string): ProjectCallGraph {
   return {
     projectRoot,
     edges: [],
@@ -166,10 +164,7 @@ export function createProjectCallGraph(
 /**
  * Add an edge to the call graph
  */
-export function addCallEdge(
-  graph: ProjectCallGraph,
-  edge: CallEdge
-): void {
+export function addCallEdge(graph: ProjectCallGraph, edge: CallEdge): void {
   graph.edges.push(edge);
 
   // Update forward index
@@ -193,7 +188,7 @@ export function addCallEdge(
 export function getCallers(
   graph: ProjectCallGraph,
   qualifiedName: string,
-  maxDepth: number = 10
+  maxDepth: number = 10,
 ): CallSite[] {
   const visited = new Set<string>();
   const result: CallSite[] = [];
@@ -219,7 +214,7 @@ export function getCallers(
 export function getCallees(
   graph: ProjectCallGraph,
   qualifiedName: string,
-  maxDepth: number = 10
+  maxDepth: number = 10,
 ): FunctionLocation[] {
   const visited = new Set<string>();
   const result: FunctionLocation[] = [];
