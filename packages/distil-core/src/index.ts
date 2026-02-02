@@ -25,23 +25,23 @@
  * ```
  */
 
-import { readFile, readdir } from 'fs/promises';
-import { join, relative, resolve } from 'path';
+import { readFile, readdir } from "fs/promises";
+import { join, relative, resolve } from "path";
 import {
   addCallEdge,
   createProjectCallGraph,
   type CallEdge,
   type FunctionLocation,
   type ProjectCallGraph,
-} from './types/callgraph.js';
-import { LANGUAGE_EXTENSIONS } from './types/common.js';
-import { getParser } from './parsers/index.js';
+} from "./types/callgraph.js";
+import { LANGUAGE_EXTENSIONS } from "./types/common.js";
+import { getParser } from "./parsers/index.js";
 
 // Type exports
-export * from './types/index.js';
+export * from "./types/index.js";
 
 // Parser exports
-export { getParser, type LanguageParser } from './parsers/index.js';
+export { getParser, type LanguageParser } from "./parsers/index.js";
 
 // Extractor exports (to be implemented)
 // export { extractFile } from './extractors/ast/index.js';
@@ -51,7 +51,7 @@ export { getParser, type LanguageParser } from './parsers/index.js';
 // export { extractPDG, getSlice } from './extractors/pdg/index.js';
 
 // Analysis layer extractors
-export { extractCFG, extractDFG, extractPDG } from './extractors.js';
+export { extractCFG, extractDFG, extractPDG } from "./extractors.js";
 
 // API exports (to be implemented)
 // export { getRelevantContext } from './api/context.js';
@@ -73,7 +73,7 @@ export async function buildCallGraph(projectRoot: string): Promise<ProjectCallGr
     const parser = getParser(filePath);
     if (!parser) continue;
 
-    const source = await readFile(filePath, 'utf-8');
+    const source = await readFile(filePath, "utf-8");
     const moduleInfo = await parser.extractAST(source, filePath);
     const calls = await parser.extractCalls(source, filePath);
 
@@ -103,7 +103,10 @@ export async function buildCallGraph(projectRoot: string): Promise<ProjectCallGr
           line: method.lineNumber,
           isExported: cls.isExported,
         });
-        registerFunctionLocation(fileFunctions, nameIndex, graph, location, [methodKey, method.name]);
+        registerFunctionLocation(fileFunctions, nameIndex, graph, location, [
+          methodKey,
+          method.name,
+        ]);
       }
     }
 
@@ -122,14 +125,14 @@ export async function buildCallGraph(projectRoot: string): Promise<ProjectCallGr
         const { location: calleeLocation, isDynamic } = resolveCallee(
           calleeName,
           fileFunctions,
-          nameIndex
+          nameIndex,
         );
-        const isMethodCall = calleeName.includes('.');
-        const callType: CallEdge['callType'] = isDynamic
-          ? 'dynamic'
+        const isMethodCall = calleeName.includes(".");
+        const callType: CallEdge["callType"] = isDynamic
+          ? "dynamic"
           : isMethodCall
-            ? 'method'
-            : 'direct';
+            ? "method"
+            : "direct";
         const edge: CallEdge = {
           caller: callerLocation,
           callee: calleeName,
@@ -155,25 +158,25 @@ export async function buildCallGraph(projectRoot: string): Promise<ProjectCallGr
 }
 
 const IGNORE_DIRS = new Set([
-  'node_modules',
-  '.git',
-  '.svn',
-  '.hg',
-  'dist',
-  'build',
-  '.next',
-  '.nuxt',
-  'coverage',
-  '.tox',
-  'venv',
-  '.venv',
-  '__pycache__',
-  '.cache',
-  '.kindling',
-  '.distil',
+  "node_modules",
+  ".git",
+  ".svn",
+  ".hg",
+  "dist",
+  "build",
+  ".next",
+  ".nuxt",
+  "coverage",
+  ".tox",
+  "venv",
+  ".venv",
+  "__pycache__",
+  ".cache",
+  ".kindling",
+  ".distil",
 ]);
 
-const IGNORE_FILES = new Set(['.DS_Store', 'Thumbs.db', '.gitkeep']);
+const IGNORE_FILES = new Set([".DS_Store", "Thumbs.db", ".gitkeep"]);
 
 async function collectSourceFiles(rootPath: string): Promise<string[]> {
   const results: string[] = [];
@@ -187,7 +190,7 @@ async function collectSourceFiles(rootPath: string): Promise<string[]> {
     }
 
     for (const entry of entries) {
-      if (entry.name.startsWith('.')) continue;
+      if (entry.name.startsWith(".")) continue;
       if (IGNORE_FILES.has(entry.name)) continue;
       const fullPath = join(dirPath, entry.name);
 
@@ -198,7 +201,7 @@ async function collectSourceFiles(rootPath: string): Promise<string[]> {
       }
 
       if (!entry.isFile()) continue;
-      const ext = entry.name.slice(entry.name.lastIndexOf('.'));
+      const ext = entry.name.slice(entry.name.lastIndexOf("."));
       if (!LANGUAGE_EXTENSIONS[ext]) continue;
       results.push(fullPath);
     }
@@ -210,8 +213,8 @@ async function collectSourceFiles(rootPath: string): Promise<string[]> {
 }
 
 function getModuleName(rootPath: string, filePath: string): string {
-  const relPath = relative(rootPath, filePath).replace(/\\/g, '/');
-  return relPath.replace(/\.[^/.]+$/, '');
+  const relPath = relative(rootPath, filePath).replace(/\\/g, "/");
+  return relPath.replace(/\.[^/.]+$/, "");
 }
 
 function createFunctionLocation(input: {
@@ -235,7 +238,7 @@ function registerFunctionLocation(
   nameIndex: Map<string, FunctionLocation[]>,
   graph: ProjectCallGraph,
   location: FunctionLocation,
-  lookupKeys: string[]
+  lookupKeys: string[],
 ): void {
   graph.functions.set(location.qualifiedName, location);
   for (const key of lookupKeys) {
@@ -253,7 +256,7 @@ function registerFunctionLocation(
 function resolveCallee(
   calleeName: string,
   fileFunctions: Map<string, FunctionLocation>,
-  nameIndex: Map<string, FunctionLocation[]>
+  nameIndex: Map<string, FunctionLocation[]>,
 ): { location: FunctionLocation | null; isDynamic: boolean } {
   const localMatch = fileFunctions.get(calleeName);
   if (localMatch) {
@@ -269,4 +272,4 @@ function resolveCallee(
 }
 
 // Version
-export const VERSION = '0.1.0';
+export const VERSION = "0.1.0";

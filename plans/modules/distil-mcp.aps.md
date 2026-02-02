@@ -1,8 +1,8 @@
 # @distil/mcp
 
-| Scope | Owner | Priority | Status |
-|-------|-------|----------|--------|
-| MCP | @aneki | medium | Planned |
+| Scope | Owner  | Priority | Status  |
+| ----- | ------ | -------- | ------- |
+| MCP   | @aneki | medium   | Planned |
 
 ## Purpose
 
@@ -72,11 +72,11 @@ This is the integration surface for editor plugins and AI coding agents that sup
 
 ## Risks & Mitigations
 
-| Risk | Mitigation |
-|------|------------|
-| MCP SDK API instability | Pin SDK version; wrap in thin adapter layer |
+| Risk                                             | Mitigation                                     |
+| ------------------------------------------------ | ---------------------------------------------- |
+| MCP SDK API instability                          | Pin SDK version; wrap in thin adapter layer    |
 | Large analysis results exceed MCP message limits | Paginate results; offer summary vs. full modes |
-| Cold start latency for analysis | Cache via Kindling; lazy initialization |
+| Cold start latency for analysis                  | Cache via Kindling; lazy initialization        |
 
 ## Tasks
 

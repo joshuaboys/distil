@@ -5,13 +5,7 @@
  * consistent behavior across different languages.
  */
 
-import type {
-  Language,
-  ModuleInfo,
-  CFGInfo,
-  DFGInfo,
-  PDGInfo,
-} from '../types/index.js';
+import type { Language, ModuleInfo, CFGInfo, DFGInfo, PDGInfo } from "../types/index.js";
 
 /**
  * Language parser interface
@@ -57,11 +51,7 @@ export interface LanguageParser {
    * @param filePath - File path
    * @returns CFGInfo or null if function not found
    */
-  extractCFG(
-    source: string,
-    functionName: string,
-    filePath: string
-  ): Promise<CFGInfo | null>;
+  extractCFG(source: string, functionName: string, filePath: string): Promise<CFGInfo | null>;
 
   /**
    * L4: Extract data flow graph for a function
@@ -71,11 +61,7 @@ export interface LanguageParser {
    * @param filePath - File path
    * @returns DFGInfo or null if function not found
    */
-  extractDFG(
-    source: string,
-    functionName: string,
-    filePath: string
-  ): Promise<DFGInfo | null>;
+  extractDFG(source: string, functionName: string, filePath: string): Promise<DFGInfo | null>;
 
   /**
    * L5: Extract program dependence graph for a function
@@ -85,11 +71,7 @@ export interface LanguageParser {
    * @param filePath - File path
    * @returns PDGInfo or null if function not found
    */
-  extractPDG(
-    source: string,
-    functionName: string,
-    filePath: string
-  ): Promise<PDGInfo | null>;
+  extractPDG(source: string, functionName: string, filePath: string): Promise<PDGInfo | null>;
 }
 
 /**

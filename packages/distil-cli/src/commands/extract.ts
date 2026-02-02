@@ -4,26 +4,26 @@
  * Extracts file structure (L1 AST) from a source file.
  */
 
-import { Command } from 'commander';
-import { readFile } from 'fs/promises';
-import { resolve } from 'path';
-import { getParser, LANGUAGE_EXTENSIONS, type ModuleInfo } from '@distil/core';
+import { Command } from "commander";
+import { readFile } from "fs/promises";
+import { resolve } from "path";
+import { getParser, LANGUAGE_EXTENSIONS, type ModuleInfo } from "@distil/core";
 
-export const extractCommand = new Command('extract')
-  .description('Extract file structure (L1 AST)')
-  .argument('<file>', 'File to analyze')
-  .option('--json', 'Output as JSON')
-  .option('--compact', 'Output compact format for LLM')
+export const extractCommand = new Command("extract")
+  .description("Extract file structure (L1 AST)")
+  .argument("<file>", "File to analyze")
+  .option("--json", "Output as JSON")
+  .option("--compact", "Output compact format for LLM")
   .action(async (file: string, options: { json?: boolean; compact?: boolean }) => {
     try {
       const filePath = resolve(file);
-      const source = await readFile(filePath, 'utf-8');
+      const source = await readFile(filePath, "utf-8");
 
       const parser = getParser(filePath);
       if (!parser) {
         const supported = Object.entries(LANGUAGE_EXTENSIONS)
           .map(([ext, lang]) => `  ${ext} (${lang})`)
-          .join('\n');
+          .join("\n");
         console.error(`Unsupported file type: ${file}\n\nSupported extensions:\n${supported}`);
         process.exit(1);
       }
@@ -45,21 +45,22 @@ export const extractCommand = new Command('extract')
   });
 
 function printModuleInfo(info: ModuleInfo): void {
-  const fileName = info.filePath.split('/').pop() ?? info.filePath;
+  const fileName = info.filePath.split("/").pop() ?? info.filePath;
   console.log(`\n${fileName} (${info.language})`);
-  console.log('-'.repeat(50));
+  console.log("-".repeat(50));
 
   if (info.docstring) {
-    console.log(`\n${info.docstring.slice(0, 100)}${info.docstring.length > 100 ? '...' : ''}`);
+    console.log(`\n${info.docstring.slice(0, 100)}${info.docstring.length > 100 ? "..." : ""}`);
   }
 
   if (info.imports.length > 0) {
     console.log(`\nImports (${info.imports.length}):`);
     for (const imp of info.imports.slice(0, 10)) {
-      const filteredNames = imp.names.filter((n: { name: string }) => n.name !== 'type');
-      const names = filteredNames.length > 0
-        ? `{ ${filteredNames.map((n: { alias: string | null; name: string }) => n.alias ?? n.name).join(', ')} }`
-        : '';
+      const filteredNames = imp.names.filter((n: { name: string }) => n.name !== "type");
+      const names =
+        filteredNames.length > 0
+          ? `{ ${filteredNames.map((n: { alias: string | null; name: string }) => n.alias ?? n.name).join(", ")} }`
+          : "";
       console.log(`   ${imp.module} ${names}`);
     }
     if (info.imports.length > 10) {
@@ -70,7 +71,7 @@ function printModuleInfo(info: ModuleInfo): void {
   if (info.functions.length > 0) {
     console.log(`\nFunctions (${info.functions.length}):`);
     for (const fn of info.functions) {
-      const exported = fn.isExported ? '[export] ' : '';
+      const exported = fn.isExported ? "[export] " : "";
       console.log(`   ${exported}${fn.signature()}`);
     }
   }
@@ -78,10 +79,10 @@ function printModuleInfo(info: ModuleInfo): void {
   if (info.classes.length > 0) {
     console.log(`\nClasses (${info.classes.length}):`);
     for (const cls of info.classes) {
-      const exported = cls.isExported ? '[export] ' : '';
+      const exported = cls.isExported ? "[export] " : "";
       console.log(`   ${exported}${cls.signature()}`);
       for (const method of cls.methods.slice(0, 5)) {
-        const vis = method.visibility === 'private' ? '[private] ' : '';
+        const vis = method.visibility === "private" ? "[private] " : "";
         console.log(`      ${vis}${method.name}()`);
       }
       if (cls.methods.length > 5) {
@@ -104,5 +105,5 @@ function printModuleInfo(info: ModuleInfo): void {
     }
   }
 
-  console.log('\n');
+  console.log("\n");
 }

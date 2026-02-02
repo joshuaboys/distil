@@ -1,8 +1,8 @@
 # @distil/core
 
-| Scope | Owner | Priority | Status |
-|-------|-------|----------|--------|
-| CORE | @aneki | high | In Progress (L1-L5 complete, Kindling pending) |
+| Scope | Owner  | Priority | Status                                         |
+| ----- | ------ | -------- | ---------------------------------------------- |
+| CORE  | @aneki | high     | In Progress (L1-L5 complete, Kindling pending) |
 
 ## Purpose
 
@@ -68,11 +68,11 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 
 ## Risks & Mitigations
 
-| Risk | Mitigation |
-|------|------------|
-| Tree-sitter Node.js bindings instability | Pin versions; test on multiple Node versions |
-| CFG/DFG complexity for edge cases | Start with common patterns; iterate based on real usage |
-| Kindling schema changes | Use versioned metadata; coordinate releases |
+| Risk                                     | Mitigation                                              |
+| ---------------------------------------- | ------------------------------------------------------- |
+| Tree-sitter Node.js bindings instability | Pin versions; test on multiple Node versions            |
+| CFG/DFG complexity for edge cases        | Start with common patterns; iterate based on real usage |
+| Kindling schema changes                  | Use versioned metadata; coordinate releases             |
 
 ## Tasks
 
@@ -157,12 +157,13 @@ This is the analytical spine of Distil. It extracts structure from code and prod
    - `analysis.metric` — Complexity, coverage
 
 2. **Distil Metadata Schema:**
+
    ```typescript
    interface DistilObservationMeta {
-     producer: 'tldr';
-     subkind: string;  // e.g., 'tldr.ast.function'
+     producer: "tldr";
+     subkind: string; // e.g., 'tldr.ast.function'
      language: Language;
-     schemaVersion: '1';
+     schemaVersion: "1";
      payload: unknown;
    }
    ```

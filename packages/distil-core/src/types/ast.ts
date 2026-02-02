@@ -8,7 +8,7 @@
  * - Module structure
  */
 
-import type { Language, SourceRange } from './common.js';
+import type { Language, SourceRange } from "./common.js";
 
 /**
  * Parameter information for functions/methods
@@ -59,7 +59,7 @@ export interface FunctionInfo {
   /** Is exported */
   isExported: boolean;
   /** Export type (named, default, none) */
-  exportType: 'named' | 'default' | 'none';
+  exportType: "named" | "default" | "none";
   /** Decorators/attributes */
   decorators: DecoratorInfo[];
   /** Line number (1-based) */
@@ -67,7 +67,7 @@ export interface FunctionInfo {
   /** Source range */
   range: SourceRange;
   /** Visibility (for class methods) */
-  visibility: 'public' | 'private' | 'protected' | null;
+  visibility: "public" | "private" | "protected" | null;
   /** Is static (for class methods) */
   isStatic: boolean;
 
@@ -88,7 +88,7 @@ export interface PropertyInfo {
   /** Default value */
   defaultValue: string | null;
   /** Visibility */
-  visibility: 'public' | 'private' | 'protected';
+  visibility: "public" | "private" | "protected";
   /** Is static */
   isStatic: boolean;
   /** Is readonly */
@@ -120,7 +120,7 @@ export interface ClassInfo {
   /** Is exported */
   isExported: boolean;
   /** Export type */
-  exportType: 'named' | 'default' | 'none';
+  exportType: "named" | "default" | "none";
   /** Is abstract */
   isAbstract: boolean;
   /** Decorators */
@@ -235,7 +235,7 @@ export interface VariableInfo {
   /** Variable name */
   name: string;
   /** Declaration kind (const, let, var) */
-  kind: 'const' | 'let' | 'var';
+  kind: "const" | "let" | "var";
   /** Type annotation */
   type: string | null;
   /** Is exported */
@@ -287,25 +287,23 @@ export interface ModuleInfo {
 /**
  * Create a FunctionInfo with signature method
  */
-export function createFunctionInfo(
-  data: Omit<FunctionInfo, 'signature'>
-): FunctionInfo {
+export function createFunctionInfo(data: Omit<FunctionInfo, "signature">): FunctionInfo {
   return {
     ...data,
     signature(): string {
-      const asyncPrefix = this.isAsync ? 'async ' : '';
-      const generatorPrefix = this.isGenerator ? '*' : '';
+      const asyncPrefix = this.isAsync ? "async " : "";
+      const generatorPrefix = this.isGenerator ? "*" : "";
       const params = this.params
         .map((p) => {
           let param = p.name;
           if (p.isRest) param = `...${param}`;
           if (p.type) param += `: ${p.type}`;
-          if (p.isOptional && !p.type?.includes('undefined')) param += '?';
+          if (p.isOptional && !p.type?.includes("undefined")) param += "?";
           if (p.defaultValue) param += ` = ${p.defaultValue}`;
           return param;
         })
-        .join(', ');
-      const ret = this.returnType ? `: ${this.returnType}` : '';
+        .join(", ");
+      const ret = this.returnType ? `: ${this.returnType}` : "";
       return `${asyncPrefix}function${generatorPrefix} ${this.name}(${params})${ret}`;
     },
   };
@@ -314,19 +312,13 @@ export function createFunctionInfo(
 /**
  * Create a ClassInfo with signature method
  */
-export function createClassInfo(
-  data: Omit<ClassInfo, 'signature'>
-): ClassInfo {
+export function createClassInfo(data: Omit<ClassInfo, "signature">): ClassInfo {
   return {
     ...data,
     signature(): string {
-      const abstract = this.isAbstract ? 'abstract ' : '';
-      const bases =
-        this.bases.length > 0 ? ` extends ${this.bases.join(', ')}` : '';
-      const impl =
-        this.implements.length > 0
-          ? ` implements ${this.implements.join(', ')}`
-          : '';
+      const abstract = this.isAbstract ? "abstract " : "";
+      const bases = this.bases.length > 0 ? ` extends ${this.bases.join(", ")}` : "";
+      const impl = this.implements.length > 0 ? ` implements ${this.implements.join(", ")}` : "";
       return `${abstract}class ${this.name}${bases}${impl}`;
     },
   };

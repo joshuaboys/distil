@@ -9,12 +9,12 @@
 
 ## Hierarchy
 
-| Layer | Purpose | You Write | You DON'T Write |
-|-------|---------|-----------|-----------------|
-| Index | Plan overview | Modules, milestones, risks | Implementation details |
-| Module | Bounded work area | Interfaces, tasks, boundaries | Code snippets |
-| Task | Execution authority | Outcome, validation command | How to implement |
-| Step | Checkpoint | Observable state | Implementation steps |
+| Layer  | Purpose             | You Write                     | You DON'T Write        |
+| ------ | ------------------- | ----------------------------- | ---------------------- |
+| Index  | Plan overview       | Modules, milestones, risks    | Implementation details |
+| Module | Bounded work area   | Interfaces, tasks, boundaries | Code snippets          |
+| Task   | Execution authority | Outcome, validation command   | How to implement       |
+| Step   | Checkpoint          | Observable state              | Implementation steps   |
 
 ## Steps: The Lean Rule
 
@@ -31,22 +31,23 @@ Steps translate task intent into **observable checkpoints**. They are NOT implem
 
 ### What Goes WHERE
 
-| Write in Step | Write NOWHERE (emerges from patterns) |
-|---------------|---------------------------------------|
-| "Auth middleware exists" | Which library to use |
-| "Tests pass" | Test implementation details |
-| "Migration applied" | SQL schema definition |
-| "Function handles errors" | Try/catch structure |
+| Write in Step             | Write NOWHERE (emerges from patterns) |
+| ------------------------- | ------------------------------------- |
+| "Auth middleware exists"  | Which library to use                  |
+| "Tests pass"              | Test implementation details           |
+| "Migration applied"       | SQL schema definition                 |
+| "Function handles errors" | Try/catch structure                   |
 
 ### Anti-Patterns (NEVER do this)
 
 ```markdown
 # ❌ BAD: Implementation tutorial disguised as step
+
 ### 1. Create authentication middleware
 
 - **Checkpoint:** Middleware created in src/middleware/auth.ts that:
   - Extracts JWT from Authorization header
-  - Validates token using jsonwebtoken library  
+  - Validates token using jsonwebtoken library
   - Decodes payload and extracts user ID
   - Attaches user object to request context
   - Returns 401 if token invalid or expired
@@ -55,6 +56,7 @@ Steps translate task intent into **observable checkpoints**. They are NOT implem
 
 ```markdown
 # ✅ GOOD: Observable checkpoint only
+
 ### 1. Create authentication middleware
 
 - **Checkpoint:** Auth middleware validates requests, attaches user to context
@@ -87,11 +89,11 @@ Tasks are **execution authority** — permission to make changes.
 
 ### Task Anti-Patterns
 
-| ❌ Don't | ✅ Do |
-|----------|-------|
-| "Implement JWT auth using jsonwebtoken" | "Add token-based authentication" |
-| "Create UserService class with methods..." | "User operations are encapsulated" |
-| "Add try/catch blocks to all handlers" | "API errors return consistent format" |
+| ❌ Don't                                   | ✅ Do                                 |
+| ------------------------------------------ | ------------------------------------- |
+| "Implement JWT auth using jsonwebtoken"    | "Add token-based authentication"      |
+| "Create UserService class with methods..." | "User operations are encapsulated"    |
+| "Add try/catch blocks to all handlers"     | "API errors return consistent format" |
 
 ## Naming Conventions
 
@@ -166,6 +168,7 @@ Before touching code:
 3. **Declare intent** — State: "Executing AUTH-002 (core, api): [description]"
 
 If no Ready work item exists:
+
 - Create Draft work item first
 - Ask human to mark Ready before proceeding
 - OR if trivial fix, note in session end summary
@@ -183,10 +186,10 @@ After completing work:
 
 ## Quick Reference
 
-| If agent is... | Check for... |
-|----------------|--------------|
-| Writing steps | Max 12 words per checkpoint? No implementation detail? |
-| Writing tasks | Outcome-focused? Has validation command? |
-| Planning module | Boundaries clear? No premature tasks? |
-| Executing | Task status is Ready? Prerequisites met? |
-| In monorepo | Packages tagged? "What's Next" updated? |
+| If agent is...  | Check for...                                           |
+| --------------- | ------------------------------------------------------ |
+| Writing steps   | Max 12 words per checkpoint? No implementation detail? |
+| Writing tasks   | Outcome-focused? Has validation command?               |
+| Planning module | Boundaries clear? No premature tasks?                  |
+| Executing       | Task status is Ready? Prerequisites met?               |
+| In monorepo     | Packages tagged? "What's Next" updated?                |
