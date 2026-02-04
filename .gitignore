@@ -32,3 +32,5 @@ coverage/
 .env
 .env.local
 .env.*.local
+
+.serena
