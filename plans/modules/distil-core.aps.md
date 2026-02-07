@@ -1,8 +1,8 @@
 # @distil/core
 
-| Scope | Owner  | Priority | Status                                         |
-| ----- | ------ | -------- | ---------------------------------------------- |
-| CORE  | @aneki | high     | In Progress (L1-L5 complete, Kindling pending) |
+| Scope | Owner  | Priority | Status                                                             |
+| ----- | ------ | -------- | ------------------------------------------------------------------ |
+| CORE  | @aneki | high     | In Progress (L1 incomplete — arrow fns missing; L3-L5 approximate) |
 
 ## Purpose
 
@@ -104,9 +104,9 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Risks:** Tree-sitter WASM vs native bindings complexity
 - **Completed:** TypeScript parser working with native bindings, 9 tests passing
 
-### CORE-003: L1 AST extractor ✅
+### CORE-003: L1 AST extractor 🔄
 
-- **Status:** Complete
+- **Status:** Incomplete — function declarations, classes, and basic imports work. Critical gaps remain.
 - **Intent:** Extract functions, classes, imports, and signatures from source files
 - **Expected Outcome:** `extractFile()` returns complete ModuleInfo with all declarations
 - **Scope:** `src/parsers/typescript.ts` (integrated with parser)
@@ -116,7 +116,13 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Validation:** `pnpm test -- parsers`
 - **Confidence:** high
 - **Risks:** Complex TypeScript syntax edge cases
-- **Completed:** Extracts functions, classes, methods, imports, exports, parameters, types
+- **Partially complete:** Extracts function declarations, classes, methods, imports, exports, parameters, types
+- **Known gaps (see CORE-014 through CORE-018):**
+  - `tryParseArrowFunction()` is a stub returning `null` — arrow functions not extracted
+  - Destructured parameters (`{ name, age }`) produce empty param lists
+  - Interface methods and properties arrays are always empty
+  - Re-exports (`export { Foo }`) and standalone `export default` not captured
+  - `toCompact()` drops interfaces, type aliases, variables, and exports
 
 ### CORE-004: L2 Call graph extractor ✅
 
@@ -179,7 +185,7 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 
 ### CORE-006: L3 CFG extractor ✅
 
-- **Status:** Complete
+- **Status:** Complete (functional, minor gaps)
 - **Intent:** Extract control flow graphs with complexity metrics
 - **Expected Outcome:** `extractCFG()` returns basic blocks, edges, and cyclomatic complexity
 - **Scope:** `src/parsers/typescript.ts` (CFGBuilder class)
@@ -189,10 +195,11 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Validation:** `pnpm test`
 - **Confidence:** high
 - **Completed:** CFG extraction with if/else, loops, switch, try/catch, cyclomatic complexity
+- **Known limitations:** Exception flow edges incomplete for try-catch
 
-### CORE-007: L4 DFG extractor ✅
+### CORE-007: L4 DFG extractor 🔄
 
-- **Status:** Complete
+- **Status:** Functional but approximate — uses line-number heuristic, not real dataflow
 - **Intent:** Track variable definitions and uses for data flow analysis
 - **Expected Outcome:** `extractDFG()` returns variable refs and def-use chains
 - **Scope:** `src/parsers/typescript.ts` (DFGBuilder class)
@@ -200,12 +207,16 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Files:** `src/parsers/typescript.ts`, `src/types/dfg.ts`
 - **Dependencies:** CORE-001, CORE-002
 - **Validation:** `pnpm test`
-- **Confidence:** high
-- **Completed:** DFG extraction with parameters, definitions, uses, updates, closures
+- **Confidence:** medium
+- **Partially complete:** DFG extraction with parameters, definitions, uses, updates, closures
+- **Known limitations:**
+  - Reaching definitions use line-number heuristic (def at line 5 assumed to reach any use at line > 5, ignoring control flow branches)
+  - `getReachingDefinitions()` returns empty map (stubbed)
+  - `getLiveVariables()` returns empty map (stubbed)
 
-### CORE-008: L5 PDG extractor and slicing ✅
+### CORE-008: L5 PDG extractor and slicing 🔄
 
-- **Status:** Complete
+- **Status:** Functional but inherits CORE-007's approximations
 - **Intent:** Combine control and data dependencies for program slicing
 - **Expected Outcome:** `extractPDG()` returns unified dependence graph; `backwardSlice()`/`forwardSlice()` compute slices
 - **Scope:** `src/parsers/typescript.ts`, `src/types/pdg.ts`
@@ -213,8 +224,9 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Files:** `src/parsers/typescript.ts`, `src/types/pdg.ts`, `src/extractors.ts`
 - **Dependencies:** CORE-006, CORE-007
 - **Validation:** `pnpm test`
-- **Confidence:** high
-- **Completed:** PDG combines CFG+DFG, backward/forward slicing implemented
+- **Confidence:** medium
+- **Partially complete:** PDG combines CFG+DFG, backward/forward slicing implemented
+- **Known limitations:** Control dependence only considers direct successors of predicates, not proper post-dominance frontier
 
 ### CORE-009: Context generation API
 
@@ -348,6 +360,84 @@ This is the analytical spine of Distil. It extracts structure from code and prod
    ```
 3. **Incremental warming:** Skip files whose content hash hasn't changed
 4. **Concurrency:** Process files in parallel (bounded by available memory)
+
+### CORE-014: Arrow function extraction
+
+- **Status:** Ready
+- **Intent:** Extract arrow functions assigned to variables as functions, not just variables
+- **Expected Outcome:** `const handler = async (req, res) => { ... }` appears in `functions` array with name, params, return type, async flag — not just as a variable with no type info
+- **Scope:** `src/parsers/typescript.ts` — `tryParseArrowFunction()` (currently a stub returning null)
+- **Non-scope:** Class method arrows (already handled)
+- **Files:** `src/parsers/typescript.ts`
+- **Dependencies:** CORE-002
+- **Validation:** `pnpm test` — new tests for arrow functions (block body, expression body, async, exported, typed)
+- **Confidence:** high
+- **Risks:** Distinguishing arrow function variables from non-function `const` declarations
+
+### CORE-015: Destructured parameter parsing
+
+- **Status:** Ready
+- **Intent:** Extract parameter names from destructured patterns
+- **Expected Outcome:** `function f({ name, age }: Props)` reports `name` and `age` as parameters, not an empty params array
+- **Scope:** `src/parsers/typescript.ts` — parameter parsing in `parseFunction()`
+- **Non-scope:** Deep nested destructuring
+- **Files:** `src/parsers/typescript.ts`
+- **Dependencies:** CORE-002
+- **Validation:** `pnpm test` — new tests for object destructuring, array destructuring, with defaults
+- **Confidence:** high
+- **Risks:** None significant
+
+### CORE-016: Interface member extraction
+
+- **Status:** Ready
+- **Intent:** Extract method signatures and property declarations from interfaces
+- **Expected Outcome:** `interface Foo { bar(x: string): void; baz: number }` reports methods and properties, not empty arrays
+- **Scope:** `src/parsers/typescript.ts` — `parseInterface()`
+- **Non-scope:** Generic type parameters
+- **Files:** `src/parsers/typescript.ts`
+- **Dependencies:** CORE-002
+- **Validation:** `pnpm test` — new tests for interface methods, properties, optional members, readonly
+- **Confidence:** high
+- **Risks:** None significant
+
+### CORE-017: Re-export and standalone export default capture
+
+- **Status:** Ready
+- **Intent:** Capture `export { Foo }`, `export type { Bar }`, and `export default expr` statements
+- **Expected Outcome:** All export forms appear in the exports array, not just inline `export` on declarations
+- **Scope:** `src/parsers/typescript.ts` — `parseExport()`
+- **Non-scope:** Dynamic `export * from` resolution
+- **Files:** `src/parsers/typescript.ts`
+- **Dependencies:** CORE-002
+- **Validation:** `pnpm test` — new tests for named re-exports, type re-exports, standalone default
+- **Confidence:** high
+- **Risks:** None significant
+
+### CORE-018: Compact output completeness
+
+- **Status:** Ready
+- **Intent:** Include interfaces, type aliases, variables, and exports in compact output
+- **Expected Outcome:** `toCompact()` produces a summary that includes all structural elements, not just functions and classes
+- **Scope:** `src/types/ast.ts` — `ModuleInfo.toCompact()`
+- **Non-scope:** Full JSON output (already complete)
+- **Files:** `src/types/ast.ts`
+- **Dependencies:** CORE-003
+- **Validation:** `pnpm test` — compact output includes interfaces, types, variables, exports
+- **Confidence:** high
+- **Risks:** None significant
+
+### CORE-019: Core test coverage expansion
+
+- **Status:** Ready
+- **Intent:** Replace weak assertions and add missing test coverage for L1-L5
+- **Expected Outcome:** Tests verify specific output values (not just `.toBeGreaterThan(0)`). Error cases, edge cases, and the gaps from CORE-014 through CORE-018 are covered.
+- **Scope:** `src/parsers/typescript.test.ts`
+- **Non-scope:** CLI tests (see CLI-013)
+- **Files:** `src/parsers/typescript.test.ts`
+- **Dependencies:** CORE-014, CORE-015, CORE-016, CORE-017, CORE-018
+- **Validation:** `pnpm test` — all new tests pass with specific value assertions
+- **Confidence:** high
+- **Risks:** None significant
 
 ## Decisions
 

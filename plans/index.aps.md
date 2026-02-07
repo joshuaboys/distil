@@ -14,7 +14,7 @@ Distil extracts _structure_ instead of dumping _text_. It provides 5 layers of c
 
 - Distil does **not** replace language servers or IDEs
 - Distil does **not** provide real-time incremental parsing (Salsa-style)
-- Distil does **not** run as a daemon (uses Kindling for persistence instead)
+- Distil does **not** run as a daemon (uses Kindling for persistence instead) — see Q-003 for reconsideration
 - Distil does **not** include local embedding models (uses external APIs)
 
 Those concerns are either out of scope or deferred to future versions.
@@ -47,16 +47,21 @@ Those concerns are either out of scope or deferred to future versions.
 
 ## Milestones
 
-### M1: Project Scaffolding + L1 AST (Complete)
+### M1: Project Scaffolding + L1 AST (Incomplete — critical gaps)
 
 - [x] Public repository created
 - [x] Package boundaries enforced (core / cli)
 - [x] Tree-sitter TypeScript/JavaScript parser integrated
-- [x] L1 AST extraction (functions, classes, imports, signatures)
+- [x] L1 AST extraction (function declarations, classes, imports, signatures)
 - [x] Core types defined and validated
 - [x] CLI `distil tree` and `distil extract` available
+- [ ] Arrow function extraction (`const fn = () => {}` — the dominant modern TS/JS pattern)
+- [ ] Destructured parameter parsing (`function f({ name, age })` → params: [])
+- [ ] Interface member extraction (methods/properties return empty arrays)
+- [ ] Re-export and standalone `export default` capture
+- [ ] Compact output includes interfaces, types, variables, exports
 
-**Target:** `distil extract <file>` works for TS/JS files ✅
+**Target:** `distil extract <file>` works for TS/JS files — basic declarations only, arrow functions and destructured params missing
 
 ### M2: L2 Call Graph + Kindling Integration (In Progress)
 
@@ -68,14 +73,33 @@ Those concerns are either out of scope or deferred to future versions.
 
 **Target:** `distil impact <function>` shows all callers ✅
 
-### M3: L3-L5 Analysis Layers (Complete)
+### M3: L3-L5 Analysis Layers (Functional — approximate)
 
 - [x] L3: Control Flow Graph extraction with cyclomatic complexity
 - [x] L4: Data Flow Graph with def-use chains
 - [x] L5: Program Dependence Graph with backward/forward slicing
 - [x] `distil cfg`, `distil dfg`, `distil slice` commands
+- [ ] L4: DFG reaching definitions use line-number heuristic, not real dataflow analysis
+- [ ] L4: `getReachingDefinitions()` and `getLiveVariables()` are stubs (return empty maps)
+- [ ] L5: Control dependence only considers direct successors, not post-dominance
 
-**Target:** `distil slice <file> <func> <line>` returns relevant lines only ✅
+**Target:** `distil slice <file> <func> <line>` returns relevant lines only — works for simple functions, approximate for complex control flow
+
+### M3.5: L1 Completeness + Test Foundation (Planned — prerequisite for usability)
+
+This milestone addresses the critical gaps found in the usability audit that block real-world adoption. Arrow functions are the dominant pattern in modern TS/JS; without extracting them, distil misses the majority of functions in typical codebases.
+
+- [ ] Arrow function extraction (CORE-014)
+- [ ] Destructured parameter parsing (CORE-015)
+- [ ] Interface member extraction (CORE-016)
+- [ ] Re-export and standalone export default capture (CORE-017)
+- [ ] Compact output completeness (CORE-018)
+- [ ] Core test coverage expansion (CORE-019)
+- [ ] CLI test coverage (CLI-013)
+- [ ] Clean up misleading language extensions (CLI-014)
+- [ ] Fix CLI help text referencing nonexistent commands (CLI-015)
+
+**Target:** `distil extract` correctly handles arrow functions, destructured params, interface members, and re-exports. Test coverage is meaningful and reliable. CLI errors and help text are accurate.
 
 ### M4: Ignore Patterns + Monorepo Support (Planned)
 
@@ -95,8 +119,11 @@ Those concerns are either out of scope or deferred to future versions.
 - [ ] `distil context` LLM-ready output command
 - [ ] Output formatting system (--json, --compact)
 - [ ] Configuration file support (`.distil/config.json`)
+- [ ] Stdin/pipe support (`cat file | distil extract -`)
+- [ ] Batch/directory extract mode (`distil extract src/`)
+- [ ] npm publish workflow for `@distil/cli` and `@distil/core`
 
-**Target:** `distil semantic "validate JWT tokens"` finds relevant functions
+**Target:** `distil semantic "validate JWT tokens"` finds relevant functions; CLI is pipeline-friendly and installable via npm
 
 ### M6: MCP Server (Planned)
 
@@ -125,7 +152,7 @@ Those concerns are either out of scope or deferred to future versions.
 - **Path:** ./modules/distil-core.aps.md
 - **Scope:** CORE
 - **Owner:** @aneki
-- **Status:** In Progress (L1-L5 complete, Kindling pending)
+- **Status:** In Progress (L1 incomplete — arrow fns missing; L3-L5 approximate; Kindling pending)
 - **Priority:** high
 - **Tags:** analysis, ast, callgraph, cfg, dfg, pdg
 - **Dependencies:** tree-sitter (current), @kindling/core/@kindling/store-sqlite (planned)
@@ -135,7 +162,7 @@ Those concerns are either out of scope or deferred to future versions.
 - **Path:** ./modules/distil-cli.aps.md
 - **Scope:** CLI
 - **Owner:** @aneki
-- **Status:** In Progress (tree/extract/calls/impact/cfg/dfg/slice commands)
+- **Status:** In Progress (commands work, 0 tests, misleading help/extensions)
 - **Priority:** high
 - **Tags:** cli, tooling
 - **Dependencies:** @distil/core
@@ -165,12 +192,33 @@ Those concerns are either out of scope or deferred to future versions.
 - **D-009:** MCP server uses stdio transport; started via `distil mcp` or configured in editor settings
 - **D-010:** `.distilignore` uses `.gitignore` syntax and is checked into version control
 - **D-011:** Monorepo detection is automatic; `--package` flag for explicit scoping
+- **D-012:** M1 (L1 AST) is not complete until arrow functions, destructured params, interface members, and re-exports are handled — these are not edge cases but dominant patterns in modern TS/JS
+- **D-013:** Test coverage must be meaningful before claiming a milestone is complete — `.toBeGreaterThan(0)` assertions do not constitute verification
+- **D-014:** Python/Rust/C# file extensions must not be listed as supported until parser implementations exist
 
 ---
 
 ## Open Questions
 
-_No open questions at this time._
+### Q-003: Should we reconsider daemon mode?
+
+llm-tldr demonstrates 155x faster queries with a daemon that keeps indexes in memory. Our current plan relies on Kindling/SQLite for caching, which still requires cold-start parsing and DB reads. For the primary use case (LLM agents making rapid sequential queries), a long-running process with in-memory indexes may be significantly better. Options:
+
+- A: Keep current plan — Kindling caching is sufficient, daemon adds operational complexity
+- B: Add optional daemon mode alongside Kindling — `distil serve` keeps indexes hot, falls back to Kindling on cold start
+- C: Replace Kindling dependency with a built-in daemon — simpler architecture, fewer external dependencies
+
+### Q-004: Should we prioritize npm publish for easier adoption?
+
+Currently install requires `git clone` + `pnpm install` + `pnpm build` + `pnpm link`. llm-tldr is `pip install llm-tldr`. A single `npx @distil/cli extract file.ts` would dramatically lower the barrier to trying distil. This could be done before M5 with minimal effort.
+
+### Q-005: How should we handle the tree-sitter native dependency for distribution?
+
+tree-sitter requires a C/C++ toolchain at install time (node-gyp-build). This will cause install failures on systems without build tools (minimal Docker images, CI runners, some Mac setups). Options:
+
+- A: Document the requirement and accept the friction
+- B: Provide pre-built binaries via optionalDependencies
+- C: Switch to tree-sitter WASM bindings (web-tree-sitter) — no native compilation needed, but may have performance implications
 
 ---
 
