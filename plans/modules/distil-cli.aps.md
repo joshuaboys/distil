@@ -1,8 +1,8 @@
 # @distil/cli
 
-| Scope | Owner  | Priority | Status      |
-| ----- | ------ | -------- | ----------- |
-| CLI   | @aneki | high     | In Progress |
+| Scope | Owner  | Priority | Status                                                    |
+| ----- | ------ | -------- | --------------------------------------------------------- |
+| CLI   | @aneki | high     | In Progress (commands work, 0 tests, misleading help/ext) |
 
 ## Purpose
 
@@ -91,8 +91,7 @@ This is the user-facing surface of Distil. It formats analysis results for human
 
 ### CLI-002: Tree and structure commands
 
-- **Status:** In Progress
-- **Note:** tree complete
+- **Status:** Partially complete — `distil tree` works; `distil structure` does not exist
 - **Intent:** Provide project overview commands
 - **Expected Outcome:** `distil tree` shows file tree; `distil structure` shows code overview
 - **Scope:** `src/commands/tree.ts`, `src/commands/structure.ts`
@@ -102,10 +101,11 @@ This is the user-facing surface of Distil. It formats analysis results for human
 - **Validation:** `distil tree . && distil structure .`
 - **Confidence:** high
 - **Risks:** Large directory handling
+- **Known gaps:** `distil structure` is referenced in the source header comment and CLI plan but was never implemented
 
 ### CLI-003: Extract command
 
-- **Status:** Complete
+- **Status:** Functional — depends on CORE-003 fixes for correct output
 - **Intent:** Expose L1 AST extraction via CLI
 - **Expected Outcome:** `distil extract <file>` outputs file analysis in requested format
 - **Scope:** `src/commands/extract.ts`
@@ -115,6 +115,7 @@ This is the user-facing surface of Distil. It formats analysis results for human
 - **Validation:** `distil extract src/index.ts --json`
 - **Confidence:** high
 - **Risks:** None significant
+- **Known gaps:** `--compact` output drops interfaces, types, variables, exports (see CORE-018); raw ENOENT error on missing files instead of user-friendly message
 
 ### CLI-004: Call graph commands (calls, impact) ✅
 
@@ -260,44 +261,83 @@ This is the user-facing surface of Distil. It formats analysis results for human
 - **Confidence:** high
 - **Risks:** None significant
 
-### CLI-013: Add CLI command tests
+### CLI-013: CLI test coverage
 
 - **Status:** Ready
-- **Intent:** Cover the zero-command-test gap — all CLI commands lack end-to-end tests
-- **Expected Outcome:** Smoke tests for extract, tree, calls, impact, cfg, dfg, slice commands; test --json and --compact flags
-- **Scope:** `src/` test files
-- **Non-scope:** Analysis correctness (tested in core)
-- **Files:** `src/commands/*.test.ts` or `src/index.test.ts`
-- **Dependencies:** (none)
-- **Validation:** `pnpm -F @distil/cli test`
+- **Intent:** Add test coverage for all CLI commands — currently 0 tests
+- **Expected Outcome:** Tests verify command parsing, output formats (--json, --compact, default), error handling, and fuzzy matching for all 7 commands
+- **Scope:** `src/` — new test files
+- **Non-scope:** Core analysis logic (tested in CORE)
+- **Files:** `src/commands/extract.test.ts`, `src/commands/tree.test.ts`, `src/index.test.ts`
+- **Dependencies:** CLI-001
+- **Validation:** `pnpm -F @distil/cli test` — all tests pass, `passWithNoTests` removed from vitest config
 - **Confidence:** high
-- **Origin:** OmO review P0-2
+- **Risks:** None significant
 
-### CLI-014: Extract remaining inline commands to src/commands/
+### CLI-014: Remove misleading language extensions
 
 - **Status:** Ready
-- **Intent:** Move calls, impact, cfg, dfg, slice commands out of the 907-line index.ts
-- **Expected Outcome:** Each command in its own file under src/commands/ following the tree/extract pattern
+- **Intent:** Stop listing Python/Rust/C# as supported extensions when no parsers exist
+- **Expected Outcome:** `LANGUAGE_EXTENSIONS` only includes TS/JS extensions. Error message for unsupported files no longer lists `.py`, `.rs`, `.cs` as supported. Python/Rust/C# grammars remain as optional dependencies for future use.
+- **Scope:** `@distil/core` — `LANGUAGE_EXTENSIONS` constant; `@distil/cli` — extract command error message
+- **Non-scope:** Implementing Python/Rust/C# parsers (M7)
+- **Files:** Core types/common.ts or wherever `LANGUAGE_EXTENSIONS` is defined
+- **Dependencies:** (none)
+- **Validation:** `distil extract test.py` error message does not list `.py` as supported
+- **Confidence:** high
+- **Risks:** None significant
+
+### CLI-015: Fix help text referencing nonexistent commands
+
+- **Status:** Ready
+- **Intent:** Remove references to `structure`, `context`, `semantic`, `warm` from the source header comment in index.ts
+- **Expected Outcome:** Source file header only lists commands that actually exist. Quick-start help text is accurate.
+- **Scope:** `src/index.ts` — header comment block (lines 2-19)
+- **Non-scope:** Implementing the missing commands (separate tasks)
+- **Files:** `src/index.ts`
+- **Dependencies:** (none)
+- **Validation:** Comment block matches registered commands
+- **Confidence:** high
+- **Risks:** None significant
+
+### CLI-016: Stdin/pipe support for extract
+
+- **Status:** Planned
+- **Intent:** Allow piping source code into distil via stdin
+- **Expected Outcome:** `cat file.ts | distil extract - --lang typescript` reads from stdin and produces the same output as file-based extract
+- **Scope:** `src/commands/extract.ts`
+- **Non-scope:** Stdin for other commands
+- **Files:** `src/commands/extract.ts`
+- **Dependencies:** CLI-003
+- **Validation:** `echo "function foo() {}" | distil extract - --lang typescript` outputs function info
+- **Confidence:** high
+- **Risks:** Language detection requires explicit `--lang` flag when reading stdin
+
+### CLI-017: Batch/directory extract mode
+
+- **Status:** Planned
+- **Intent:** Allow extracting structure from all files in a directory
+- **Expected Outcome:** `distil extract src/` produces aggregated L1 output for all supported files in the directory
+- **Scope:** `src/commands/extract.ts`
+- **Non-scope:** Recursive call graph (use `distil calls` for that)
+- **Files:** `src/commands/extract.ts`
+- **Dependencies:** CLI-003
+- **Validation:** `distil extract src/ --json` outputs array of ModuleInfo objects
+- **Confidence:** high
+- **Risks:** Output size for large directories; need sensible defaults (respect .distilignore, skip node_modules)
+
+### CLI-018: Modularize inline commands
+
+- **Status:** Planned
+- **Intent:** Extract calls, impact, cfg, dfg, slice commands from index.ts into separate command files
+- **Expected Outcome:** Each command is in its own file under `src/commands/`. Fuzzy matching logic is extracted into a shared utility. index.ts is under 100 lines.
 - **Scope:** `src/commands/`, `src/index.ts`
-- **Non-scope:** Behavior changes, new features
-- **Files:** `src/commands/calls.ts`, `src/commands/impact.ts`, `src/commands/cfg.ts`, `src/commands/dfg.ts`, `src/commands/slice.ts`, `src/index.ts`
+- **Non-scope:** Changing command behavior
+- **Files:** `src/commands/calls.ts`, `src/commands/impact.ts`, `src/commands/cfg.ts`, `src/commands/dfg.ts`, `src/commands/slice.ts`, `src/utils/fuzzy.ts`
 - **Dependencies:** (none)
-- **Validation:** `pnpm -F @distil/cli test && pnpm -F @distil/cli build`
+- **Validation:** `pnpm build && distil --help` — all commands still work
 - **Confidence:** high
-- **Origin:** OmO review P1-6
-
-### CLI-015: Fix empty catch and minor issues
-
-- **Status:** Complete
-- **Intent:** Address silent error swallowing in tree.ts directory traversal
-- **Expected Outcome:** Permission errors logged at debug level or skipped entries counted
-- **Scope:** `src/commands/tree.ts`
-- **Non-scope:** New error handling framework
-- **Files:** `src/commands/tree.ts`
-- **Dependencies:** (none)
-- **Validation:** `pnpm -F @distil/cli build`
-- **Confidence:** high
-- **Origin:** OmO review P3-14
+- **Risks:** None significant
 
 ## Decisions
 
