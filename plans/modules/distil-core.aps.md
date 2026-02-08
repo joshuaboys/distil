@@ -1,8 +1,8 @@
 # @distil/core
 
-| Scope | Owner  | Priority | Status                                         |
-| ----- | ------ | -------- | ---------------------------------------------- |
-| CORE  | @aneki | high     | In Progress (L1-L5 complete, Kindling pending) |
+| Scope | Owner  | Priority | Status      |
+| ----- | ------ | -------- | ----------- |
+| CORE  | @aneki | high     | In Progress |
 
 ## Purpose
 
@@ -351,13 +351,13 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 
 ## Decisions
 
-- **D-001:** Tree-sitter is the parsing foundation; no fallback to regex or other parsers
-- **D-002:** All analysis results are JSON-serializable for Kindling storage
-- **D-003:** Content hashes (SHA-256) are used for dirty detection
-- **D-004:** Higher layers (CFG, DFG, PDG) are computed on-demand, not eagerly
-- **D-005:** `.distilignore` uses `.gitignore` syntax for familiarity
-- **D-006:** Semantic search uses external embedding APIs; no local models
-- **D-007:** Monorepo detection is automatic; explicit `--package` flag for scoping
+- **CORE-D-001:** Tree-sitter is the parsing foundation; no fallback to regex or other parsers
+- **CORE-D-002:** All analysis results are JSON-serializable for Kindling storage
+- **CORE-D-003:** Content hashes (SHA-256) are used for dirty detection
+- **CORE-D-004:** Higher layers (CFG, DFG, PDG) are computed on-demand, not eagerly
+- **CORE-D-005:** `.distilignore` uses `.gitignore` syntax for familiarity
+- **CORE-D-006:** Semantic search uses external embedding APIs; no local models
+- **CORE-D-007:** Monorepo detection is automatic; explicit `--package` flag for scoping
 
 ## Notes
 

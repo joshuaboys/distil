@@ -1,8 +1,8 @@
 # @distil/cli
 
-| Scope | Owner  | Priority | Status                                |
-| ----- | ------ | -------- | ------------------------------------- |
-| CLI   | @aneki | high     | In Progress (L1-L5 commands complete) |
+| Scope | Owner  | Priority | Status      |
+| ----- | ------ | -------- | ----------- |
+| CLI   | @aneki | high     | In Progress |
 
 ## Purpose
 
@@ -77,7 +77,8 @@ This is the user-facing surface of Distil. It formats analysis results for human
 
 ### CLI-001: Project setup and command structure
 
-- **Status:** In Progress (extract/tree registered)
+- **Status:** In Progress
+- **Note:** extract/tree registered
 - **Intent:** Establish CLI framework and command hierarchy
 - **Expected Outcome:** `tldr --help` shows all commands; subcommands parse correctly
 - **Scope:** `src/index.ts`, `src/commands/`
@@ -90,7 +91,8 @@ This is the user-facing surface of Distil. It formats analysis results for human
 
 ### CLI-002: Tree and structure commands
 
-- **Status:** In Progress (tree complete)
+- **Status:** In Progress
+- **Note:** tree complete
 - **Intent:** Provide project overview commands
 - **Expected Outcome:** `distil tree` shows file tree; `distil structure` shows code overview
 - **Scope:** `src/commands/tree.ts`, `src/commands/structure.ts`
@@ -260,11 +262,11 @@ This is the user-facing surface of Distil. It formats analysis results for human
 
 ## Decisions
 
-- **D-001:** Commander.js is the CLI framework (mature, widely used)
-- **D-002:** Default output is human-readable; --json for programmatic use
-- **D-003:** API keys for semantic search read from env vars first, then config
-- **D-004:** Progress indicators use stderr; output uses stdout (for piping)
-- **D-005:** `.distilignore` is respected by default; `--no-ignore` to override
+- **CLI-D-001:** Commander.js is the CLI framework (mature, widely used)
+- **CLI-D-002:** Default output is human-readable; --json for programmatic use
+- **CLI-D-003:** API keys for semantic search read from env vars first, then config
+- **CLI-D-004:** Progress indicators use stderr; output uses stdout (for piping)
+- **CLI-D-005:** `.distilignore` is respected by default; `--no-ignore` to override
 
 ## Future Enhancements
 

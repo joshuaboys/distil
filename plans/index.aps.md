@@ -122,33 +122,63 @@ Those concerns are either out of scope or deferred to future versions.
 
 ### @distil/core
 
-- **Path:** ./modules/distil-core.aps.md
+- **Path:** modules/distil-core.aps.md
 - **Scope:** CORE
 - **Owner:** @aneki
-- **Status:** In Progress (L1-L5 complete, Kindling pending)
+- **Status:** In Progress
 - **Priority:** high
 - **Tags:** analysis, ast, callgraph, cfg, dfg, pdg
 - **Dependencies:** tree-sitter (current), @kindling/core/@kindling/store-sqlite (planned)
 
 ### @distil/cli
 
-- **Path:** ./modules/distil-cli.aps.md
+- **Path:** modules/distil-cli.aps.md
 - **Scope:** CLI
 - **Owner:** @aneki
-- **Status:** In Progress (tree/extract/calls/impact/cfg/dfg/slice commands)
+- **Status:** In Progress
 - **Priority:** high
 - **Tags:** cli, tooling
 - **Dependencies:** @distil/core
 
 ### @distil/mcp
 
-- **Path:** ./modules/distil-mcp.aps.md
+- **Path:** modules/distil-mcp.aps.md
 - **Scope:** MCP
 - **Owner:** @aneki
 - **Status:** Planned
 - **Priority:** medium
 - **Tags:** mcp, integration, editor
 - **Dependencies:** @distil/core, @modelcontextprotocol/sdk
+
+---
+
+## What's Next
+
+Prioritized queue of ready work across all packages:
+
+| #   | Work Item | Module                                         | Packages   | Owner  | Status      |
+| --- | --------- | ---------------------------------------------- | ---------- | ------ | ----------- |
+| 1   | CLI-001   | [cli](modules/distil-cli.aps.md)               | cli        | @aneki | In Progress |
+| 2   | CLI-002   | [cli](modules/distil-cli.aps.md)               | cli        | @aneki | In Progress |
+| 3   | CORE-010  | [core](modules/distil-core.aps.md)             | core       | @aneki | Ready       |
+| 4   | CORE-009  | [core](modules/distil-core.aps.md)             | core       | @aneki | Ready       |
+| 5   | CORE-011  | [core](modules/distil-core.aps.md)             | core       | @aneki | Ready       |
+| 6   | CORE-005  | [core](modules/distil-core.aps.md)             | core       | @aneki | Ready       |
+| 7   | CLI-010   | [cli](modules/distil-cli.aps.md)               | cli        | @aneki | Ready       |
+| 8   | MCP-001   | [mcp](modules/distil-mcp.aps.md)               | mcp        | @aneki | Ready       |
+
+<!-- Items blocked on dependencies:
+  CORE-012 (Semantic search) - blocked on CORE-005
+  CORE-013 (Index warming) - blocked on CORE-005
+  CLI-005 (Context command) - blocked on CORE-009
+  CLI-008 (Semantic search CLI) - blocked on CORE-012
+  CLI-009 (Warm command) - blocked on CORE-005, CORE-013
+  CLI-011 (.distilignore CLI) - blocked on CORE-010
+  CLI-012 (MCP subcommand) - blocked on MCP-001
+  MCP-002 (Analysis tools) - blocked on MCP-001
+  MCP-003 (Resources/prompts) - blocked on MCP-001, MCP-002
+  MCP-004 (CLI integration) - blocked on MCP-001
+-->
 
 ---
 

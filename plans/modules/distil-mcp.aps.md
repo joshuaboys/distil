@@ -134,10 +134,10 @@ This is the integration surface for editor plugins and AI coding agents that sup
 
 ## Decisions
 
-- **D-001:** Use stdio transport (standard for editor MCP integrations)
-- **D-002:** One tool per analysis layer (not one monolithic tool)
-- **D-003:** Tool results are JSON objects matching core type schemas
-- **D-004:** Server is a separate package to keep CLI lightweight
+- **MCP-D-001:** Use stdio transport (standard for editor MCP integrations)
+- **MCP-D-002:** One tool per analysis layer (not one monolithic tool)
+- **MCP-D-003:** Tool results are JSON objects matching core type schemas
+- **MCP-D-004:** Server is a separate package to keep CLI lightweight
 
 ## Notes
 
