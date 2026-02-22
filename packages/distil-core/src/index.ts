@@ -36,12 +36,20 @@ import {
 } from "./types/callgraph.js";
 import { LANGUAGE_EXTENSIONS } from "./types/common.js";
 import { getParser } from "./parsers/index.js";
+import { createIgnoreMatcher, type IgnoreOptions } from "./ignore/index.js";
 
 // Type exports
 export * from "./types/index.js";
 
 // Parser exports
 export { getParser, type LanguageParser } from "./parsers/index.js";
+export {
+  createIgnoreMatcher,
+  findNearestDistilignore,
+  isIgnoredPath,
+  type IgnoreOptions,
+  type IgnoreMatcher,
+} from "./ignore/index.js";
 
 // Extractor exports (to be implemented)
 // export { extractFile } from './extractors/ast/index.js';
@@ -59,10 +67,13 @@ export { extractCFG, extractDFG, extractPDG } from "./extractors.js";
 // Kindling integration (to be implemented)
 // export { DistilStore } from './kindling/store.js';
 
-export async function buildCallGraph(projectRoot: string): Promise<ProjectCallGraph> {
+export async function buildCallGraph(
+  projectRoot: string,
+  options: IgnoreOptions = {},
+): Promise<ProjectCallGraph> {
   const rootPath = resolve(projectRoot);
   const graph = createProjectCallGraph(rootPath);
-  const files = await collectSourceFiles(rootPath);
+  const files = await collectSourceFiles(rootPath, options);
   graph.files = files;
 
   const nameIndex = new Map<string, FunctionLocation[]>();
@@ -157,29 +168,9 @@ export async function buildCallGraph(projectRoot: string): Promise<ProjectCallGr
   return graph;
 }
 
-const IGNORE_DIRS = new Set([
-  "node_modules",
-  ".git",
-  ".svn",
-  ".hg",
-  "dist",
-  "build",
-  ".next",
-  ".nuxt",
-  "coverage",
-  ".tox",
-  "venv",
-  ".venv",
-  "__pycache__",
-  ".cache",
-  ".kindling",
-  ".distil",
-]);
-
-const IGNORE_FILES = new Set([".DS_Store", "Thumbs.db", ".gitkeep"]);
-
-async function collectSourceFiles(rootPath: string): Promise<string[]> {
+async function collectSourceFiles(rootPath: string, options: IgnoreOptions = {}): Promise<string[]> {
   const results: string[] = [];
+  const matcher = await createIgnoreMatcher(rootPath, options);
 
   async function walk(dirPath: string): Promise<void> {
     let entries: { name: string; isDirectory(): boolean; isFile(): boolean }[] = [];
@@ -190,12 +181,11 @@ async function collectSourceFiles(rootPath: string): Promise<string[]> {
     }
 
     for (const entry of entries) {
-      if (entry.name.startsWith(".")) continue;
-      if (IGNORE_FILES.has(entry.name)) continue;
       const fullPath = join(dirPath, entry.name);
+      const ignored = matcher.ignores(fullPath, entry.isDirectory());
+      if (ignored) continue;
 
       if (entry.isDirectory()) {
-        if (IGNORE_DIRS.has(entry.name)) continue;
         await walk(fullPath);
         continue;
       }

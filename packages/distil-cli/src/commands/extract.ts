@@ -7,16 +7,24 @@
 import { Command } from "commander";
 import { readFile } from "fs/promises";
 import { resolve } from "path";
-import { getParser, LANGUAGE_EXTENSIONS, type ModuleInfo } from "@distil/core";
+import { getParser, isIgnoredPath, LANGUAGE_EXTENSIONS, type ModuleInfo } from "@distil/core";
+import { resolveCliIgnoreOptions } from "../ignore.js";
 
 export const extractCommand = new Command("extract")
   .description("Extract file structure (L1 AST)")
   .argument("<file>", "File to analyze")
   .option("--json", "Output as JSON")
   .option("--compact", "Output compact format for LLM")
-  .action(async (file: string, options: { json?: boolean; compact?: boolean }) => {
+  .action(async (file: string, options: { json?: boolean; compact?: boolean }, cmd: Command) => {
     try {
       const filePath = resolve(file);
+      const ignoreOptions = resolveCliIgnoreOptions(cmd);
+      const ignored = await isIgnoredPath(filePath, ignoreOptions);
+      if (ignored) {
+        console.error(`File is ignored: ${file}. Use --no-ignore to analyze ignored files.`);
+        process.exit(1);
+      }
+
       const source = await readFile(filePath, "utf-8");
 
       const parser = getParser(filePath);

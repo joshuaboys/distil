@@ -21,6 +21,7 @@
 import { Command } from "commander";
 import { resolve } from "path";
 import { readFile, access } from "fs/promises";
+import { pathToFileURL } from "url";
 import {
   buildCallGraph,
   extractCFG,
@@ -28,6 +29,7 @@ import {
   extractPDG,
   getComplexityRating,
   getParser,
+  isIgnoredPath,
   VERSION,
 } from "@distil/core";
 import type {
@@ -41,6 +43,7 @@ import type {
 
 import { extractCommand } from "./commands/extract.js";
 import { treeCommand } from "./commands/tree.js";
+import { resolveCliIgnoreOptions } from "./ignore.js";
 
 // Built-in methods to filter from call graph output
 const BUILTIN_METHODS = new Set([
@@ -249,10 +252,11 @@ const callsCommand = new Command("calls")
   .argument("[path]", "Project root", ".")
   .option("--json", "Output as JSON")
   .option("--limit <n>", "Limit edges in output", "20")
-  .action(async (path: string, options: { json?: boolean; limit?: string }) => {
+  .action(async (path: string, options: { json?: boolean; limit?: string }, cmd: Command) => {
     try {
       const rootPath = resolve(path);
-      const graph = await buildCallGraph(rootPath);
+      const ignoreOptions = resolveCliIgnoreOptions(cmd);
+      const graph = await buildCallGraph(rootPath, ignoreOptions);
       const limit = parseInt(options.limit ?? "20", 10);
 
       if (options.json) {
@@ -274,16 +278,22 @@ const impactCommand = new Command("impact")
   .option("--depth <n>", "Depth of transitive callers (default: 1 = direct only)", "1")
   .option("--json", "Output as JSON")
   .action(
-    async (functionName: string, path: string, options: { depth?: string; json?: boolean }) => {
+    async (
+      functionName: string,
+      path: string,
+      options: { depth?: string; json?: boolean },
+      cmd: Command,
+    ) => {
       try {
         const rootPath = resolve(path);
+        const ignoreOptions = resolveCliIgnoreOptions(cmd);
         const depthRaw = parseInt(options.depth ?? "1", 10);
         if (Number.isNaN(depthRaw) || depthRaw < 1) {
           console.error(`Error: --depth must be a positive integer (got "${options.depth}")`);
           process.exit(1);
         }
         const depth = depthRaw;
-        const graph = await buildCallGraph(rootPath);
+        const graph = await buildCallGraph(rootPath, ignoreOptions);
 
         // Fuzzy match: find all functions containing the search term
         const matches: FunctionLocation[] = [];
@@ -355,10 +365,16 @@ const cfgCommand = new Command("cfg")
   .argument("<file>", "Source file path")
   .argument("<function>", "Function name (or Class.method)")
   .option("--json", "Output as JSON")
-  .action(async (file: string, functionName: string, options: { json?: boolean }) => {
+  .action(async (file: string, functionName: string, options: { json?: boolean }, cmd: Command) => {
     try {
       const filePath = resolve(file);
       await checkFileExists(filePath, file);
+      const ignoreOptions = resolveCliIgnoreOptions(cmd);
+      const ignored = await isIgnoredPath(filePath, ignoreOptions);
+      if (ignored) {
+        console.error(`File is ignored: ${file}. Use --no-ignore to analyze ignored files.`);
+        process.exit(1);
+      }
 
       // Get available functions for fuzzy matching
       const available = await listAvailableFunctions(filePath);
@@ -412,10 +428,16 @@ const dfgCommand = new Command("dfg")
   .argument("<file>", "Source file path")
   .argument("<function>", "Function name (or Class.method)")
   .option("--json", "Output as JSON")
-  .action(async (file: string, functionName: string, options: { json?: boolean }) => {
+  .action(async (file: string, functionName: string, options: { json?: boolean }, cmd: Command) => {
     try {
       const filePath = resolve(file);
       await checkFileExists(filePath, file);
+      const ignoreOptions = resolveCliIgnoreOptions(cmd);
+      const ignored = await isIgnoredPath(filePath, ignoreOptions);
+      if (ignored) {
+        console.error(`File is ignored: ${file}. Use --no-ignore to analyze ignored files.`);
+        process.exit(1);
+      }
 
       // Get available functions for fuzzy matching
       const available = await listAvailableFunctions(filePath);
@@ -478,10 +500,17 @@ const sliceCommand = new Command("slice")
       functionName: string,
       lineStr: string,
       options: { var?: string; forward?: boolean; json?: boolean },
+      cmd: Command,
     ) => {
       try {
         const filePath = resolve(file);
         await checkFileExists(filePath, file);
+        const ignoreOptions = resolveCliIgnoreOptions(cmd);
+        const ignored = await isIgnoredPath(filePath, ignoreOptions);
+        if (ignored) {
+          console.error(`File is ignored: ${file}. Use --no-ignore to analyze ignored files.`);
+          process.exit(1);
+        }
 
         const line = parseInt(lineStr, 10);
         if (Number.isNaN(line) || line < 1) {
@@ -577,15 +606,17 @@ const sliceCommand = new Command("slice")
     },
   );
 
-const program = new Command();
+export function createProgram(): Command {
+  const program = new Command();
 
-program
-  .name("distil")
-  .description("Token-efficient code analysis for LLMs")
-  .version(VERSION)
-  .addHelpText(
-    "after",
-    `
+  program
+    .name("distil")
+    .description("Token-efficient code analysis for LLMs")
+    .version(VERSION)
+    .option("--no-ignore", "Disable ignore rules (.distilignore and built-in ignores)")
+    .addHelpText(
+      "after",
+      `
 Quick start:
   $ distil tree .                              # See project structure
   $ distil extract src/index.ts                # Extract file analysis
@@ -595,25 +626,42 @@ Quick start:
   $ distil slice src/index.ts myFunction 42    # What affects line 42?
 
 Supported languages: TypeScript, JavaScript`,
-  );
+    );
 
-// Register commands
-program.addCommand(extractCommand);
-program.addCommand(treeCommand);
-program.addCommand(callsCommand);
-program.addCommand(impactCommand);
-program.addCommand(cfgCommand);
-program.addCommand(dfgCommand);
-program.addCommand(sliceCommand);
+  // Register commands
+  program.addCommand(extractCommand);
+  program.addCommand(treeCommand);
+  program.addCommand(callsCommand);
+  program.addCommand(impactCommand);
+  program.addCommand(cfgCommand);
+  program.addCommand(dfgCommand);
+  program.addCommand(sliceCommand);
 
-// Show help (exit 0) when no args provided
-if (process.argv.length <= 2) {
-  program.outputHelp();
-  process.exit(0);
+  return program;
 }
 
-// Parse arguments
-program.parse();
+export async function run(argv: string[] = process.argv): Promise<void> {
+  const program = createProgram();
+
+  // Show help (exit 0) when no args provided
+  if (argv.length <= 2) {
+    program.outputHelp();
+    return;
+  }
+
+  await program.parseAsync(argv);
+}
+
+const isDirectExecution =
+  typeof process.argv[1] === "string" &&
+  import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+
+if (isDirectExecution) {
+  run().catch((error: unknown) => {
+    console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  });
+}
 
 function formatCallGraph(graph: ProjectCallGraph) {
   return {
