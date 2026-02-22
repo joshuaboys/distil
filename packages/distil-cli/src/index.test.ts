@@ -3,22 +3,24 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const buildCallGraphMock = vi.fn();
-const createIgnoreMatcherMock = vi.fn();
-const isIgnoredPathMock = vi.fn();
-const extractAstMock = vi.fn();
+const coreMocks = vi.hoisted(() => ({
+  buildCallGraphMock: vi.fn(),
+  createIgnoreMatcherMock: vi.fn(),
+  isIgnoredPathMock: vi.fn(),
+  extractAstMock: vi.fn(),
+}));
 
 vi.mock("@distil/core", () => ({
   VERSION: "0.1.0",
   LANGUAGE_EXTENSIONS: { ".ts": "typescript", ".js": "javascript" },
-  buildCallGraph: buildCallGraphMock,
-  createIgnoreMatcher: createIgnoreMatcherMock,
+  buildCallGraph: coreMocks.buildCallGraphMock,
+  createIgnoreMatcher: coreMocks.createIgnoreMatcherMock,
   extractCFG: vi.fn(),
   extractDFG: vi.fn(),
   extractPDG: vi.fn(),
   getComplexityRating: vi.fn(() => "low"),
-  getParser: vi.fn(() => ({ extractAST: extractAstMock })),
-  isIgnoredPath: isIgnoredPathMock,
+  getParser: vi.fn(() => ({ extractAST: coreMocks.extractAstMock })),
+  isIgnoredPath: coreMocks.isIgnoredPathMock,
 }));
 
 import { createProgram } from "./index.js";
@@ -33,7 +35,7 @@ async function createTempDir(): Promise<string> {
 
 describe("CLI ignore integration", () => {
   beforeEach(() => {
-    buildCallGraphMock.mockResolvedValue({
+    coreMocks.buildCallGraphMock.mockResolvedValue({
       projectRoot: "/tmp/project",
       files: [],
       builtAt: new Date().toISOString(),
@@ -42,13 +44,13 @@ describe("CLI ignore integration", () => {
       forwardIndex: new Map(),
       backwardIndex: new Map(),
     });
-    createIgnoreMatcherMock.mockResolvedValue({
+    coreMocks.createIgnoreMatcherMock.mockResolvedValue({
       basePath: "/tmp/project",
       ignoreFilePath: null,
       ignores: () => false,
     });
-    isIgnoredPathMock.mockResolvedValue(false);
-    extractAstMock.mockResolvedValue({
+    coreMocks.isIgnoredPathMock.mockResolvedValue(false);
+    coreMocks.extractAstMock.mockResolvedValue({
       toCompact: () => ({}),
       toJSON: () => ({}),
       filePath: "file.ts",
@@ -72,14 +74,18 @@ describe("CLI ignore integration", () => {
     const program = createProgram();
     await program.parseAsync(["node", "distil", "calls", ".", "--json"]);
 
-    expect(buildCallGraphMock).toHaveBeenCalledWith(expect.any(String), { useIgnore: true });
+    expect(coreMocks.buildCallGraphMock).toHaveBeenCalledWith(expect.any(String), {
+      useIgnore: true,
+    });
   });
 
   it("passes useIgnore=false to calls with --no-ignore", async () => {
     const program = createProgram();
     await program.parseAsync(["node", "distil", "--no-ignore", "calls", ".", "--json"]);
 
-    expect(buildCallGraphMock).toHaveBeenCalledWith(expect.any(String), { useIgnore: false });
+    expect(coreMocks.buildCallGraphMock).toHaveBeenCalledWith(expect.any(String), {
+      useIgnore: false,
+    });
   });
 
   it("passes useIgnore=false to tree matcher with --no-ignore", async () => {
@@ -90,6 +96,8 @@ describe("CLI ignore integration", () => {
     const program = createProgram();
     await program.parseAsync(["node", "distil", "--no-ignore", "tree", root, "--json"]);
 
-    expect(createIgnoreMatcherMock).toHaveBeenCalledWith(expect.any(String), { useIgnore: false });
+    expect(coreMocks.createIgnoreMatcherMock).toHaveBeenCalledWith(expect.any(String), {
+      useIgnore: false,
+    });
   });
 });
