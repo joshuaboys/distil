@@ -50,7 +50,7 @@ export async function createIgnoreMatcher(
   }
 
   const ignoreFilePath = await findNearestDistilignore(basePath);
-  const ignoreBasePath = ignoreFilePath ? dirname(ignoreFilePath) : basePath;
+  const ignoreBasePath = ignoreFilePath ? dirname(ignoreFilePath) : await toDirectory(basePath);
   const matcher = ignore();
   matcher.add(getBuiltinIgnorePatterns());
 
