@@ -1,6 +1,6 @@
 import { mkdtemp, mkdir, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
-import { join } from "path";
+import { join, relative } from "path";
 import { afterEach, describe, expect, it } from "vitest";
 import { buildCallGraph } from "../index.js";
 import { createIgnoreMatcher, findNearestDistilignore, isIgnoredPath } from "./index.js";
@@ -65,7 +65,7 @@ describe("ignore", () => {
     );
 
     const graph = await buildCallGraph(root);
-    const files = graph.files.map((file) => file.replace(root + "/", ""));
+    const files = graph.files.map((file) => relative(root, file).replace(/\\/g, "/"));
     expect(files).toContain("src/keep.ts");
     expect(files).not.toContain("src/ignored.ts");
     expect(files).not.toContain("node_modules/ignored.ts");
@@ -82,7 +82,7 @@ describe("ignore", () => {
     expect(await isIgnoredPath(target, { useIgnore: false })).toBe(false);
 
     const graph = await buildCallGraph(root, { useIgnore: false });
-    const files = graph.files.map((file) => file.replace(root + "/", ""));
+    const files = graph.files.map((file) => relative(root, file).replace(/\\/g, "/"));
     expect(files).toContain("src/ignored.ts");
   });
 });
