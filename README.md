@@ -101,7 +101,7 @@ All commands support `--json` for programmatic use. Function names use fuzzy mat
 packages/
   distil-core   # Analysis engine (tree-sitter parsers, L1-L5 extractors)
   distil-cli    # Command-line interface (Commander.js)
-  distil-mcp    # MCP server for editor/agent integration (in progress)
+  distil-mcp    # MCP server for editor/agent integration
 ```
 
 ```
@@ -118,13 +118,42 @@ packages/
 
 ## MCP Server
 
-An MCP server (`@distil/mcp`) is in development for v0.1, exposing all analysis layers via the Model Context Protocol. This enables editors and agents (Claude Code, Cursor, etc.) to query Distil analysis directly.
+Distil includes an MCP server for editor and agent integration. Start it with:
+
+```bash
+distil mcp
+```
+
+Or add to your editor's MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "distil": {
+      "command": "distil",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+**Available MCP tools:**
+
+| Tool             | Description                                     |
+| ---------------- | ----------------------------------------------- |
+| `distil_extract` | L1: Extract file structure (functions, classes) |
+| `distil_calls`   | L2: Build project call graph                    |
+| `distil_impact`  | L2: Find all callers of a function              |
+| `distil_cfg`     | L3: Control flow graph with complexity metrics  |
+| `distil_dfg`     | L4: Data flow graph with def-use chains         |
+| `distil_slice`   | L5: Program slice (backward/forward)            |
+
+**Workflow prompts:** `distil_before_editing`, `distil_debug_line`, `distil_refactor_impact`
 
 ## Roadmap
 
 Planned features:
 
-- **MCP server** -- expose analysis via Model Context Protocol (in progress, v0.1)
 - **Semantic search** -- natural language code search via embeddings
 - **Index warming** -- pre-build all analysis layers for fast queries
 - **Monorepo support** -- per-package analysis with cross-package call graphs
