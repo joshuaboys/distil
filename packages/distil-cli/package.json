@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@distil/core": "workspace:*",
+    "@distil/mcp": "workspace:*",
     "commander": "^12.1.0"
   },
   "devDependencies": {

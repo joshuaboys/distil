@@ -44,6 +44,9 @@ importers:
       '@distil/core':
         specifier: workspace:*
         version: link:../distil-core
+      '@distil/mcp':
+        specifier: workspace:*
+        version: link:../distil-mcp
       commander:
         specifier: ^12.1.0
         version: 12.1.0
