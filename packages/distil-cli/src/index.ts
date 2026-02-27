@@ -42,6 +42,7 @@ import type {
 } from "@distil/core";
 
 import { extractCommand } from "./commands/extract.js";
+import { mcpCommand } from "./commands/mcp.js";
 import { treeCommand } from "./commands/tree.js";
 import { resolveCliIgnoreOptions } from "./ignore.js";
 
@@ -636,6 +637,7 @@ Supported languages: TypeScript, JavaScript`,
   program.addCommand(cfgCommand);
   program.addCommand(dfgCommand);
   program.addCommand(sliceCommand);
+  program.addCommand(mcpCommand);
 
   return program;
 }
