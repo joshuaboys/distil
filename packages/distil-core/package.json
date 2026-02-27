@@ -58,5 +58,12 @@
     "type": "git",
     "url": "https://github.com/joshuaboys/distil.git",
     "directory": "packages/distil-core"
+  },
+  "homepage": "https://github.com/joshuaboys/distil",
+  "bugs": {
+    "url": "https://github.com/joshuaboys/distil/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

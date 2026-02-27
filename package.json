@@ -37,5 +37,13 @@
   "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joshuaboys/distil.git"
+  },
+  "homepage": "https://github.com/joshuaboys/distil",
+  "bugs": {
+    "url": "https://github.com/joshuaboys/distil/issues"
   }
 }
