@@ -3,6 +3,10 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "references": [{ "path": "./packages/distil-core" }, { "path": "./packages/distil-cli" }],
+  "references": [
+    { "path": "./packages/distil-core" },
+    { "path": "./packages/distil-cli" },
+    { "path": "./packages/distil-mcp" }
+  ],
   "files": []
 }
