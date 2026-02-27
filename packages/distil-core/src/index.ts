@@ -64,8 +64,15 @@ export { extractCFG, extractDFG, extractPDG } from "./extractors.js";
 // API exports (to be implemented)
 // export { getRelevantContext } from './api/context.js';
 
-// Kindling integration (to be implemented)
-// export { DistilStore } from './kindling/store.js';
+// Kindling integration
+export { DistilStore, DISTIL_SUBKINDS } from "./kindling/store.js";
+export type {
+  KindlingAdapter,
+  DistilObservation,
+  DistilObservationMeta,
+  DistilObservationQuery,
+  ObservationKind,
+} from "./kindling/types.js";
 
 export async function buildCallGraph(
   projectRoot: string,
@@ -168,7 +175,10 @@ export async function buildCallGraph(
   return graph;
 }
 
-async function collectSourceFiles(rootPath: string, options: IgnoreOptions = {}): Promise<string[]> {
+async function collectSourceFiles(
+  rootPath: string,
+  options: IgnoreOptions = {},
+): Promise<string[]> {
   const results: string[] = [];
   const matcher = await createIgnoreMatcher(rootPath, options);
 
