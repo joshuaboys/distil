@@ -58,12 +58,12 @@ Those concerns are either out of scope or deferred to future versions.
 
 **Target:** `distil extract <file>` works for TS/JS files ✅
 
-### M2: L2 Call Graph + Kindling Integration (In Progress)
+### M2: L2 Call Graph + Kindling Integration (Complete)
 
 - [x] Cross-file call graph construction
 - [x] Forward edges (what does this function call?)
 - [x] Backward edges (what calls this function?)
-- [ ] Kindling integration for caching analysis results
+- [x] Kindling integration for caching analysis results
 - [x] Impact analysis command
 
 **Target:** `distil impact <function>` shows all callers ✅
@@ -77,13 +77,13 @@ Those concerns are either out of scope or deferred to future versions.
 
 **Target:** `distil slice <file> <func> <line>` returns relevant lines only ✅
 
-### M4: Ignore Patterns + Monorepo Support (Planned)
+### M4: Ignore Patterns + Monorepo Support (In Progress)
 
-- [ ] `.distilignore` file support (`.gitignore` syntax)
+- [x] `.distilignore` file support (`.gitignore` syntax)
 - [ ] Monorepo workspace detection (pnpm, npm, lerna)
 - [ ] Cross-package call graph resolution
 - [ ] `--package` scoping flag
-- [ ] `--no-ignore` override flag
+- [x] `--no-ignore` override flag
 
 **Target:** Distil works correctly in monorepos and respects project ignore patterns
 
@@ -160,20 +160,23 @@ Prioritized queue of ready work across all packages:
 | --- | --------- | ---------------------------------------------- | ---------- | ------ | ----------- |
 | 1   | CLI-001   | [cli](modules/distil-cli.aps.md)               | cli        | @aneki | In Progress |
 | 2   | CLI-002   | [cli](modules/distil-cli.aps.md)               | cli        | @aneki | In Progress |
-| 3   | CORE-010  | [core](modules/distil-core.aps.md)             | core       | @aneki | Ready       |
-| 4   | CORE-009  | [core](modules/distil-core.aps.md)             | core       | @aneki | Ready       |
-| 5   | CORE-011  | [core](modules/distil-core.aps.md)             | core       | @aneki | Ready       |
-| 6   | CORE-005  | [core](modules/distil-core.aps.md)             | core       | @aneki | Ready       |
-| 7   | CLI-010   | [cli](modules/distil-cli.aps.md)               | cli        | @aneki | Ready       |
-| 8   | MCP-001   | [mcp](modules/distil-mcp.aps.md)               | mcp        | @aneki | Ready       |
+| 3   | CORE-009  | [core](modules/distil-core.aps.md)             | core       | @aneki | Ready       |
+| 4   | CORE-011  | [core](modules/distil-core.aps.md)             | core       | @aneki | Ready       |
+| 5   | CLI-010   | [cli](modules/distil-cli.aps.md)               | cli        | @aneki | Ready       |
+| 6   | MCP-001   | [mcp](modules/distil-mcp.aps.md)               | mcp        | @aneki | In Progress |
+
+<!-- Completed:
+  CORE-005 (Kindling integration) - done
+  CORE-010 (.distilignore support) - done
+  CLI-011 (.distilignore CLI) - done
+-->
 
 <!-- Items blocked on dependencies:
-  CORE-012 (Semantic search) - blocked on CORE-005
-  CORE-013 (Index warming) - blocked on CORE-005
+  CORE-012 (Semantic search) - blocked on CORE-005 (unblocked)
+  CORE-013 (Index warming) - blocked on CORE-005 (unblocked)
   CLI-005 (Context command) - blocked on CORE-009
   CLI-008 (Semantic search CLI) - blocked on CORE-012
-  CLI-009 (Warm command) - blocked on CORE-005, CORE-013
-  CLI-011 (.distilignore CLI) - blocked on CORE-010
+  CLI-009 (Warm command) - blocked on CORE-013
   CLI-012 (MCP subcommand) - blocked on MCP-001
   MCP-002 (Analysis tools) - blocked on MCP-001
   MCP-003 (Resources/prompts) - blocked on MCP-001, MCP-002

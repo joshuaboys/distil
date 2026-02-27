@@ -228,9 +228,9 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Confidence:** high
 - **Risks:** Token budget tuning
 
-### CORE-010: .distilignore support
+### CORE-010: .distilignore support ✅
 
-- **Status:** Planned
+- **Status:** Complete
 - **Intent:** Allow projects to exclude files/directories from analysis via ignore patterns
 - **Expected Outcome:** `.distilignore` file in project root is respected by all analysis commands; supports glob patterns like `.gitignore`
 - **Scope:** `src/ignore/`
