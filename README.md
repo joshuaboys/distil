@@ -101,31 +101,30 @@ All commands support `--json` for programmatic use. Function names use fuzzy mat
 packages/
   distil-core   # Analysis engine (tree-sitter parsers, L1-L5 extractors)
   distil-cli    # Command-line interface (Commander.js)
+  distil-mcp    # MCP server for editor/agent integration (in progress)
 ```
 
-Distil will integrate with [Kindling](https://github.com/anthropics/kindling) for caching and persistence:
-
 ```
-                     Distil CLI
+              Distil CLI / MCP Server
                         |
                         v
               Distil Analysis Engine
          L1 -> L2 -> L3 -> L4 -> L5
                         |
                         v
-              Kindling Persistence
-         SQLite + FTS5, observation storage
-                        |
-                        v
-               .kindling/distil.db
+                  tree-sitter
+            (language-specific grammars)
 ```
+
+## MCP Server
+
+An MCP server (`@distil/mcp`) is in development for v0.1, exposing all analysis layers via the Model Context Protocol. This enables editors and agents (Claude Code, Cursor, etc.) to query Distil analysis directly.
 
 ## Roadmap
 
-Planned features (not yet implemented):
+Planned features:
 
-- **MCP server** -- expose analysis via Model Context Protocol for editor and agent integration
-- **`.distilignore`** -- project-level ignore patterns (like `.gitignore`)
+- **MCP server** -- expose analysis via Model Context Protocol (in progress, v0.1)
 - **Semantic search** -- natural language code search via embeddings
 - **Index warming** -- pre-build all analysis layers for fast queries
 - **Monorepo support** -- per-package analysis with cross-package call graphs

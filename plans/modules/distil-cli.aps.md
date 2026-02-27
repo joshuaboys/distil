@@ -228,9 +228,9 @@ This is the user-facing surface of Distil. It formats analysis results for human
 - **Confidence:** high
 - **Risks:** None significant
 
-### CLI-011: .distilignore CLI integration
+### CLI-011: .distilignore CLI integration ✅
 
-- **Status:** Planned
+- **Status:** Complete
 - **Intent:** Ensure all CLI commands respect .distilignore patterns
 - **Expected Outcome:** Files matching .distilignore patterns are excluded from all output
 - **Scope:** Integration between CLI commands and CORE-010 ignore logic
