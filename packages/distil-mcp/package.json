@@ -4,7 +4,7 @@
   "description": "MCP server for Distil — expose code analysis via Model Context Protocol",
   "type": "module",
   "bin": {
-    "distil-mcp": "./dist/index.js"
+    "distil-mcp": "dist/index.js"
   },
   "main": "./dist/server.js",
   "types": "./dist/server.d.ts",
@@ -43,7 +43,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/joshuaboys/distil.git",
+    "url": "git+https://github.com/joshuaboys/distil.git",
     "directory": "packages/distil-mcp"
   },
   "homepage": "https://github.com/joshuaboys/distil",
