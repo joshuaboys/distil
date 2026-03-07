@@ -142,7 +142,7 @@ export class TypeScriptParser implements LanguageParser {
           break;
 
         case "export_statement":
-          this.parseExport(child, exports, functions, classes, variables);
+          this.parseExport(child, exports, functions, classes, variables, interfaces, typeAliases);
           break;
 
         case "function_declaration":
@@ -439,6 +439,8 @@ export class TypeScriptParser implements LanguageParser {
     functions: FunctionInfo[],
     classes: ClassInfo[],
     variables: VariableInfo[],
+    interfaces: InterfaceInfo[] = [],
+    typeAliases: TypeAliasInfo[] = [],
   ): void {
     const children = node.children;
     let isDefault = false;
@@ -472,6 +474,32 @@ export class TypeScriptParser implements LanguageParser {
           sourceModule: null,
           isTypeOnly: false,
           lineNumber: cls.lineNumber,
+        });
+      } else if (child.type === "interface_declaration") {
+        const iface = this.parseInterface(child);
+        iface.isExported = true;
+        interfaces.push(iface);
+        exports.push({
+          name: iface.name,
+          localName: null,
+          isDefault,
+          isReExport: false,
+          sourceModule: null,
+          isTypeOnly: true,
+          lineNumber: iface.lineNumber,
+        });
+      } else if (child.type === "type_alias_declaration") {
+        const alias = this.parseTypeAlias(child);
+        alias.isExported = true;
+        typeAliases.push(alias);
+        exports.push({
+          name: alias.name,
+          localName: null,
+          isDefault,
+          isReExport: false,
+          sourceModule: null,
+          isTypeOnly: true,
+          lineNumber: alias.lineNumber,
         });
       } else if (child.type === "lexical_declaration" || child.type === "variable_declaration") {
         const vars = this.parseVariableDeclaration(child, true);
@@ -751,6 +779,14 @@ export class TypeScriptParser implements LanguageParser {
     for (const child of node.children) {
       if (child.type === "identifier" || child.type === "type_identifier") {
         name = child.text;
+      } else if (child.type === "extends_type_clause") {
+        for (const c of child.children) {
+          if (c.type === "type_identifier" || c.type === "generic_type") {
+            extendsList.push(c.text);
+          }
+        }
+      } else if (child.type === "interface_body") {
+        this.parseInterfaceBody(child, methods, properties);
       }
     }
 
@@ -763,6 +799,90 @@ export class TypeScriptParser implements LanguageParser {
       isExported: false,
       lineNumber: node.startPosition.row + 1,
       range: this.getNodeRange(node),
+    };
+  }
+
+  private parseInterfaceBody(
+    node: TSNode,
+    methods: FunctionInfo[],
+    properties: PropertyInfo[],
+  ): void {
+    for (const child of node.children) {
+      if (child.type === "method_signature") {
+        const method = this.parseMethodSignature(child);
+        if (method) methods.push(method);
+      } else if (child.type === "property_signature") {
+        const prop = this.parsePropertySignature(child);
+        if (prop) properties.push(prop);
+      }
+    }
+  }
+
+  private parseMethodSignature(node: TSNode): FunctionInfo | null {
+    let name = "";
+    let params: ParameterInfo[] = [];
+    let returnType: string | null = null;
+
+    for (const child of node.children) {
+      if (child.type === "property_identifier") {
+        name = child.text;
+      } else if (child.type === "formal_parameters") {
+        params = this.parseParameters(child);
+      } else if (child.type === "type_annotation") {
+        returnType = child.text.slice(1).trim();
+      }
+    }
+
+    if (!name) return null;
+
+    return createFunctionInfo({
+      name,
+      params,
+      returnType,
+      docstring: null,
+      isMethod: true,
+      isAsync: false,
+      isGenerator: false,
+      isExported: false,
+      exportType: "none",
+      decorators: [],
+      lineNumber: node.startPosition.row + 1,
+      range: this.getNodeRange(node),
+      visibility: "public",
+      isStatic: false,
+    });
+  }
+
+  private parsePropertySignature(node: TSNode): PropertyInfo | null {
+    let name = "";
+    let type: string | null = null;
+    let isReadonly = false;
+    let isOptional = false;
+
+    for (const child of node.children) {
+      if (child.type === "property_identifier") {
+        name = child.text;
+      } else if (child.type === "type_annotation") {
+        type = child.text.slice(1).trim();
+      } else if (child.type === "readonly") {
+        isReadonly = true;
+      } else if (child.type === "?") {
+        isOptional = true;
+      }
+    }
+
+    if (!name) return null;
+
+    return {
+      name,
+      type,
+      defaultValue: null,
+      visibility: "public",
+      isStatic: false,
+      isReadonly,
+      isOptional,
+      lineNumber: node.startPosition.row + 1,
+      decorators: [],
     };
   }
 
