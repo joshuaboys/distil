@@ -104,8 +104,9 @@ export async function buildTree(
         });
       }
     }
-  } catch {
-    // Permission denied or other error
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    process.stderr.write(`warning: skipping ${dirPath}: ${msg}\n`);
   }
 
   return node;
