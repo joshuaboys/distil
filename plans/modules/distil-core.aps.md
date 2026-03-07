@@ -349,6 +349,97 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 3. **Incremental warming:** Skip files whose content hash hasn't changed
 4. **Concurrency:** Process files in parallel (bounded by available memory)
 
+### CORE-014: Extract findCallers() to core
+
+- **Status:** Ready
+- **Intent:** Deduplicate caller-finding logic currently implemented independently in CLI and MCP
+- **Expected Outcome:** Single `findCallers()` function in core that both CLI and MCP consume
+- **Scope:** `src/callgraph/`
+- **Non-scope:** CLI/MCP command changes (handled by CLI-014, MCP consumers)
+- **Files:** `src/index.ts` or `src/callgraph/`
+- **Dependencies:** CORE-004
+- **Validation:** `pnpm -F @distil/core test`
+- **Confidence:** high
+- **Origin:** OmO review P1-3
+
+### CORE-015: Move BUILTIN_METHODS filtering to core
+
+- **Status:** Ready
+- **Intent:** Make call graph noise filtering available to all consumers (CLI + MCP)
+- **Expected Outcome:** Built-in method filter set lives in core; MCP users get the same filtering as CLI users
+- **Scope:** `src/callgraph/`
+- **Non-scope:** CLI/MCP display logic
+- **Files:** `src/callgraph/builtins.ts` or similar
+- **Dependencies:** CORE-004
+- **Validation:** `pnpm -F @distil/core test`
+- **Confidence:** high
+- **Origin:** OmO review P1-4
+
+### CORE-016: Split typescript.ts into separate builder files
+
+- **Status:** Ready
+- **Intent:** Reduce parser file complexity before multi-language support
+- **Expected Outcome:** CFGBuilder (~690 lines) and DFGBuilder (~305 lines) extracted to separate files; parser stays in typescript.ts
+- **Scope:** `src/parsers/`
+- **Non-scope:** Behavior changes, new features
+- **Files:** `src/parsers/typescript.ts`, `src/parsers/cfg-builder.ts`, `src/parsers/dfg-builder.ts`
+- **Dependencies:** (none)
+- **Validation:** `pnpm -F @distil/core test`
+- **Confidence:** high
+- **Origin:** OmO review P1-5
+
+### CORE-017: Document DFG reaching-definitions approximation
+
+- **Status:** Ready
+- **Intent:** Document known limitation of line-number heuristic in def-use chain building
+- **Expected Outcome:** README or design doc explains L4/L5 precision boundaries for users
+- **Scope:** Documentation only
+- **Non-scope:** Algorithm changes
+- **Files:** `README.md` or `docs/`
+- **Dependencies:** (none)
+- **Validation:** Documentation exists and is accurate
+- **Confidence:** high
+- **Origin:** OmO review P2-7
+
+### CORE-018: Complete interface parsing
+
+- **Status:** Ready
+- **Intent:** Extract interface members, methods, and extends clauses (currently only name is parsed)
+- **Expected Outcome:** `parseInterface()` populates methods, properties, and extends arrays
+- **Scope:** `src/parsers/typescript.ts`
+- **Non-scope:** New type definitions
+- **Files:** `src/parsers/typescript.ts`
+- **Dependencies:** (none)
+- **Validation:** `pnpm -F @distil/core test`
+- **Confidence:** high
+- **Origin:** OmO review P2-8
+
+### CORE-019: Add parser edge case tests
+
+- **Status:** Ready
+- **Intent:** Cover untested parsing scenarios that could produce incorrect analysis
+- **Expected Outcome:** Tests for nested arrow functions, complex destructuring, optional chaining, generators, decorators
+- **Scope:** `src/parsers/typescript.test.ts`
+- **Non-scope:** Parser implementation changes (unless tests reveal bugs)
+- **Files:** `src/parsers/typescript.test.ts`
+- **Dependencies:** (none)
+- **Validation:** `pnpm -F @distil/core test`
+- **Confidence:** high
+- **Origin:** OmO review P2-9
+
+### CORE-020: Fix dead code and minor inefficiencies
+
+- **Status:** Ready
+- **Intent:** Clean up dead ternary in processBreakContinue and per-call Set allocation in DFGBuilder
+- **Expected Outcome:** Dead ternary removed; builtins set is a module-level constant
+- **Scope:** `src/parsers/typescript.ts`
+- **Non-scope:** Behavior changes
+- **Files:** `src/parsers/typescript.ts`
+- **Dependencies:** (none)
+- **Validation:** `pnpm -F @distil/core test`
+- **Confidence:** high
+- **Origin:** OmO review P3-11
+
 ## Decisions
 
 - **CORE-D-001:** Tree-sitter is the parsing foundation; no fallback to regex or other parsers
