@@ -260,6 +260,45 @@ This is the user-facing surface of Distil. It formats analysis results for human
 - **Confidence:** high
 - **Risks:** None significant
 
+### CLI-013: Add CLI command tests
+
+- **Status:** Ready
+- **Intent:** Cover the zero-command-test gap — all CLI commands lack end-to-end tests
+- **Expected Outcome:** Smoke tests for extract, tree, calls, impact, cfg, dfg, slice commands; test --json and --compact flags
+- **Scope:** `src/` test files
+- **Non-scope:** Analysis correctness (tested in core)
+- **Files:** `src/commands/*.test.ts` or `src/index.test.ts`
+- **Dependencies:** (none)
+- **Validation:** `pnpm -F @distil/cli test`
+- **Confidence:** high
+- **Origin:** OmO review P0-2
+
+### CLI-014: Extract remaining inline commands to src/commands/
+
+- **Status:** Ready
+- **Intent:** Move calls, impact, cfg, dfg, slice commands out of the 907-line index.ts
+- **Expected Outcome:** Each command in its own file under src/commands/ following the tree/extract pattern
+- **Scope:** `src/commands/`, `src/index.ts`
+- **Non-scope:** Behavior changes, new features
+- **Files:** `src/commands/calls.ts`, `src/commands/impact.ts`, `src/commands/cfg.ts`, `src/commands/dfg.ts`, `src/commands/slice.ts`, `src/index.ts`
+- **Dependencies:** (none)
+- **Validation:** `pnpm -F @distil/cli test && pnpm -F @distil/cli build`
+- **Confidence:** high
+- **Origin:** OmO review P1-6
+
+### CLI-015: Fix empty catch and minor issues
+
+- **Status:** Ready
+- **Intent:** Address silent error swallowing in tree.ts directory traversal
+- **Expected Outcome:** Permission errors logged at debug level or skipped entries counted
+- **Scope:** `src/commands/tree.ts`
+- **Non-scope:** New error handling framework
+- **Files:** `src/commands/tree.ts`
+- **Dependencies:** (none)
+- **Validation:** `pnpm -F @distil/cli build`
+- **Confidence:** high
+- **Origin:** OmO review P3-14
+
 ## Decisions
 
 - **CLI-D-001:** Commander.js is the CLI framework (mature, widely used)

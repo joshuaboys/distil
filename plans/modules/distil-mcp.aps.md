@@ -1,8 +1,8 @@
 # @distil/mcp
 
-| Scope | Owner  | Priority | Status  |
-| ----- | ------ | -------- | ------- |
-| MCP   | @aneki | medium   | Planned |
+| Scope | Owner  | Priority | Status      |
+| ----- | ------ | -------- | ----------- |
+| MCP   | @aneki | medium   | In Progress |
 
 ## Purpose
 
@@ -80,9 +80,9 @@ This is the integration surface for editor plugins and AI coding agents that sup
 
 ## Tasks
 
-### MCP-001: Project setup and server scaffold
+### MCP-001: Project setup and server scaffold ✅
 
-- **Status:** Planned
+- **Status:** Complete
 - **Intent:** Create @distil/mcp package with MCP server boilerplate
 - **Expected Outcome:** MCP server starts, responds to initialize, lists tools
 - **Scope:** `packages/distil-mcp/`
@@ -92,6 +92,7 @@ This is the integration surface for editor plugins and AI coding agents that sup
 - **Validation:** `pnpm build && node packages/distil-mcp/dist/index.js` responds to MCP handshake
 - **Confidence:** high
 - **Risks:** None significant
+- **Completed:** Server implemented with 6 tools, 3 prompts, 13 tests passing
 
 ### MCP-002: Analysis tool definitions
 

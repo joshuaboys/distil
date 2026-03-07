@@ -98,12 +98,12 @@ Those concerns are either out of scope or deferred to future versions.
 
 **Target:** `distil semantic "validate JWT tokens"` finds relevant functions
 
-### M6: MCP Server (Planned)
+### M6: MCP Server (In Progress)
 
-- [ ] MCP server package (`@distil/mcp`)
-- [ ] Tool definitions for all analysis layers
-- [ ] Resource and prompt definitions
-- [ ] `distil mcp` CLI subcommand
+- [x] MCP server package (`@distil/mcp`)
+- [x] Tool definitions for all analysis layers (6 tools)
+- [x] Resource and prompt definitions (3 prompts)
+- [x] `distil mcp` CLI subcommand
 - [ ] Editor integration testing (Claude Code, Cursor)
 
 **Target:** Editors and agents query Distil analysis via MCP protocol
@@ -145,7 +145,7 @@ Those concerns are either out of scope or deferred to future versions.
 - **Path:** modules/distil-mcp.aps.md
 - **Scope:** MCP
 - **Owner:** @aneki
-- **Status:** Planned
+- **Status:** In Progress
 - **Priority:** medium
 - **Tags:** mcp, integration, editor
 - **Dependencies:** @distil/core, @modelcontextprotocol/sdk
@@ -156,19 +156,29 @@ Those concerns are either out of scope or deferred to future versions.
 
 Prioritized queue of ready work across all packages:
 
-| #   | Work Item | Module                                         | Packages   | Owner  | Status      |
-| --- | --------- | ---------------------------------------------- | ---------- | ------ | ----------- |
-| 1   | CLI-001   | [cli](modules/distil-cli.aps.md)               | cli        | @aneki | In Progress |
-| 2   | CLI-002   | [cli](modules/distil-cli.aps.md)               | cli        | @aneki | In Progress |
-| 3   | CORE-009  | [core](modules/distil-core.aps.md)             | core       | @aneki | Ready       |
-| 4   | CORE-011  | [core](modules/distil-core.aps.md)             | core       | @aneki | Ready       |
-| 5   | CLI-010   | [cli](modules/distil-cli.aps.md)               | cli        | @aneki | Ready       |
-| 6   | MCP-001   | [mcp](modules/distil-mcp.aps.md)               | mcp        | @aneki | In Progress |
+| #   | Work Item | Module                             | Packages | Owner  | Status      | Priority |
+| --- | --------- | ---------------------------------- | -------- | ------ | ----------- | -------- |
+| 1   | CLI-013   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P0       |
+| 2   | CORE-014  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
+| 3   | CORE-015  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
+| 4   | CORE-016  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
+| 5   | CLI-014   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P1       |
+| 6   | CORE-017  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
+| 7   | CORE-018  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
+| 8   | CORE-019  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
+| 9   | CORE-020  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P3       |
+| 10  | CLI-015   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P3       |
+| 11  | CLI-001   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
+| 12  | CLI-002   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
+| 13  | CORE-009  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
+| 14  | CORE-011  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
+| 15  | CLI-010   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | —        |
 
 <!-- Completed:
-  CORE-005 (Kindling integration) - done
+  CORE-005 (Kindling integration) - scaffolded, not wired
   CORE-010 (.distilignore support) - done
   CLI-011 (.distilignore CLI) - done
+  MCP-001 (MCP server scaffold) - done (6 tools, 3 prompts, 13 tests)
 -->
 
 <!-- Items blocked on dependencies:
@@ -198,6 +208,7 @@ Prioritized queue of ready work across all packages:
 - **D-009:** MCP server uses stdio transport; started via `distil mcp` or configured in editor settings
 - **D-010:** `.distilignore` uses `.gitignore` syntax and is checked into version control
 - **D-011:** Monorepo detection is automatic; `--package` flag for explicit scoping
+- **D-012:** OmO review (2026-03-06) findings tracked as CORE-014..020 and CLI-013..015; prioritized P0-P3
 
 ---
 
