@@ -38,6 +38,7 @@ jobs:
       - run: pnpm test
 =======
       - run: pnpm test
+<<<<<<< HEAD
         if: matrix.node-version != 22
 
       - run: pnpm coverage
@@ -51,3 +52,18 @@ jobs:
           name: coverage-report
           path: packages/*/coverage/
           retention-days: 14
+||||||| parent of b08e10f (fix: address PR #11 review feedback)
+        if: matrix.node-version != 22
+
+      - run: pnpm coverage
+        if: matrix.node-version == 22
+
+      - name: Upload coverage
+        if: matrix.node-version == 22
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: packages/*/coverage/
+          retention-days: 14
+=======
+>>>>>>> b08e10f (fix: address PR #11 review feedback)

@@ -848,7 +848,7 @@ export class TypeScriptParser implements LanguageParser {
       decorators: [],
       lineNumber: node.startPosition.row + 1,
       range: this.getNodeRange(node),
-      visibility: "public",
+      visibility: null,
       isStatic: false,
     });
   }

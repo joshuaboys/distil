@@ -97,9 +97,9 @@ All commands support `--json` for programmatic use. Function names use fuzzy mat
 - Loop-carried dependencies use the nearest prior definition heuristic
 - Multiple reaching definitions are marked `isMayReach: true`
 
-The approximation avoids false positives (spurious def-use edges) at the cost of potentially missing some valid edges.
+This approximation can introduce both false positives (spurious def-use edges) and false negatives (missing valid edges), especially in the presence of complex control flow such as branching and loops.
 
-**L5 (PDG/Slicing)** inherits L4's precision boundaries — slices are sound but may be slightly larger than a full dataflow analysis would produce.
+**L5 (PDG/Slicing)** inherits L4's approximation — slices may include some statements that are not strictly relevant and may miss some that are, and are intended as a practical aid rather than a fully sound program analysis.
 
 ## Supported Languages
 
