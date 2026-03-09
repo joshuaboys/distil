@@ -1,17 +1,115 @@
+<div align="center">
+
 # Distil
 
-Token-efficient code analysis for LLMs.
+**Token-efficient code analysis for LLMs.
+Extract structure, not text.**
 
-Modern codebases are massive. Even when a model's context window is large enough, dumping raw source buries signal under noise. Distil extracts _structure_ instead of text, reducing context by **~95%** while preserving what matters for accurate reasoning.
+[![CI](https://github.com/joshuaboys/distil/actions/workflows/ci.yml/badge.svg)](https://github.com/joshuaboys/distil/actions/workflows/ci.yml)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![npm](https://img.shields.io/npm/v/@distil/cli)](https://www.npmjs.com/package/@distil/cli)
 
-## How It Works
+</div>
 
-Instead of feeding raw source files into an LLM context, Distil produces structured analysis at five layers of depth. Each layer adds more detail, so you request only what the task needs:
+---
+
+## Features
+
+- **~95% token reduction** — structured analysis instead of raw source dumps
+- **Five analysis layers** — from function signatures (L1) to program slicing (L5)
+- **Tree-sitter powered** — fast, accurate parsing for TypeScript and JavaScript
+- **MCP server** — plug into any editor or AI agent that supports MCP
+- **Fuzzy matching** — find functions by name without exact spelling
+- **JSON output** — `--json` on every command for programmatic use
+
+## Quick Start
+
+```sh
+# Install from npm
+npm install -g @distil/cli
+
+# See the structure of a project
+distil tree .
+
+# Extract functions, classes, and imports from a file
+distil extract src/auth.ts
+
+# Who calls this function? What breaks if I change it?
+distil impact validateToken .
+```
+
+## Install
+
+```sh
+npm install -g @distil/cli
+```
+
+<details>
+<summary><strong>From source</strong></summary>
+
+Requires [pnpm](https://pnpm.io) and Node 18+.
+
+```sh
+git clone https://github.com/joshuaboys/distil.git
+cd distil
+pnpm install && pnpm build
+pnpm -F @distil/cli link --global
+```
+
+</details>
+
+## Usage
+
+### Explore unfamiliar code
+
+```sh
+distil tree .                 # file tree structure
+distil extract src/auth.ts    # functions, classes, imports, signatures
+```
+
+### Understand dependencies before editing
+
+```sh
+distil impact validateToken .           # who calls this function?
+distil calls .                          # full project call graph
+distil dfg src/auth.ts validateToken    # data flow through a function
+```
+
+### Assess complexity before refactoring
+
+```sh
+distil cfg src/auth.ts validateToken    # control flow + cyclomatic complexity
+```
+
+### Debug a specific line
+
+```sh
+distil slice src/auth.ts validateToken 42             # what affects line 42?
+distil slice src/auth.ts validateToken 42 --forward   # what does line 42 affect?
+```
+
+## Commands
+
+| Command | Layer | Description |
+| --- | --- | --- |
+| `distil tree [path]` | — | File tree structure |
+| `distil extract <file>` | L1 | Functions, classes, imports, signatures |
+| `distil calls [path]` | L2 | Build project call graph |
+| `distil impact <func> [path]` | L2 | Find all callers of a function |
+| `distil cfg <file> <func>` | L3 | Control flow graph with complexity |
+| `distil dfg <file> <func>` | L4 | Data flow graph with def-use chains |
+| `distil slice <file> <func> <line>` | L5 | Program slice (backward/forward) |
+
+All commands support `--json` for programmatic use. Function names use fuzzy matching.
+
+## Analysis Layers
+
+Each layer adds depth — request only what the task needs:
 
 ```
 Raw source (10,000 tokens)
-    |
-    v
+    │
+    ▼
 L1: AST      (500 tokens)   "What functions exist?"
 L2: Calls    (800 tokens)   "Who calls what?"
 L3: CFG      (200 tokens)   "How complex is this function?"
@@ -19,112 +117,15 @@ L4: DFG      (300 tokens)   "Where does this value flow?"
 L5: Slice    (150 tokens)   "What affects line 42?"
 ```
 
-## Installation
-
-```bash
-# From source (pnpm monorepo)
-git clone https://github.com/joshuaboys/distil.git
-cd distil
-pnpm install && pnpm build
-
-# Link globally
-pnpm -F @distil/cli link --global
-```
-
-## Workflows
-
-### Before reading unfamiliar code
-
-```bash
-# Get the lay of the land
-distil tree .
-
-# Understand a specific file's structure
-distil extract src/auth.ts
-```
-
-### Before editing a function
-
-```bash
-# Who calls this function? What might break?
-distil impact validateToken .
-
-# What data flows through it?
-distil dfg src/auth.ts validateToken
-```
-
-### Before refactoring
-
-```bash
-# Build the full call graph to see dependencies
-distil calls .
-
-# Check complexity before deciding what to simplify
-distil cfg src/auth.ts validateToken
-```
-
-### Debugging a specific line
-
-```bash
-# What code affects line 42? (backward slice)
-distil slice src/auth.ts validateToken 42
-
-# What does line 42 affect? (forward slice)
-distil slice src/auth.ts validateToken 42 --forward
-```
-
-## Commands
-
-| Command                             | Layer | Description                             |
-| ----------------------------------- | ----- | --------------------------------------- |
-| `distil tree [path]`                | -     | File tree structure                     |
-| `distil extract <file>`             | L1    | Functions, classes, imports, signatures |
-| `distil calls [path]`               | L2    | Build project call graph                |
-| `distil impact <func> [path]`       | L2    | Find all callers of a function          |
-| `distil cfg <file> <func>`          | L3    | Control flow graph with complexity      |
-| `distil dfg <file> <func>`          | L4    | Data flow graph with def-use chains     |
-| `distil slice <file> <func> <line>` | L5    | Program slice (backward/forward)        |
-
-All commands support `--json` for programmatic use. Function names use fuzzy matching.
-
-## Supported Languages
-
-| Language              | L1      | L2  | L3-L5 |
-| --------------------- | ------- | --- | ----- |
-| TypeScript/JavaScript | yes     | yes | yes   |
-| Python                | planned | -   | -     |
-| Rust                  | planned | -   | -     |
-
-## Architecture
-
-```
-packages/
-  distil-core   # Analysis engine (tree-sitter parsers, L1-L5 extractors)
-  distil-cli    # Command-line interface (Commander.js)
-  distil-mcp    # MCP server for editor/agent integration
-```
-
-```
-              Distil CLI / MCP Server
-                        |
-                        v
-              Distil Analysis Engine
-         L1 -> L2 -> L3 -> L4 -> L5
-                        |
-                        v
-                  tree-sitter
-            (language-specific grammars)
-```
-
 ## MCP Server
 
-Distil includes an MCP server for editor and agent integration. Start it with:
+Distil includes an MCP server for editor and agent integration.
 
-```bash
+```sh
 distil mcp
 ```
 
-Or add to your editor's MCP settings:
+Add to your editor's MCP settings:
 
 ```json
 {
@@ -137,37 +138,55 @@ Or add to your editor's MCP settings:
 }
 ```
 
-**Available MCP tools:**
+<details>
+<summary><strong>Available tools and prompts</strong></summary>
 
-| Tool             | Description                                     |
-| ---------------- | ----------------------------------------------- |
+| Tool | Description |
+| --- | --- |
 | `distil_extract` | L1: Extract file structure (functions, classes) |
-| `distil_calls`   | L2: Build project call graph                    |
-| `distil_impact`  | L2: Find all callers of a function              |
-| `distil_cfg`     | L3: Control flow graph with complexity metrics  |
-| `distil_dfg`     | L4: Data flow graph with def-use chains         |
-| `distil_slice`   | L5: Program slice (backward/forward)            |
+| `distil_calls` | L2: Build project call graph |
+| `distil_impact` | L2: Find all callers of a function |
+| `distil_cfg` | L3: Control flow graph with complexity metrics |
+| `distil_dfg` | L4: Data flow graph with def-use chains |
+| `distil_slice` | L5: Program slice (backward/forward) |
 
 **Workflow prompts:** `distil_before_editing`, `distil_debug_line`, `distil_refactor_impact`
 
-## Roadmap
+</details>
 
-Planned features:
+## Supported Languages
 
-- **Semantic search** -- natural language code search via embeddings
-- **Index warming** -- pre-build all analysis layers for fast queries
-- **Monorepo support** -- per-package analysis with cross-package call graphs
+| Language | L1 | L2 | L3–L5 |
+| --- | --- | --- | --- |
+| TypeScript / JavaScript | yes | yes | yes |
+| Python | planned | — | — |
+| Rust | planned | — | — |
 
-Roadmap details and module specs are in `plans/` using APS format. Start at [plans/index.aps.md](./plans/index.aps.md).
+## Architecture
 
-## Development
-
-```bash
-pnpm install        # Install dependencies
-pnpm build          # Build all packages
-pnpm test           # Run all tests
-pnpm typecheck      # Type check
 ```
+packages/
+  distil-core   # Analysis engine (tree-sitter parsers, L1–L5 extractors)
+  distil-cli    # Command-line interface (Commander.js)
+  distil-mcp    # MCP server for editor/agent integration
+```
+
+## Uninstall
+
+```sh
+npm uninstall -g @distil/cli
+```
+
+## More
+
+- [Roadmap and module specs](plans/index.aps.md) — planned features and APS design docs
+- [Contributing](CONTRIBUTING.md) — development setup and guidelines
+
+## Acknowledgements
+
+Distil is built on:
+
+- **[tree-sitter](https://tree-sitter.github.io/tree-sitter/)** — the incremental parsing framework that powers all of Distil's language analysis. Tree-sitter's concrete syntax trees and query language make accurate, fast extraction possible without relying on regex or language-specific hacks.
 
 ## License
 
