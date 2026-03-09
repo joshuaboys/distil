@@ -167,7 +167,7 @@ Prioritized queue of ready work across all packages:
 | 7   | CORE-018  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
 | 8   | CORE-019  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
 | 9   | CORE-020  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P3       |
-| 10  | CLI-015   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P3       |
+| 10  | CLI-015   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Complete    | P3       |
 | 11  | CLI-001   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
 | 12  | CLI-002   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
 | 13  | CORE-009  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
