@@ -264,7 +264,7 @@ None. The project builds, tests pass, and the core analysis produces correct res
 ### CI Pipeline (`.github/workflows/ci.yml`)
 
 - Triggers on push/PR to main
-- Matrix: Node 22.x
+- Matrix: Node 20.x, 22.x
 - Steps: install → build → typecheck → lint → test
 - **Good**: All quality gates are in sequence. A type error blocks test execution.
 - **Missing**: No code coverage reporting. No integration/e2e tests.

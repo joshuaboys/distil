@@ -288,7 +288,7 @@ This is the user-facing surface of Distil. It formats analysis results for human
 
 ### CLI-015: Fix empty catch and minor issues
 
-- **Status:** Ready
+- **Status:** Complete
 - **Intent:** Address silent error swallowing in tree.ts directory traversal
 - **Expected Outcome:** Permission errors logged at debug level or skipped entries counted
 - **Scope:** `src/commands/tree.ts`
