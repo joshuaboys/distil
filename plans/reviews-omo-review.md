@@ -21,8 +21,16 @@ The project is at an **early-mature** stage — core functionality works, the MC
 | Type Check   | ✅ Clean       | Strict mode with `noUncheckedIndexedAccess`                    |
 | Lint         | ✅ Clean       | ESLint passes                                                  |
 | Format       | ⚠️ 19 warnings | All in `.claude/` configs and `plans/index.aps.md`, not source |
+<<<<<<< HEAD
 | TODOs        | 1              | Arrow function parsing gap (typescript.ts:841) (as of dad0895) |
 | Dependencies | ✅ Current     | tree-sitter 0.25, MCP SDK 1.9                                  |
+||||||| parent of ba31867 (fix(docs): correct dependency versions and CI matrix in review doc)
+| TODOs        | 1              | Arrow function parsing gap (typescript.ts:841)                 |
+| Dependencies | ✅ Current     | tree-sitter 0.25, MCP SDK 1.9                                  |
+=======
+| TODOs        | 1              | Arrow function parsing gap (typescript.ts:841)                 |
+| Dependencies | ✅ Current     | tree-sitter ^0.22.4, tree-sitter-typescript ^0.23.2, MCP SDK ^1.12.1 |
+>>>>>>> ba31867 (fix(docs): correct dependency versions and CI matrix in review doc)
 
 ---
 
@@ -265,7 +273,14 @@ None. The project builds, tests pass, and the core analysis produces correct res
 
 - Triggers on push/PR to main
 - Matrix: Node 20.x, 22.x
+<<<<<<< HEAD
 - Steps: install → build → typecheck → test
+||||||| parent of ba31867 (fix(docs): correct dependency versions and CI matrix in review doc)
+- Matrix: Node 22.x
+- Steps: install → build → typecheck → lint → test
+=======
+- Steps: install → build → typecheck → lint → test
+>>>>>>> ba31867 (fix(docs): correct dependency versions and CI matrix in review doc)
 - **Good**: All quality gates are in sequence. A type error blocks test execution.
 - **Missing**: No code coverage reporting. No integration/e2e tests.
 
