@@ -17,11 +17,11 @@ The project is at an **early-mature** stage — core functionality works, the MC
 | Metric       | Status         | Details                                                        |
 | ------------ | -------------- | -------------------------------------------------------------- |
 | Build        | ✅ Pass        | All 3 packages build cleanly                                   |
-| Tests        | ✅ 39/39       | core=23, cli=3, mcp=13                                         |
+| Tests        | ✅ 39/39       | core=23, cli=3, mcp=13 (as of dad0895)                         |
 | Type Check   | ✅ Clean       | Strict mode with `noUncheckedIndexedAccess`                    |
 | Lint         | ✅ Clean       | ESLint passes                                                  |
 | Format       | ⚠️ 19 warnings | All in `.claude/` configs and `plans/index.aps.md`, not source |
-| TODOs        | 1              | Arrow function parsing gap (typescript.ts:841)                 |
+| TODOs        | 1              | Arrow function parsing gap (typescript.ts:841) (as of dad0895) |
 | Dependencies | ✅ Current     | tree-sitter 0.25, MCP SDK 1.9                                  |
 
 ---
@@ -265,7 +265,7 @@ None. The project builds, tests pass, and the core analysis produces correct res
 
 - Triggers on push/PR to main
 - Matrix: Node 20.x, 22.x
-- Steps: install → build → typecheck → lint → test
+- Steps: install → build → typecheck → test
 - **Good**: All quality gates are in sequence. A type error blocks test execution.
 - **Missing**: No code coverage reporting. No integration/e2e tests.
 
