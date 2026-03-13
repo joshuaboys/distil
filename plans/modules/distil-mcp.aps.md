@@ -92,37 +92,39 @@ This is the integration surface for editor plugins and AI coding agents that sup
 - **Validation:** `pnpm build && node packages/distil-mcp/dist/index.js` responds to MCP handshake
 - **Confidence:** high
 - **Risks:** None significant
-- **Completed:** Server implemented with 6 tools, 3 prompts, 13 tests passing
+- **Completed:** Server scaffold with MCP handshake, tool/prompt/resource registration, and 13 protocol-level tests passing
 
-### MCP-002: Analysis tool definitions
+### MCP-002: Analysis tool definitions ✅
 
-- **Status:** Planned
+- **Status:** Complete
 - **Intent:** Register all analysis tools with the MCP server
 - **Expected Outcome:** MCP clients can call distil_extract, distil_calls, distil_cfg, etc.
-- **Scope:** `packages/distil-mcp/src/tools/`
+- **Scope:** `packages/distil-mcp/src/server.ts`
 - **Non-scope:** Analysis logic (delegates to core)
-- **Files:** `packages/distil-mcp/src/tools/extract.ts`, `packages/distil-mcp/src/tools/calls.ts`, `packages/distil-mcp/src/tools/cfg.ts`, `packages/distil-mcp/src/tools/dfg.ts`, `packages/distil-mcp/src/tools/slice.ts`
+- **Files:** `packages/distil-mcp/src/server.ts`
 - **Dependencies:** MCP-001
 - **Validation:** MCP client can call each tool and receive correct JSON results
 - **Confidence:** high
 - **Risks:** Input validation and error formatting for MCP protocol
+- **Completed:** 6 tools implemented inline in server.ts (distil_tree, distil_extract, distil_calls, distil_impact, distil_cfg, distil_dfg)
 
-### MCP-003: Resource and prompt definitions
+### MCP-003: Resource and prompt definitions ✅
 
-- **Status:** Planned
+- **Status:** Complete
 - **Intent:** Provide project-level resources and workflow prompts via MCP
 - **Expected Outcome:** MCP clients can access project structure as a resource and use workflow prompts
-- **Scope:** `packages/distil-mcp/src/resources/`, `packages/distil-mcp/src/prompts/`
+- **Scope:** `packages/distil-mcp/src/server.ts`
 - **Non-scope:** Complex prompt engineering
-- **Files:** `packages/distil-mcp/src/resources/project.ts`, `packages/distil-mcp/src/prompts/workflows.ts`
+- **Files:** `packages/distil-mcp/src/server.ts`
 - **Dependencies:** MCP-001, MCP-002
 - **Validation:** Resources and prompts accessible from MCP client
 - **Confidence:** medium
 - **Risks:** Prompt template design requires iteration
+- **Completed:** 3 prompts (distil_before_editing, distil_debug_line, distil_refactor_impact) implemented inline in server.ts
 
-### MCP-004: CLI integration subcommand
+### MCP-004: CLI integration subcommand ✅
 
-- **Status:** Planned
+- **Status:** Complete
 - **Intent:** Add `distil mcp` subcommand to start MCP server from CLI
 - **Expected Outcome:** `distil mcp` starts the server on stdio; configurable via CLI flags
 - **Scope:** `packages/distil-cli/src/commands/mcp.ts`
@@ -132,6 +134,22 @@ This is the integration surface for editor plugins and AI coding agents that sup
 - **Validation:** `distil mcp` starts server; editor connects successfully
 - **Confidence:** high
 - **Risks:** None significant
+- **Completed:** `distil mcp` command exists in packages/distil-cli/src/commands/mcp.ts
+
+### MCP-005: Add MCP tool execution tests
+
+- **Status:** Ready
+- **Intent:** Test that MCP tools produce correct analysis results, not just protocol compliance
+- **Expected Outcome:** Tests invoke distil_extract, distil_cfg, etc. with real fixture files and verify analysis output matches expected structure/values
+- **Scope:** `src/server.test.ts` or `src/__tests__/`
+- **Non-scope:** Protocol-level tests (already covered by existing 13 tests)
+- **Files:** `src/server.test.ts`
+- **Dependencies:** MCP-001
+- **Validation:** `pnpm -F @distil/mcp test`
+- **Confidence:** high
+- **Risks:** Test fixtures need to be stable; shared with core test fixtures where possible
+- **Origin:** OmO review gap — existing 13 tests only verify MCP schema/protocol, not analysis correctness
+- **Priority:** P1
 
 ## Decisions
 
