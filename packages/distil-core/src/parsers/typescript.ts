@@ -56,6 +56,31 @@ interface TSParser {
   setLanguage(lang: unknown): void;
 }
 
+/**
+ * Built-in identifiers to skip during DFG analysis.
+ * Hoisted to module level to avoid per-call Set allocation.
+ */
+const DFG_BUILTIN_IDENTIFIERS = new Set([
+  "true",
+  "false",
+  "null",
+  "undefined",
+  "this",
+  "super",
+  "console",
+  "Math",
+  "Object",
+  "Array",
+  "String",
+  "Number",
+  "Boolean",
+  "Error",
+  "Promise",
+  "JSON",
+  "Date",
+  "RegExp",
+]);
+
 // Tree-sitter imports (dynamic to handle optional dependency)
 let ParserClass: (new () => TSParser) | null = null;
 let TypeScriptLanguage: unknown = null;
@@ -1707,8 +1732,7 @@ class CFGBuilder {
   }
 
   private processBreakContinue(node: TSNode, predecessors: number[]): number[] {
-    const blockType = node.type === "break_statement" ? "body" : "body";
-    const block = this.createBlock(blockType, node);
+    const block = this.createBlock("body", node);
     block.statements = [this.getNodeText(node)];
 
     for (const predId of predecessors) {
@@ -2016,29 +2040,7 @@ class DFGBuilder {
   }
 
   private processIdentifier(node: TSNode, type: RefType): void {
-    // Skip keywords and built-ins
-    const builtins = new Set([
-      "true",
-      "false",
-      "null",
-      "undefined",
-      "this",
-      "super",
-      "console",
-      "Math",
-      "Object",
-      "Array",
-      "String",
-      "Number",
-      "Boolean",
-      "Error",
-      "Promise",
-      "JSON",
-      "Date",
-      "RegExp",
-    ]);
-
-    if (builtins.has(node.text)) return;
+    if (DFG_BUILTIN_IDENTIFIERS.has(node.text)) return;
 
     // createRef already adds to this.refs and this.variables
     this.createRef(node, type);
