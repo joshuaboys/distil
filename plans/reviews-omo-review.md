@@ -26,11 +26,17 @@ The project is at an **early-mature** stage — core functionality works, the MC
 | Dependencies | ✅ Current     | tree-sitter 0.25, MCP SDK 1.9                                  |
 ||||||| parent of ba31867 (fix(docs): correct dependency versions and CI matrix in review doc)
 | TODOs        | 1              | Arrow function parsing gap (typescript.ts:841)                 |
+<<<<<<< HEAD
 | Dependencies | ✅ Current     | tree-sitter 0.25, MCP SDK 1.9                                  |
 =======
 | TODOs        | 1              | Arrow function parsing gap (typescript.ts:841)                 |
 | Dependencies | ✅ Current     | tree-sitter ^0.22.4, tree-sitter-typescript ^0.23.2, MCP SDK ^1.12.1 |
 >>>>>>> ba31867 (fix(docs): correct dependency versions and CI matrix in review doc)
+||||||| parent of d9e5765 (docs(plans): address PR #13 review findings)
+| Dependencies | ✅ Current     | tree-sitter 0.25, MCP SDK 1.9                                  |
+=======
+| Dependencies | ✅ Current     | tree-sitter ^0.22.4, MCP SDK ^1.12.1                           |
+>>>>>>> d9e5765 (docs(plans): address PR #13 review findings)
 
 ---
 
@@ -247,23 +253,23 @@ None. The project builds, tests pass, and the core analysis produces correct res
 
 ### Milestone Status
 
-| Milestone           | APS Status  | Actual Status                    | Accurate? |
-| ------------------- | ----------- | -------------------------------- | --------- |
-| M1: Core Foundation | ✅ Complete | ✅ Implemented                   | ✅        |
-| M2: CLI             | ✅ Complete | ✅ Implemented                   | ✅        |
-| M3: L1-L5 Analysis  | ✅ Complete | ✅ Implemented                   | ✅        |
-| M4: MCP Server      | 🔄 Partial  | ✅ MCP-001 done, MCP-002 planned | ⚠️ Stale  |
-| M5: Caching         | 📋 Planned  | Scaffolded, not wired            | ✅        |
-| M6: Multi-language  | 📋 Planned  | Not started                      | ✅        |
-| M7: Semantic Search | 📋 Planned  | Not started                      | ✅        |
+| Milestone                            | APS Status    | Actual Status                                                 | Accurate? |
+| ------------------------------------ | ------------- | ------------------------------------------------------------- | --------- |
+| M1: Project Scaffolding + L1 AST     | ✅ Complete   | ✅ Implemented                                                | ✅        |
+| M2: L2 Call Graph + Kindling         | ✅ Complete   | ✅ Call graph done; Kindling scaffolded but not wired          | ⚠️ Partial |
+| M3: L3-L5 Analysis Layers            | ✅ Complete   | ✅ Implemented                                                | ✅        |
+| M4: Ignore Patterns + Monorepo       | 🔄 In Progress | .distilignore done; monorepo support not started              | ✅        |
+| M5: Semantic Search + CLI Polish     | 📋 Planned    | Not started                                                   | ✅        |
+| M6: MCP Server                       | 🔄 In Progress | MCP-001..004 done; editor integration testing remaining       | ⚠️ Stale  |
+| M7: Multi-Language Support           | 📋 Planned    | Not started                                                   | ✅        |
 
 ### Specific Inaccuracies
 
-1. **MCP-001 is complete but listed as "Planned"** — The MCP server is fully implemented with 6 tools, 3 prompts, and 13 tests. The APS plan doesn't reflect this. Task status should be updated to "Complete".
+1. **MCP-001..004 now marked complete** — MCP-001 (scaffold), MCP-002 (6 tools), MCP-003 (3 prompts), and MCP-004 (`distil mcp` CLI) are all implemented in server.ts and commands/mcp.ts. The module plan has been updated accordingly. Only editor integration testing (M6 checklist) remains.
 
-2. **Kindling caching scope unclear** — M5 lists caching as planned, and the scaffolding exists in `kindling/`. But the APS doesn't specify when/whether the existing scaffolding should be wired into the analysis pipeline, or if it's a fresh implementation.
+2. **Kindling caching scope clarified** — M2 checklist item was marked complete prematurely. The scaffolding exists in `kindling/` (store, observations, types, config) but is not wired into the analysis pipeline. A note has been added to M2 and the completed items section in index.aps.md.
 
-3. **No mention of ignore system** — The `.distilignore` system is implemented and working but not referenced as a work item in any milestone. It was presumably added ad-hoc.
+3. **No mention of ignore system** — The `.distilignore` system is implemented and working. It is tracked as CORE-010 in the core module plan and referenced in M4 (Ignore Patterns + Monorepo) in index.aps.md.
 
 ---
 
@@ -272,6 +278,7 @@ None. The project builds, tests pass, and the core analysis produces correct res
 ### CI Pipeline (`.github/workflows/ci.yml`)
 
 - Triggers on push/PR to main
+<<<<<<< HEAD
 - Matrix: Node 20.x, 22.x
 <<<<<<< HEAD
 - Steps: install → build → typecheck → test
@@ -281,8 +288,15 @@ None. The project builds, tests pass, and the core analysis produces correct res
 =======
 - Steps: install → build → typecheck → lint → test
 >>>>>>> ba31867 (fix(docs): correct dependency versions and CI matrix in review doc)
+||||||| parent of d9e5765 (docs(plans): address PR #13 review findings)
+- Matrix: Node 22.x
+- Steps: install → build → typecheck → lint → test
+=======
+- Matrix: Node 20, 22
+- Steps: install → build → typecheck → test
+>>>>>>> d9e5765 (docs(plans): address PR #13 review findings)
 - **Good**: All quality gates are in sequence. A type error blocks test execution.
-- **Missing**: No code coverage reporting. No integration/e2e tests.
+- **Missing**: No lint step in CI (lint runs locally via pre-commit hook). No code coverage reporting. No integration/e2e tests.
 
 ### Publish Pipeline (`.github/workflows/publish.yml`)
 

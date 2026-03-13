@@ -64,6 +64,7 @@ Those concerns are either out of scope or deferred to future versions.
 - [x] Forward edges (what does this function call?)
 - [x] Backward edges (what calls this function?)
 - [x] Kindling integration for caching analysis results
+      **Note:** Kindling caching layer is scaffolded (store, observations, types, config) but not wired into the analysis pipeline. Analysis results are not actively cached yet. See CORE-005.
 - [x] Impact analysis command
 
 **Target:** `distil impact <function>` shows all callers ✅
@@ -162,6 +163,7 @@ Prioritized queue of ready work across all packages:
 | 2   | CORE-014  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
 | 3   | CORE-015  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
 | 4   | CORE-016  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
+<<<<<<< HEAD
 | 5   | CLI-014   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P1       |
 | 6   | CORE-017  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
 | 7   | CORE-018  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
@@ -173,12 +175,42 @@ Prioritized queue of ready work across all packages:
 | 13  | CORE-009  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
 | 14  | CORE-011  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
 | 15  | CLI-010   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | —        |
+||||||| parent of d9e5765 (docs(plans): address PR #13 review findings)
+| 5   | CLI-014   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P1       |
+| 6   | CORE-017  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
+| 7   | CORE-018  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
+| 8   | CORE-019  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
+| 9   | CORE-020  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P3       |
+| 10  | CLI-015   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P3       |
+| 11  | CLI-001   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
+| 12  | CLI-002   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
+| 13  | CORE-009  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
+| 14  | CORE-011  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
+| 15  | CLI-010   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | —        |
+=======
+| 5   | CORE-021  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
+| 6   | MCP-005   | [mcp](modules/distil-mcp.aps.md)   | mcp      | @aneki | Ready       | P1       |
+| 7   | CLI-014   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P1       |
+| 8   | CORE-017  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
+| 9   | CORE-018  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
+| 10  | CORE-019  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
+| 11  | CORE-020  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P3       |
+| 12  | CLI-015   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P3       |
+| 13  | CLI-001   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
+| 14  | CLI-002   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
+| 15  | CORE-009  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
+| 16  | CORE-011  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
+| 17  | CLI-010   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | —        |
+>>>>>>> d9e5765 (docs(plans): address PR #13 review findings)
 
 <!-- Completed:
-  CORE-005 (Kindling integration) - scaffolded, not wired
+  CORE-005 (Kindling integration) - scaffolded, not wired (M2 checklist item marked prematurely; caching code exists but is not actively used in analysis pipeline)
   CORE-010 (.distilignore support) - done
   CLI-011 (.distilignore CLI) - done
-  MCP-001 (MCP server scaffold) - done (6 tools, 3 prompts, 13 tests)
+  MCP-001 (MCP server scaffold) - done (server boilerplate, MCP handshake, 13 protocol tests)
+  MCP-002 (Analysis tools) - done (6 tools implemented in server.ts)
+  MCP-003 (Resources/prompts) - done (3 prompts implemented in server.ts)
+  MCP-004 (CLI integration) - done (distil mcp subcommand)
 -->
 
 <!-- Items blocked on dependencies:
@@ -188,9 +220,6 @@ Prioritized queue of ready work across all packages:
   CLI-008 (Semantic search CLI) - blocked on CORE-012
   CLI-009 (Warm command) - blocked on CORE-013
   CLI-012 (MCP subcommand) - blocked on MCP-001
-  MCP-002 (Analysis tools) - blocked on MCP-001
-  MCP-003 (Resources/prompts) - blocked on MCP-001, MCP-002
-  MCP-004 (CLI integration) - blocked on MCP-001
 -->
 
 ---
@@ -209,6 +238,7 @@ Prioritized queue of ready work across all packages:
 - **D-010:** `.distilignore` uses `.gitignore` syntax and is checked into version control
 - **D-011:** Monorepo detection is automatic; `--package` flag for explicit scoping
 - **D-012:** OmO review (2026-03-06) findings tracked as CORE-014..020 and CLI-013..015; prioritized P0-P3
+- **D-013:** Review gaps (benchmarking, MCP execution tests) tracked as CORE-021 and MCP-005; both P1
 
 ---
 
