@@ -163,50 +163,24 @@ Prioritized queue of ready work across all packages:
 | 2   | CORE-014  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
 | 3   | CORE-015  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
 | 4   | CORE-016  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
-<<<<<<< HEAD
-| 5   | CLI-014   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P1       |
-| 6   | CORE-017  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
-| 7   | CORE-018  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
-| 8   | CORE-019  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
-| 9   | CORE-020  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P3       |
-| 10  | CLI-015   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Complete    | P3       |
-| 11  | CLI-001   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
-| 12  | CLI-002   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
-| 13  | CORE-009  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
-| 14  | CORE-011  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
-| 15  | CLI-010   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | —        |
-||||||| parent of d9e5765 (docs(plans): address PR #13 review findings)
-| 5   | CLI-014   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P1       |
-| 6   | CORE-017  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
-| 7   | CORE-018  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
-| 8   | CORE-019  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
-| 9   | CORE-020  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P3       |
-| 10  | CLI-015   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P3       |
-| 11  | CLI-001   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
-| 12  | CLI-002   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
-| 13  | CORE-009  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
-| 14  | CORE-011  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
-| 15  | CLI-010   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | —        |
-=======
 | 5   | CORE-021  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
 | 6   | MCP-005   | [mcp](modules/distil-mcp.aps.md)   | mcp      | @aneki | Ready       | P1       |
 | 7   | CLI-014   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P1       |
-| 8   | CORE-017  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
-| 9   | CORE-018  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
-| 10  | CORE-019  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
-| 11  | CORE-020  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P3       |
-| 12  | CLI-015   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P3       |
-| 13  | CLI-001   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
-| 14  | CLI-002   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
-| 15  | CORE-009  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
-| 16  | CORE-011  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
-| 17  | CLI-010   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | —        |
->>>>>>> d9e5765 (docs(plans): address PR #13 review findings)
+| 8   | CORE-019  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
+| 9   | CLI-001   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
+| 10  | CLI-002   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
+| 11  | CORE-009  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
+| 12  | CORE-011  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
+| 13  | CLI-010   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | —        |
 
 <!-- Completed:
   CORE-005 (Kindling integration) - scaffolded, not wired (M2 checklist item marked prematurely; caching code exists but is not actively used in analysis pipeline)
   CORE-010 (.distilignore support) - done
+  CORE-017 (DFG docs) - done (PR #12, README documents L4/L5 approximation)
+  CORE-018 (Interface parsing) - done (PR #11, parseInterface populates methods/properties/extends)
+  CORE-020 (Dead code cleanup) - done (PR #9, dead ternary removed, builtins Set hoisted)
   CLI-011 (.distilignore CLI) - done
+  CLI-015 (Empty catch fix) - done (PR #10, tree.ts logs permission errors to stderr)
   MCP-001 (MCP server scaffold) - done (server boilerplate, MCP handshake, 13 protocol tests)
   MCP-002 (Analysis tools) - done (6 tools implemented in server.ts)
   MCP-003 (Resources/prompts) - done (3 prompts implemented in server.ts)
