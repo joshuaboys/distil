@@ -6,6 +6,7 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "coverage": "pnpm -r run coverage",
+    "bench": "pnpm -F @distil/core bench",
     "clean": "pnpm -r clean",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
