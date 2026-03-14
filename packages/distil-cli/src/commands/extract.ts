@@ -6,9 +6,10 @@
 
 import { Command } from "commander";
 import { readFile } from "fs/promises";
-import { resolve } from "path";
+import { resolve, relative } from "path";
 import { getParser, isIgnoredPath, LANGUAGE_EXTENSIONS, type ModuleInfo } from "@distil/core";
 import { resolveCliIgnoreOptions } from "../ignore.js";
+import { resolveFormat } from "../format/index.js";
 
 export const extractCommand = new Command("extract")
   .description("Extract file structure (L1 AST)")
@@ -37,13 +38,13 @@ export const extractCommand = new Command("extract")
       }
 
       const moduleInfo = await parser.extractAST(source, filePath);
+      const format = resolveFormat(options);
 
-      if (options.compact) {
-        console.log(JSON.stringify(moduleInfo.toCompact(), null, 2));
-      } else if (options.json) {
+      if (format === "compact") {
+        printCompactModuleInfo(moduleInfo, filePath);
+      } else if (format === "json") {
         console.log(JSON.stringify(moduleInfo.toJSON(), null, 2));
       } else {
-        // Human-readable output
         printModuleInfo(moduleInfo);
       }
     } catch (error) {
@@ -114,4 +115,51 @@ function printModuleInfo(info: ModuleInfo): void {
   }
 
   console.log("\n");
+}
+
+function printCompactModuleInfo(info: ModuleInfo, filePath: string): void {
+  const relPath = relative(process.cwd(), filePath);
+  console.log(relPath);
+
+  for (const imp of info.imports) {
+    const filteredNames = imp.names.filter((n: { name: string }) => n.name !== "type");
+    const names =
+      filteredNames.length > 0
+        ? `{ ${filteredNames.map((n: { alias: string | null; name: string }) => n.alias ?? n.name).join(", ")} }`
+        : imp.module;
+    console.log(`  import ${names} from "${imp.module}"`);
+  }
+
+  for (const fn of info.functions) {
+    const params = fn.params
+      .map((p) => {
+        const type = p.type ? `: ${p.type}` : "";
+        return `${p.name}${type}`;
+      })
+      .join(", ");
+    const ret = fn.returnType ? `: ${fn.returnType}` : "";
+    console.log(`  fn ${fn.name}(${params})${ret} [L${fn.lineNumber}]`);
+  }
+
+  for (const cls of info.classes) {
+    console.log(`  class ${cls.name} [L${cls.lineNumber}]`);
+    for (const method of cls.methods) {
+      const params = method.params
+        .map((p) => {
+          const type = p.type ? `: ${p.type}` : "";
+          return `${p.name}${type}`;
+        })
+        .join(", ");
+      const ret = method.returnType ? `: ${method.returnType}` : "";
+      console.log(`    method ${method.name}(${params})${ret} [L${method.lineNumber}]`);
+    }
+  }
+
+  for (const iface of info.interfaces) {
+    console.log(`  interface ${iface.name}`);
+  }
+
+  for (const type of info.typeAliases) {
+    console.log(`  type ${type.name}`);
+  }
 }

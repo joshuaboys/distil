@@ -69,8 +69,13 @@ export {
   type CallerWithDepth,
 } from "./callgraph-utils.js";
 
-// API exports (to be implemented)
-// export { getRelevantContext } from './api/context.js';
+// API exports
+export { getRelevantContext } from "./api/index.js";
+export type { ContextOptions, FunctionContext, RelevantContext } from "./api/index.js";
+
+// Workspace detection
+export { detectWorkspace, resolvePackageImport } from "./workspace/index.js";
+export type { WorkspaceInfo, WorkspacePackage, WorkspaceType } from "./workspace/index.js";
 
 // Kindling integration
 export { DistilStore, DISTIL_SUBKINDS } from "./kindling/store.js";
