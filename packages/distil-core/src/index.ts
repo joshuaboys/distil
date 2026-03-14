@@ -61,6 +61,14 @@ export {
 // Analysis layer extractors
 export { extractCFG, extractDFG, extractPDG } from "./extractors.js";
 
+// Call graph utilities
+export {
+  findCallers,
+  BUILTIN_METHODS,
+  isBuiltinMethod,
+  type CallerWithDepth,
+} from "./callgraph-utils.js";
+
 // API exports (to be implemented)
 // export { getRelevantContext } from './api/context.js';
 

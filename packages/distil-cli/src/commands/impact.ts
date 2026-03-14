@@ -6,8 +6,8 @@
 
 import { Command } from "commander";
 import { resolve } from "path";
-import { buildCallGraph } from "@distil/core";
-import type { ProjectCallGraph, FunctionLocation, CallEdge } from "@distil/core";
+import { buildCallGraph, findCallers } from "@distil/core";
+import type { FunctionLocation, CallerWithDepth } from "@distil/core";
 import { resolveCliIgnoreOptions } from "../ignore.js";
 
 export const impactCommand = new Command("impact")
@@ -67,7 +67,7 @@ export const impactCommand = new Command("impact")
         }
 
         const target = matches[0]!;
-        const callers = getCallersWithDepth(graph, target.qualifiedName, depth);
+        const callers = findCallers(graph, target.qualifiedName, depth);
 
         if (options.json) {
           console.log(
@@ -77,8 +77,8 @@ export const impactCommand = new Command("impact")
                 depth,
                 callers: callers.map((c) => ({
                   caller: c.caller,
-                  file: c.callSite.file,
-                  line: c.callSite.line,
+                  file: c.edge.callSite.file,
+                  line: c.edge.callSite.line,
                   depth: c.depth,
                 })),
                 callerCount: callers.length,
@@ -97,39 +97,6 @@ export const impactCommand = new Command("impact")
       }
     },
   );
-
-interface CallerWithDepth {
-  caller: FunctionLocation;
-  callSite: CallEdge["callSite"];
-  depth: number;
-}
-
-function getCallersWithDepth(
-  graph: ProjectCallGraph,
-  qualifiedName: string,
-  maxDepth: number,
-): CallerWithDepth[] {
-  const visited = new Set<string>();
-  const result: CallerWithDepth[] = [];
-
-  function traverse(name: string, depth: number): void {
-    if (depth > maxDepth || visited.has(name)) return;
-    visited.add(name);
-
-    const edges = graph.backwardIndex.get(name) ?? [];
-    for (const edge of edges) {
-      result.push({
-        caller: edge.caller,
-        callSite: edge.callSite,
-        depth,
-      });
-      traverse(edge.caller.qualifiedName, depth + 1);
-    }
-  }
-
-  traverse(qualifiedName, 1);
-  return result;
-}
 
 function printImpactResult(
   target: FunctionLocation,
@@ -153,23 +120,23 @@ function printImpactResult(
 
   console.log(`\nDirect callers (${directCallers.length}):`);
   for (const caller of directCallers) {
-    const callerRelPath = caller.callSite.file.replace(rootPath + "/", "");
+    const callerRelPath = caller.edge.callSite.file.replace(rootPath + "/", "");
     console.log(`   ${caller.caller.qualifiedName}`);
-    console.log(`      at ${callerRelPath}:${caller.callSite.line}`);
+    console.log(`      at ${callerRelPath}:${caller.edge.callSite.line}`);
   }
 
   if (depth > 1 && transitiveCallers.length > 0) {
     console.log(`\nTransitive callers (${transitiveCallers.length}):`);
     for (const caller of transitiveCallers) {
-      const callerRelPath = caller.callSite.file.replace(rootPath + "/", "");
+      const callerRelPath = caller.edge.callSite.file.replace(rootPath + "/", "");
       const indent = "   " + "  ".repeat(caller.depth - 1);
       console.log(`${indent}<- ${caller.caller.qualifiedName} (depth ${caller.depth})`);
-      console.log(`${indent}   at ${callerRelPath}:${caller.callSite.line}`);
+      console.log(`${indent}   at ${callerRelPath}:${caller.edge.callSite.line}`);
     }
   }
 
   // Summary
-  const affectedFiles = new Set(callers.map((c) => c.callSite.file));
+  const affectedFiles = new Set(callers.map((c) => c.edge.callSite.file));
   console.log(`\nSummary:`);
   console.log(`   ${callers.length} total callers across ${affectedFiles.size} files`);
   if (depth === 1 && callers.length > 0) {
