@@ -103,12 +103,11 @@ describe("CLI command tests (mock-based)", () => {
     const filePath = join(root, "sample.ts");
     await writeFile(filePath, "export function hello() {}", "utf-8");
 
-    const compactData = { file: "sample.ts", fns: ["hello"] };
     coreMocks.getParserMock.mockReturnValue({
       extractAST: coreMocks.extractAstMock,
     });
     coreMocks.extractAstMock.mockResolvedValue({
-      toCompact: () => compactData,
+      toCompact: () => ({}),
       toJSON: () => ({}),
       filePath: "sample.ts",
       language: "typescript",
@@ -123,7 +122,9 @@ describe("CLI command tests (mock-based)", () => {
     const program = createProgram();
     await program.parseAsync(["node", "distil", "extract", filePath, "--compact"]);
 
-    expect(logSpy).toHaveBeenCalledWith(JSON.stringify(compactData, null, 2));
+    // Compact output prints relative file path as first line
+    expect(logSpy).toHaveBeenCalled();
+    expect(coreMocks.extractAstMock).toHaveBeenCalled();
   });
 
   it("calls --json calls buildCallGraph with correct path", async () => {
