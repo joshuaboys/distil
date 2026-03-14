@@ -489,4 +489,143 @@ describe("TypeScriptParser", () => {
       expect(sliceLines?.size).toBeGreaterThan(0);
     });
   });
+
+  describe("default parameter values", () => {
+    it("should parse functions with default parameters", async () => {
+      const source = `
+        function createUser(name: string, role = "user", active: boolean = true) {
+          return { name, role, active };
+        }
+      `;
+      const result = await parser.extractAST(source, "test.ts");
+
+      expect(result.functions).toHaveLength(1);
+      expect(result.functions[0]?.name).toBe("createUser");
+    });
+  });
+
+  describe("rest parameters", () => {
+    it("should parse functions with rest parameters", async () => {
+      const source = `
+        function merge(...items: string[]): string {
+          return items.join("");
+        }
+      `;
+      const result = await parser.extractAST(source, "test.ts");
+
+      expect(result.functions).toHaveLength(1);
+    });
+  });
+
+  describe("arrow function styles", () => {
+    it("should not crash on expression-body arrow functions", async () => {
+      const source = `
+        const add = (a: number, b: number): number => a + b;
+      `;
+      const result = await parser.extractAST(source, "test.ts");
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe("enum declarations", () => {
+    it("should not crash on enum declarations", async () => {
+      const source = `
+        enum Direction {
+          Up = "UP",
+          Down = "DOWN",
+          Left = "LEFT",
+          Right = "RIGHT",
+        }
+      `;
+      const result = await parser.extractAST(source, "test.ts");
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe("namespace declarations", () => {
+    it("should not crash on namespace declarations", async () => {
+      const source = `
+        namespace Validation {
+          export interface StringValidator {
+            isAcceptable(s: string): boolean;
+          }
+          export function validate(s: string): boolean {
+            return s.length > 0;
+          }
+        }
+      `;
+      const result = await parser.extractAST(source, "test.ts");
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe("try-catch-finally in CFG", () => {
+    it("should produce CFG blocks for try-catch-finally", async () => {
+      const source = `
+        function safeParse(input: string): unknown {
+          try {
+            return JSON.parse(input);
+          } catch (e) {
+            console.error(e);
+            return null;
+          } finally {
+            console.log("done");
+          }
+        }
+      `;
+      const cfg = await parser.extractCFG(source, "safeParse", "test.ts");
+
+      expect(cfg).not.toBeNull();
+      expect(cfg?.blocks.length).toBeGreaterThan(2);
+    });
+  });
+
+  describe("switch statement in CFG", () => {
+    it("should report decision points for switch cases", async () => {
+      const source = `
+        function describe(x: number): string {
+          switch (x) {
+            case 1: return "one";
+            case 2: return "two";
+            case 3: return "three";
+            default: return "other";
+          }
+        }
+      `;
+      const cfg = await parser.extractCFG(source, "describe", "test.ts");
+
+      expect(cfg).not.toBeNull();
+      expect(cfg?.decisionPoints).toBeGreaterThanOrEqual(3);
+    });
+  });
+
+  describe("closures in DFG", () => {
+    it("should track closed-over variables", async () => {
+      const source = `
+        function makeCounter(): () => number {
+          let count = 0;
+          return () => { count++; return count; };
+        }
+      `;
+      const dfg = await parser.extractDFG(source, "makeCounter", "test.ts");
+
+      expect(dfg).not.toBeNull();
+      expect(dfg?.variables).toContain("count");
+    });
+  });
+
+  describe("re-exports", () => {
+    it("should not crash on re-export statements", async () => {
+      const source = `
+        export { readFile } from "fs/promises";
+        export * from "./utils";
+      `;
+      const result = await parser.extractAST(source, "test.ts");
+
+      expect(result).toBeDefined();
+    });
+  });
 });
