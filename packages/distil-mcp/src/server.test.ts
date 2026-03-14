@@ -1,4 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { mkdtemp, writeFile, rm } from "fs/promises";
+import { join } from "path";
+import { tmpdir } from "os";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "./server.js";
@@ -179,5 +182,147 @@ describe("MCP server tools and prompts", () => {
     expect(content.text).toContain("myFunction");
     expect(content.text).toContain("distil_calls");
     expect(content.text).toContain("distil_impact");
+  });
+});
+
+describe("MCP tool execution", () => {
+  let client: Client;
+  let cleanup: () => Promise<void>;
+  let tmpDir: string;
+  let fixturePath: string;
+
+  const FIXTURE_SOURCE = `import { readFile } from "fs/promises";
+
+export function greet(name: string): string {
+  if (name.length === 0) {
+    return "Hello, stranger!";
+  }
+  return \`Hello, \${name}!\`;
+}
+
+function helper(x: number): number {
+  const doubled = x * 2;
+  return doubled + 1;
+}
+
+export class Processor {
+  process(data: string): string {
+    return helper(data.length).toString();
+  }
+}
+`;
+
+  beforeAll(async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), "distil-mcp-test-"));
+    fixturePath = join(tmpDir, "sample.ts");
+    await writeFile(fixturePath, FIXTURE_SOURCE, "utf-8");
+
+    const { server } = createServer();
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+
+    client = new Client(
+      { name: "test-client", version: "0.1.0" },
+      { capabilities: {} },
+    );
+
+    await server.connect(serverTransport);
+    await client.connect(clientTransport);
+
+    cleanup = async () => {
+      await client.close();
+      await server.close();
+      await rm(tmpDir, { recursive: true, force: true });
+    };
+  });
+
+  afterAll(async () => {
+    await cleanup();
+  });
+
+  it("distil_extract returns functions, classes, and imports", async () => {
+    const result = await client.callTool({
+      name: "distil_extract",
+      arguments: { file: fixturePath },
+    });
+
+    expect(result.isError).toBeFalsy();
+    const text = (result.content as Array<{ type: string; text: string }>)[0]!
+      .text;
+    const parsed = JSON.parse(text);
+
+    const functionNames = parsed.functions.map(
+      (f: { name: string }) => f.name,
+    );
+    expect(functionNames).toContain("greet");
+    expect(functionNames).toContain("helper");
+
+    const classNames = parsed.classes.map((c: { name: string }) => c.name);
+    expect(classNames).toContain("Processor");
+
+    const importModules = parsed.imports.map(
+      (i: { module: string }) => i.module,
+    );
+    expect(importModules).toContain("fs/promises");
+  });
+
+  it("distil_cfg returns CFG with complexity for greet", async () => {
+    const result = await client.callTool({
+      name: "distil_cfg",
+      arguments: { file: fixturePath, function: "greet" },
+    });
+
+    expect(result.isError).toBeFalsy();
+    const text = (result.content as Array<{ type: string; text: string }>)[0]!
+      .text;
+    const parsed = JSON.parse(text);
+
+    expect(parsed.functionName).toBe("greet");
+    expect(parsed.cyclomaticComplexity).toBeGreaterThanOrEqual(1);
+    expect(Array.isArray(parsed.blocks)).toBe(true);
+    expect(Array.isArray(parsed.edges)).toBe(true);
+  });
+
+  it("distil_dfg returns data flow for helper", async () => {
+    const result = await client.callTool({
+      name: "distil_dfg",
+      arguments: { file: fixturePath, function: "helper" },
+    });
+
+    expect(result.isError).toBeFalsy();
+    const text = (result.content as Array<{ type: string; text: string }>)[0]!
+      .text;
+    const parsed = JSON.parse(text);
+
+    expect(parsed.functionName).toBe("helper");
+    expect(parsed.variables).toContain("x");
+    expect(parsed.variables).toContain("doubled");
+  });
+
+  it("distil_slice returns backward slice from helper line 12", async () => {
+    const result = await client.callTool({
+      name: "distil_slice",
+      arguments: { file: fixturePath, function: "helper", line: 12 },
+    });
+
+    expect(result.isError).toBeFalsy();
+    const text = (result.content as Array<{ type: string; text: string }>)[0]!
+      .text;
+    const parsed = JSON.parse(text);
+
+    expect(parsed.direction).toBe("backward");
+    expect(parsed.lines.length).toBeGreaterThan(0);
+  });
+
+  it("distil_extract returns error for unsupported .py file", async () => {
+    const pyFile = join(tmpDir, "sample.py");
+    await writeFile(pyFile, "print('hello')", "utf-8");
+
+    const result = await client.callTool({
+      name: "distil_extract",
+      arguments: { file: pyFile },
+    });
+
+    expect(result.isError).toBe(true);
   });
 });
