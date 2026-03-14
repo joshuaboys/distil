@@ -24,7 +24,7 @@ describe("createServer", () => {
 
 describe("MCP server tools and prompts", () => {
   let client: Client;
-  let cleanup: () => Promise<void>;
+  let cleanup: () => Promise<void> = async () => {};
 
   beforeAll(async () => {
     const { server } = createServer();
@@ -187,7 +187,7 @@ describe("MCP server tools and prompts", () => {
 
 describe("MCP tool execution", () => {
   let client: Client;
-  let cleanup: () => Promise<void>;
+  let cleanup: () => Promise<void> = async () => {};
   let tmpDir: string;
   let fixturePath: string;
 
