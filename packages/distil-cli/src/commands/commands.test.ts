@@ -1,6 +1,7 @@
 import { mkdtemp, mkdir, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
-import { join } from "path";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import { execFileSync } from "child_process";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -14,6 +15,8 @@ const coreMocks = vi.hoisted(() => ({
   isIgnoredPathMock: vi.fn(),
   createIgnoreMatcherMock: vi.fn(),
   getComplexityRatingMock: vi.fn(),
+  findCallersMock: vi.fn(),
+  isBuiltinMethodMock: vi.fn(),
 }));
 
 vi.mock("@distil/core", () => ({
@@ -27,6 +30,8 @@ vi.mock("@distil/core", () => ({
   isIgnoredPath: coreMocks.isIgnoredPathMock,
   createIgnoreMatcher: coreMocks.createIgnoreMatcherMock,
   getComplexityRating: coreMocks.getComplexityRatingMock,
+  findCallers: coreMocks.findCallersMock,
+  isBuiltinMethod: coreMocks.isBuiltinMethodMock,
 }));
 
 import { createProgram } from "../index.js";
@@ -48,6 +53,8 @@ describe("CLI command tests (mock-based)", () => {
     vi.spyOn(process, "exit").mockImplementation((() => undefined) as never);
     coreMocks.isIgnoredPathMock.mockResolvedValue(false);
     coreMocks.getComplexityRatingMock.mockReturnValue("low");
+    coreMocks.findCallersMock.mockReturnValue([]);
+    coreMocks.isBuiltinMethodMock.mockReturnValue(false);
     coreMocks.createIgnoreMatcherMock.mockResolvedValue({
       basePath: "/tmp/project",
       ignoreFilePath: null,
@@ -57,6 +64,9 @@ describe("CLI command tests (mock-based)", () => {
 
   afterEach(async () => {
     vi.restoreAllMocks();
+    for (const mock of Object.values(coreMocks)) {
+      mock.mockClear();
+    }
     await Promise.all(tempRoots.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
   });
 
@@ -353,7 +363,8 @@ describe("CLI command tests (mock-based)", () => {
 });
 
 describe("CLI command integration smoke tests", () => {
-  const CLI_ENTRY = join(import.meta.dirname, "..", "..", "dist", "index.js");
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const CLI_ENTRY = join(__dirname, "..", "..", "dist", "index.js");
 
   afterEach(async () => {
     await Promise.all(tempRoots.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
