@@ -25,7 +25,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "bench": "vitest bench"
   },
   "dependencies": {
     "tree-sitter": "^0.22.4",
