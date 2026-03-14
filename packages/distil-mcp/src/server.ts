@@ -16,11 +16,12 @@ import {
   extractCFG,
   extractDFG,
   extractPDG,
+  findCallers,
   getComplexityRating,
   getParser,
   VERSION,
 } from "@distil/core";
-import type { ProjectCallGraph, FunctionLocation, CallEdge } from "@distil/core";
+import type { ProjectCallGraph, FunctionLocation } from "@distil/core";
 
 /**
  * Serialize a ProjectCallGraph to a JSON-safe object.
@@ -50,36 +51,6 @@ function serializeCallGraph(graph: ProjectCallGraph) {
     })),
     edgeCount: graph.edges.length,
   };
-}
-
-/**
- * Find callers of a function in the call graph with depth tracking.
- */
-function findCallers(
-  graph: ProjectCallGraph,
-  qualifiedName: string,
-  maxDepth: number,
-): Array<{ caller: FunctionLocation; edge: CallEdge; depth: number }> {
-  const visited = new Set<string>();
-  const result: Array<{
-    caller: FunctionLocation;
-    edge: CallEdge;
-    depth: number;
-  }> = [];
-
-  function traverse(name: string, depth: number): void {
-    if (depth > maxDepth || visited.has(name)) return;
-    visited.add(name);
-
-    const edges = graph.backwardIndex.get(name) ?? [];
-    for (const edge of edges) {
-      result.push({ caller: edge.caller, edge, depth });
-      traverse(edge.caller.qualifiedName, depth + 1);
-    }
-  }
-
-  traverse(qualifiedName, 1);
-  return result;
 }
 
 /**
