@@ -96,6 +96,12 @@ Commands are in `packages/distil-cli/src/commands/` and registered in the main i
 
 Strict TypeScript with `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` enabled. Uses ES modules with NodeNext resolution.
 
+## Branching Strategy
+
+- **`dev`** — Default branch. All feature/fix branches target `dev` via PR. CI runs on push and PRs to `dev`.
+- **`main`** — Stable release branch. Merged from `dev` when ready to release. Tags on `main` trigger the publish workflow.
+- Feature branches: `feat/<name>`, `fix/<name>`, etc. — branch from and PR into `dev`.
+
 ## Planning
 
 Roadmap and module specs are in `plans/` using APS format. Start at `plans/index.aps.md`.
