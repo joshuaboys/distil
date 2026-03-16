@@ -9,6 +9,7 @@ import { readdir } from "fs/promises";
 import { resolve, join, relative } from "path";
 import { createIgnoreMatcher, LANGUAGE_EXTENSIONS, type IgnoreMatcher } from "@distil/core";
 import { resolveCliIgnoreOptions } from "../ignore.js";
+import { resolveFormat } from "../format/index.js";
 
 export const treeCommand = new Command("tree")
   .description("Show file tree structure")
@@ -16,10 +17,11 @@ export const treeCommand = new Command("tree")
   .option("--all", "Include all files (not just source files)")
   .option("--depth <n>", "Maximum depth", "10")
   .option("--json", "Output as JSON")
+  .option("--compact", "Compact output for piping")
   .action(
     async (
       path: string,
-      options: { all?: boolean; depth?: string; json?: boolean },
+      options: { all?: boolean; depth?: string; json?: boolean; compact?: boolean },
       cmd: Command,
     ) => {
       try {
@@ -29,9 +31,12 @@ export const treeCommand = new Command("tree")
         const ignoreOptions = resolveCliIgnoreOptions(cmd);
         const matcher = await createIgnoreMatcher(rootPath, ignoreOptions);
         const tree = await buildTree(rootPath, maxDepth, sourceOnly, matcher);
+        const format = resolveFormat(options);
 
-        if (options.json) {
+        if (format === "json") {
           console.log(JSON.stringify(tree, null, 2));
+        } else if (format === "compact") {
+          printCompactTree(tree, rootPath);
         } else {
           printTree(tree, "", true, rootPath);
         }
@@ -148,5 +153,22 @@ function getFileIcon(language?: string): string {
       return "[cs]";
     default:
       return "[file]";
+  }
+}
+
+function printCompactTree(node: TreeNode, rootPath: string): void {
+  collectPaths(node, rootPath);
+}
+
+function collectPaths(node: TreeNode, rootPath: string): void {
+  if (node.type === "file") {
+    const relPath = relative(rootPath, node.path);
+    console.log(relPath);
+  }
+
+  if (node.children) {
+    for (const child of node.children) {
+      collectPaths(child, rootPath);
+    }
   }
 }
