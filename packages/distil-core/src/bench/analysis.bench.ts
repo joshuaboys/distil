@@ -369,17 +369,27 @@ describe("L5: PDG extraction", () => {
   });
 });
 
+// Precompute PDGs and slice targets outside benchmarks
+const smallReturnLine =
+  SMALL_SOURCE.split("\n").findIndex((l) => l.includes("return a + b")) + 1;
+const largeReturnLine =
+  LARGE_SOURCE.split("\n").findIndex((l) => l.includes("ok: true, value: results")) + 1;
+
+let cachedSmallPDG: Awaited<ReturnType<typeof parser.extractPDG>> | null = null;
+let cachedLargePDG: Awaited<ReturnType<typeof parser.extractPDG>> | null = null;
+
 describe("L5: backward slicing", () => {
   bench("slice from return in simple function", async () => {
-    const pdg = await parser.extractPDG(SMALL_SOURCE, "add", "bench.ts");
-    pdg?.backwardSlice(3);
+    if (!cachedSmallPDG) {
+      cachedSmallPDG = await parser.extractPDG(SMALL_SOURCE, "add", "bench.ts");
+    }
+    cachedSmallPDG?.backwardSlice(smallReturnLine);
   });
 
   bench("slice from complex method", async () => {
-    const pdg = await parser.extractPDG(LARGE_SOURCE, "TaskScheduler.run", "bench.ts");
-    // Slice from near the end of the method
-    const lines = LARGE_SOURCE.split("\n");
-    const returnLine = lines.findIndex((l) => l.includes("ok: true, value: results")) + 1;
-    pdg?.backwardSlice(returnLine);
+    if (!cachedLargePDG) {
+      cachedLargePDG = await parser.extractPDG(LARGE_SOURCE, "TaskScheduler.run", "bench.ts");
+    }
+    cachedLargePDG?.backwardSlice(largeReturnLine);
   });
 });

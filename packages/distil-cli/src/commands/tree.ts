@@ -9,6 +9,7 @@ import { readdir } from "fs/promises";
 import { resolve, join, relative } from "path";
 import { createIgnoreMatcher, LANGUAGE_EXTENSIONS, type IgnoreMatcher } from "@distil/core";
 import { resolveCliIgnoreOptions } from "../ignore.js";
+import { loadConfig } from "../config/index.js";
 import { resolveFormat } from "../format/index.js";
 
 export const treeCommand = new Command("tree")
@@ -31,7 +32,8 @@ export const treeCommand = new Command("tree")
         const ignoreOptions = resolveCliIgnoreOptions(cmd);
         const matcher = await createIgnoreMatcher(rootPath, ignoreOptions);
         const tree = await buildTree(rootPath, maxDepth, sourceOnly, matcher);
-        const format = resolveFormat(options);
+        const config = await loadConfig(rootPath);
+        const format = resolveFormat(options, config.defaultFormat);
 
         if (format === "json") {
           console.log(JSON.stringify(tree, null, 2));
