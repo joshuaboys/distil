@@ -210,8 +210,13 @@ async function buildFunctionContext(
   includeCFG: boolean,
   includeDFG: boolean,
 ): Promise<FunctionContext> {
+  // qualifiedName is "module.func" or "module.Class.method"
+  // Extract the parser-facing name by dropping the module prefix
+  const parts = location.qualifiedName.split(".");
+  const lookupName = parts.length > 2 ? parts.slice(1).join(".") : location.name;
+
   // Get L1 info from AST
-  const astInfo = await getASTInfo(location.file, location.name);
+  const astInfo = await getASTInfo(location.file, lookupName);
 
   // Get direct callers/callees from graph
   const forwardEdges = graph.forwardIndex.get(location.qualifiedName) ?? [];
@@ -240,7 +245,7 @@ async function buildFunctionContext(
   // L3: Complexity
   if (includeCFG) {
     try {
-      const cfg = await extractCFG(location.file, location.name);
+      const cfg = await extractCFG(location.file, lookupName);
       if (cfg) {
         ctx.complexity = cfg.cyclomaticComplexity;
         ctx.complexityRating = getComplexityRating(cfg.cyclomaticComplexity);
@@ -253,7 +258,7 @@ async function buildFunctionContext(
   // L4: Data flow variables
   if (includeDFG) {
     try {
-      const dfg = await extractDFG(location.file, location.name);
+      const dfg = await extractDFG(location.file, lookupName);
       if (dfg) {
         ctx.variables = dfg.variables;
       }

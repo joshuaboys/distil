@@ -1,3 +1,4 @@
+import { readFileSync } from "fs";
 import { readFile } from "fs/promises";
 import { join, resolve } from "path";
 import type { WorkspaceInfo } from "./detect.js";
@@ -42,16 +43,13 @@ function resolveEntryPoint(pkgDir: string, subpath: string): string | null {
   const pkgJsonPath = join(pkgDir, "package.json");
   let content: string;
   try {
-    // Use sync read since this is called in resolution context
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const fs = require("fs") as typeof import("fs");
-    content = fs.readFileSync(pkgJsonPath, "utf-8");
+    content = readFileSync(pkgJsonPath, "utf-8");
   } catch {
     return null;
   }
 
   let pkg: {
-    exports?: Record<string, string | Record<string, string>>;
+    exports?: string | Record<string, string | Record<string, string>>;
     main?: string;
     types?: string;
     module?: string;
@@ -63,21 +61,24 @@ function resolveEntryPoint(pkgDir: string, subpath: string): string | null {
   }
 
   // Try exports map first (modern Node.js resolution)
-  if (pkg.exports && subpath in pkg.exports) {
-    const exportEntry = pkg.exports[subpath];
-    if (exportEntry) {
-      const resolved = resolveExportEntry(exportEntry);
-      if (resolved) return resolve(pkgDir, resolved);
+  if (pkg.exports) {
+    // String shorthand: "exports": "./dist/index.js"
+    if (typeof pkg.exports === "string") {
+      if (subpath === ".") return resolve(pkgDir, pkg.exports);
+    } else if (subpath in pkg.exports) {
+      const exportEntry = pkg.exports[subpath];
+      if (exportEntry) {
+        const resolved = resolveExportEntry(exportEntry);
+        if (resolved) return resolve(pkgDir, resolved);
+      }
     }
   }
 
   // For root subpath, fall back to main/types/module
   if (subpath === ".") {
-    // Prefer types for analysis purposes, then main, then module
     const entry = pkg.types ?? pkg.main ?? pkg.module;
     if (entry) return resolve(pkgDir, entry);
 
-    // Default fallback
     return resolve(pkgDir, "index.js");
   }
 
@@ -122,7 +123,7 @@ async function resolveEntryPointAsync(pkgDir: string, subpath: string): Promise<
   }
 
   let pkg: {
-    exports?: Record<string, string | Record<string, string>>;
+    exports?: string | Record<string, string | Record<string, string>>;
     main?: string;
     types?: string;
     module?: string;
@@ -133,11 +134,15 @@ async function resolveEntryPointAsync(pkgDir: string, subpath: string): Promise<
     return null;
   }
 
-  if (pkg.exports && subpath in pkg.exports) {
-    const exportEntry = pkg.exports[subpath];
-    if (exportEntry) {
-      const resolved = resolveExportEntry(exportEntry);
-      if (resolved) return resolve(pkgDir, resolved);
+  if (pkg.exports) {
+    if (typeof pkg.exports === "string") {
+      if (subpath === ".") return resolve(pkgDir, pkg.exports);
+    } else if (subpath in pkg.exports) {
+      const exportEntry = pkg.exports[subpath];
+      if (exportEntry) {
+        const resolved = resolveExportEntry(exportEntry);
+        if (resolved) return resolve(pkgDir, resolved);
+      }
     }
   }
 

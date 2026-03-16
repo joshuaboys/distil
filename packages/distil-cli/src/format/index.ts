@@ -11,11 +11,14 @@ export interface FormatOptions {
   color?: boolean;
 }
 
-/** Resolve output format from CLI options */
-export function resolveFormat(options: { json?: boolean; compact?: boolean }): OutputFormat {
+/** Resolve output format from CLI options, with optional config default */
+export function resolveFormat(
+  options: { json?: boolean; compact?: boolean },
+  configDefault?: OutputFormat,
+): OutputFormat {
   if (options.compact) return "compact";
   if (options.json) return "json";
-  return "text";
+  return configDefault ?? "text";
 }
 
 /** Format an analysis result for output */

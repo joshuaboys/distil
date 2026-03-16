@@ -9,6 +9,7 @@ import { readFile } from "fs/promises";
 import { resolve, relative } from "path";
 import { getParser, isIgnoredPath, LANGUAGE_EXTENSIONS, type ModuleInfo } from "@distil/core";
 import { resolveCliIgnoreOptions } from "../ignore.js";
+import { loadConfig } from "../config/index.js";
 import { resolveFormat } from "../format/index.js";
 
 export const extractCommand = new Command("extract")
@@ -38,7 +39,8 @@ export const extractCommand = new Command("extract")
       }
 
       const moduleInfo = await parser.extractAST(source, filePath);
-      const format = resolveFormat(options);
+      const config = await loadConfig(process.cwd());
+      const format = resolveFormat(options, config.defaultFormat);
 
       if (format === "compact") {
         printCompactModuleInfo(moduleInfo, filePath);
