@@ -14,7 +14,7 @@ The tool provides 5 analysis layers:
 - **L4: DFG** - Data flow, def-use chains
 - **L5: PDG** - Program dependence, slicing
 
-Currently only L1 is implemented. L2-L5 are planned.
+All five layers (L1-L5) are implemented for TypeScript/JavaScript.
 
 ## Build & Test Commands
 
@@ -43,12 +43,13 @@ pnpm -F @distil/core test:watch
 
 ## Package Structure
 
-This is a pnpm monorepo with two packages:
+This is a pnpm monorepo with these packages:
 
 - **`packages/distil-core`** (`@distil/core`) - Analysis engine with tree-sitter parsers
 - **`packages/distil-cli`** (`@distil/cli`) - Command-line interface using Commander
+- **`packages/distil-mcp`** (`@distil/mcp`) - MCP server for editor/agent integration (in progress)
 
-The CLI depends on core. Core will eventually depend on `@kindling/core` and `@kindling/store-sqlite` for caching.
+The CLI depends on core. The MCP server depends on core and `@modelcontextprotocol/sdk`.
 
 ## Architecture
 
@@ -56,26 +57,50 @@ The CLI depends on core. Core will eventually depend on `@kindling/core` and `@k
 
 Parsers implement the `LanguageParser` interface in `packages/distil-core/src/parsers/base.ts`. Each parser provides extraction methods for all 5 analysis layers.
 
-The `TypeScriptParser` class (`packages/distil-core/src/parsers/typescript.ts`) handles both TypeScript and JavaScript files (.ts, .tsx, .js, .jsx, .mjs, .cjs). It uses tree-sitter for parsing with lazy initialization.
+The `TypeScriptParser` class (`packages/distil-core/src/parsers/typescript.ts`) handles both TypeScript and JavaScript files (.ts, .tsx, .js, .jsx, .mjs, .cjs). It uses tree-sitter for parsing with lazy initialization. The parser includes builders for all layers: AST extraction, call extraction, CFGBuilder, DFGBuilder, and PDGBuilder.
 
 Key types are in `packages/distil-core/src/types/`:
 
 - `ast.ts` - L1 types (ModuleInfo, FunctionInfo, ClassInfo, etc.)
-- `callgraph.ts`, `cfg.ts`, `dfg.ts`, `pdg.ts` - L2-L5 types (stubs)
+- `callgraph.ts` - L2 types (ProjectCallGraph, CallEdge, FunctionLocation)
+- `cfg.ts` - L3 types (CFGInfo, BasicBlock, CFGEdge)
+- `dfg.ts` - L4 types (DFGInfo, VariableRef, DefUseChain)
+- `pdg.ts` - L5 types (PDGInfo, PDGNode, PDGEdge, backwardSlice/forwardSlice)
 - `common.ts` - Shared types (Language, SourceRange, etc.)
+
+### High-Level Extractors
+
+`packages/distil-core/src/extractors.ts` provides convenience functions (`extractCFG`, `extractDFG`, `extractPDG`) that handle file reading and parser selection. The `buildCallGraph` function in `index.ts` constructs the project-wide L2 call graph.
+
+### Ignore System
+
+`packages/distil-core/src/ignore/` implements `.distilignore` support using `.gitignore` syntax. The `createIgnoreMatcher` function builds a matcher that is used by file collection and all analysis commands. Supports `--no-ignore` override via the CLI.
+
+### Kindling Integration
+
+`packages/distil-core/src/kindling/` provides the caching layer using Kindling for persisting analysis results as observations.
 
 ### CLI Commands
 
-Commands are in `packages/distil-cli/src/commands/`. Currently implemented:
+Commands are in `packages/distil-cli/src/commands/` and registered in the main index. Implemented commands:
 
-- `extract` - Extract file structure (L1)
-- `tree` - Show file tree
-
-Each command is a Commander subcommand registered in the main index.
+- `tree` - Show file tree structure
+- `extract` - Extract file structure (L1 AST)
+- `calls` - Build project call graph (L2)
+- `impact` - Find all callers of a function (L2)
+- `cfg` - Control flow graph with complexity (L3)
+- `dfg` - Data flow graph with def-use chains (L4)
+- `slice` - Program slice, backward/forward (L5)
 
 ## TypeScript Configuration
 
 Strict TypeScript with `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` enabled. Uses ES modules with NodeNext resolution.
+
+## Branching Strategy
+
+- **`dev`** — Default branch. All feature/fix branches target `dev` via PR. CI runs on push and PRs to `dev`.
+- **`main`** — Stable release branch. Merged from `dev` when ready to release. Tags on `main` trigger the publish workflow.
+- Feature branches: `feat/<name>`, `fix/<name>`, etc. — branch from and PR into `dev`.
 
 ## Planning
 

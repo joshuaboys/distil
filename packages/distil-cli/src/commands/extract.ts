@@ -6,17 +6,27 @@
 
 import { Command } from "commander";
 import { readFile } from "fs/promises";
-import { resolve } from "path";
-import { getParser, LANGUAGE_EXTENSIONS, type ModuleInfo } from "@distil/core";
+import { resolve, relative } from "path";
+import { getParser, isIgnoredPath, LANGUAGE_EXTENSIONS, type ModuleInfo } from "@distil/core";
+import { resolveCliIgnoreOptions } from "../ignore.js";
+import { loadConfig } from "../config/index.js";
+import { resolveFormat } from "../format/index.js";
 
 export const extractCommand = new Command("extract")
   .description("Extract file structure (L1 AST)")
   .argument("<file>", "File to analyze")
   .option("--json", "Output as JSON")
   .option("--compact", "Output compact format for LLM")
-  .action(async (file: string, options: { json?: boolean; compact?: boolean }) => {
+  .action(async (file: string, options: { json?: boolean; compact?: boolean }, cmd: Command) => {
     try {
       const filePath = resolve(file);
+      const ignoreOptions = resolveCliIgnoreOptions(cmd);
+      const ignored = await isIgnoredPath(filePath, ignoreOptions);
+      if (ignored) {
+        console.error(`File is ignored: ${file}. Use --no-ignore to analyze ignored files.`);
+        process.exit(1);
+      }
+
       const source = await readFile(filePath, "utf-8");
 
       const parser = getParser(filePath);
@@ -29,13 +39,14 @@ export const extractCommand = new Command("extract")
       }
 
       const moduleInfo = await parser.extractAST(source, filePath);
+      const config = await loadConfig(process.cwd());
+      const format = resolveFormat(options, config.defaultFormat);
 
-      if (options.compact) {
-        console.log(JSON.stringify(moduleInfo.toCompact(), null, 2));
-      } else if (options.json) {
+      if (format === "compact") {
+        printCompactModuleInfo(moduleInfo, filePath);
+      } else if (format === "json") {
         console.log(JSON.stringify(moduleInfo.toJSON(), null, 2));
       } else {
-        // Human-readable output
         printModuleInfo(moduleInfo);
       }
     } catch (error) {
@@ -106,4 +117,51 @@ function printModuleInfo(info: ModuleInfo): void {
   }
 
   console.log("\n");
+}
+
+function printCompactModuleInfo(info: ModuleInfo, filePath: string): void {
+  const relPath = relative(process.cwd(), filePath);
+  console.log(relPath);
+
+  for (const imp of info.imports) {
+    const filteredNames = imp.names.filter((n: { name: string }) => n.name !== "type");
+    const names =
+      filteredNames.length > 0
+        ? `{ ${filteredNames.map((n: { alias: string | null; name: string }) => n.alias ?? n.name).join(", ")} }`
+        : imp.module;
+    console.log(`  import ${names} from "${imp.module}"`);
+  }
+
+  for (const fn of info.functions) {
+    const params = fn.params
+      .map((p) => {
+        const type = p.type ? `: ${p.type}` : "";
+        return `${p.name}${type}`;
+      })
+      .join(", ");
+    const ret = fn.returnType ? `: ${fn.returnType}` : "";
+    console.log(`  fn ${fn.name}(${params})${ret} [L${fn.lineNumber}]`);
+  }
+
+  for (const cls of info.classes) {
+    console.log(`  class ${cls.name} [L${cls.lineNumber}]`);
+    for (const method of cls.methods) {
+      const params = method.params
+        .map((p) => {
+          const type = p.type ? `: ${p.type}` : "";
+          return `${p.name}${type}`;
+        })
+        .join(", ");
+      const ret = method.returnType ? `: ${method.returnType}` : "";
+      console.log(`    method ${method.name}(${params})${ret} [L${method.lineNumber}]`);
+    }
+  }
+
+  for (const iface of info.interfaces) {
+    console.log(`  interface ${iface.name}`);
+  }
+
+  for (const type of info.typeAliases) {
+    console.log(`  type ${type.name}`);
+  }
 }

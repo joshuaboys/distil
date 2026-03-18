@@ -63,12 +63,13 @@ Those concerns are either out of scope or deferred to future versions.
 
 **Target:** `distil extract <file>` works for TS/JS files — basic declarations only, arrow functions and destructured params missing
 
-### M2: L2 Call Graph + Kindling Integration (In Progress)
+### M2: L2 Call Graph + Kindling Integration (Complete)
 
 - [x] Cross-file call graph construction
 - [x] Forward edges (what does this function call?)
 - [x] Backward edges (what calls this function?)
-- [ ] Kindling integration for caching analysis results
+- [x] Kindling integration for caching analysis results
+      **Note:** Kindling caching layer is scaffolded (store, observations, types, config) but not wired into the analysis pipeline. Analysis results are not actively cached yet. See CORE-005.
 - [x] Impact analysis command
 
 **Target:** `distil impact <function>` shows all callers ✅
@@ -101,13 +102,13 @@ This milestone addresses the critical gaps found in the usability audit that blo
 
 **Target:** `distil extract` correctly handles arrow functions, destructured params, interface members, and re-exports. Test coverage is meaningful and reliable. CLI errors and help text are accurate.
 
-### M4: Ignore Patterns + Monorepo Support (Planned)
+### M4: Ignore Patterns + Monorepo Support (In Progress)
 
-- [ ] `.distilignore` file support (`.gitignore` syntax)
+- [x] `.distilignore` file support (`.gitignore` syntax)
 - [ ] Monorepo workspace detection (pnpm, npm, lerna)
 - [ ] Cross-package call graph resolution
 - [ ] `--package` scoping flag
-- [ ] `--no-ignore` override flag
+- [x] `--no-ignore` override flag
 
 **Target:** Distil works correctly in monorepos and respects project ignore patterns
 
@@ -125,12 +126,12 @@ This milestone addresses the critical gaps found in the usability audit that blo
 
 **Target:** `distil semantic "validate JWT tokens"` finds relevant functions; CLI is pipeline-friendly and installable via npm
 
-### M6: MCP Server (Planned)
+### M6: MCP Server (In Progress)
 
-- [ ] MCP server package (`@distil/mcp`)
-- [ ] Tool definitions for all analysis layers
-- [ ] Resource and prompt definitions
-- [ ] `distil mcp` CLI subcommand
+- [x] MCP server package (`@distil/mcp`)
+- [x] Tool definitions for all analysis layers (6 tools)
+- [x] Resource and prompt definitions (3 prompts)
+- [x] `distil mcp` CLI subcommand
 - [ ] Editor integration testing (Claude Code, Cursor)
 
 **Target:** Editors and agents query Distil analysis via MCP protocol
@@ -149,7 +150,7 @@ This milestone addresses the critical gaps found in the usability audit that blo
 
 ### @distil/core
 
-- **Path:** ./modules/distil-core.aps.md
+- **Path:** modules/distil-core.aps.md
 - **Scope:** CORE
 - **Owner:** @aneki
 - **Status:** In Progress (L1 incomplete — arrow fns missing; L3-L5 approximate; Kindling pending)
@@ -159,7 +160,7 @@ This milestone addresses the critical gaps found in the usability audit that blo
 
 ### @distil/cli
 
-- **Path:** ./modules/distil-cli.aps.md
+- **Path:** modules/distil-cli.aps.md
 - **Scope:** CLI
 - **Owner:** @aneki
 - **Status:** In Progress (commands work, 0 tests, misleading help/extensions)
@@ -169,13 +170,58 @@ This milestone addresses the critical gaps found in the usability audit that blo
 
 ### @distil/mcp
 
-- **Path:** ./modules/distil-mcp.aps.md
+- **Path:** modules/distil-mcp.aps.md
 - **Scope:** MCP
 - **Owner:** @aneki
-- **Status:** Planned
+- **Status:** In Progress
 - **Priority:** medium
 - **Tags:** mcp, integration, editor
 - **Dependencies:** @distil/core, @modelcontextprotocol/sdk
+
+---
+
+## What's Next
+
+Prioritized queue of ready work across all packages:
+
+| #   | Work Item | Module                             | Packages | Owner  | Status      | Priority |
+| --- | --------- | ---------------------------------- | -------- | ------ | ----------- | -------- |
+| 1   | CLI-013   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P0       |
+| 2   | CORE-014  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
+| 3   | CORE-015  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
+| 4   | CORE-016  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
+| 5   | CORE-021  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P1       |
+| 6   | MCP-005   | [mcp](modules/distil-mcp.aps.md)   | mcp      | @aneki | Ready       | P1       |
+| 7   | CLI-014   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | P1       |
+| 8   | CORE-019  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | P2       |
+| 9   | CLI-001   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
+| 10  | CLI-002   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | In Progress | —        |
+| 11  | CORE-009  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
+| 12  | CORE-011  | [core](modules/distil-core.aps.md) | core     | @aneki | Ready       | —        |
+| 13  | CLI-010   | [cli](modules/distil-cli.aps.md)   | cli      | @aneki | Ready       | —        |
+
+<!-- Completed:
+  CORE-005 (Kindling integration) - scaffolded, not wired (M2 checklist item marked prematurely; caching code exists but is not actively used in analysis pipeline)
+  CORE-010 (.distilignore support) - done
+  CORE-017 (DFG docs) - done (PR #12, README documents L4/L5 approximation)
+  CORE-018 (Interface parsing) - done (PR #11, parseInterface populates methods/properties/extends)
+  CORE-020 (Dead code cleanup) - done (PR #9, dead ternary removed, builtins Set hoisted)
+  CLI-011 (.distilignore CLI) - done
+  CLI-015 (Empty catch fix) - done (PR #10, tree.ts logs permission errors to stderr)
+  MCP-001 (MCP server scaffold) - done (server boilerplate, MCP handshake, 13 protocol tests)
+  MCP-002 (Analysis tools) - done (6 tools implemented in server.ts)
+  MCP-003 (Resources/prompts) - done (3 prompts implemented in server.ts)
+  MCP-004 (CLI integration) - done (distil mcp subcommand)
+-->
+
+<!-- Items blocked on dependencies:
+  CORE-012 (Semantic search) - blocked on CORE-005 (unblocked)
+  CORE-013 (Index warming) - blocked on CORE-005 (unblocked)
+  CLI-005 (Context command) - blocked on CORE-009
+  CLI-008 (Semantic search CLI) - blocked on CORE-012
+  CLI-009 (Warm command) - blocked on CORE-013
+  CLI-012 (MCP subcommand) - blocked on MCP-001
+-->
 
 ---
 

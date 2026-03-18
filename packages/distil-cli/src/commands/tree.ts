@@ -7,7 +7,10 @@
 import { Command } from "commander";
 import { readdir } from "fs/promises";
 import { resolve, join, relative } from "path";
-import { LANGUAGE_EXTENSIONS } from "@distil/core";
+import { createIgnoreMatcher, LANGUAGE_EXTENSIONS, type IgnoreMatcher } from "@distil/core";
+import { resolveCliIgnoreOptions } from "../ignore.js";
+import { loadConfig } from "../config/index.js";
+import { resolveFormat } from "../format/index.js";
 
 export const treeCommand = new Command("tree")
   .description("Show file tree structure")
@@ -15,24 +18,36 @@ export const treeCommand = new Command("tree")
   .option("--all", "Include all files (not just source files)")
   .option("--depth <n>", "Maximum depth", "10")
   .option("--json", "Output as JSON")
-  .action(async (path: string, options: { all?: boolean; depth?: string; json?: boolean }) => {
-    try {
-      const rootPath = resolve(path);
-      const maxDepth = parseInt(options.depth ?? "10", 10);
-      const sourceOnly = !options.all;
+  .option("--compact", "Compact output for piping")
+  .action(
+    async (
+      path: string,
+      options: { all?: boolean; depth?: string; json?: boolean; compact?: boolean },
+      cmd: Command,
+    ) => {
+      try {
+        const rootPath = resolve(path);
+        const maxDepth = parseInt(options.depth ?? "10", 10);
+        const sourceOnly = !options.all;
+        const ignoreOptions = resolveCliIgnoreOptions(cmd);
+        const matcher = await createIgnoreMatcher(rootPath, ignoreOptions);
+        const tree = await buildTree(rootPath, maxDepth, sourceOnly, matcher);
+        const config = await loadConfig(rootPath);
+        const format = resolveFormat(options, config.defaultFormat);
 
-      const tree = await buildTree(rootPath, maxDepth, sourceOnly);
-
-      if (options.json) {
-        console.log(JSON.stringify(tree, null, 2));
-      } else {
-        printTree(tree, "", true, rootPath);
+        if (format === "json") {
+          console.log(JSON.stringify(tree, null, 2));
+        } else if (format === "compact") {
+          printCompactTree(tree, rootPath);
+        } else {
+          printTree(tree, "", true, rootPath);
+        }
+      } catch (error) {
+        console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        process.exit(1);
       }
-    } catch (error) {
-      console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
-      process.exit(1);
-    }
-  });
+    },
+  );
 
 interface TreeNode {
   name: string;
@@ -42,31 +57,11 @@ interface TreeNode {
   language?: string | undefined;
 }
 
-const IGNORE_DIRS = new Set([
-  "node_modules",
-  ".git",
-  ".svn",
-  ".hg",
-  "dist",
-  "build",
-  ".next",
-  ".nuxt",
-  "coverage",
-  ".tox",
-  "venv",
-  ".venv",
-  "__pycache__",
-  ".cache",
-  ".kindling",
-  ".distil",
-]);
-
-const IGNORE_FILES = new Set([".DS_Store", "Thumbs.db", ".gitkeep"]);
-
-async function buildTree(
+export async function buildTree(
   dirPath: string,
   maxDepth: number,
   sourceOnly: boolean,
+  matcher: IgnoreMatcher,
   depth: number = 0,
 ): Promise<TreeNode> {
   const name = dirPath.split("/").pop() ?? dirPath;
@@ -91,14 +86,12 @@ async function buildTree(
     });
 
     for (const entry of sortedEntries) {
-      if (entry.name.startsWith(".") && entry.name !== ".") continue;
-      if (IGNORE_FILES.has(entry.name)) continue;
-
       const fullPath = join(dirPath, entry.name);
+      const ignored = matcher.ignores(fullPath, entry.isDirectory());
+      if (ignored) continue;
 
       if (entry.isDirectory()) {
-        if (IGNORE_DIRS.has(entry.name)) continue;
-        const child = await buildTree(fullPath, maxDepth, sourceOnly, depth + 1);
+        const child = await buildTree(fullPath, maxDepth, sourceOnly, matcher, depth + 1);
         if (child.children && child.children.length > 0) {
           node.children!.push(child);
         } else if (!sourceOnly) {
@@ -118,8 +111,9 @@ async function buildTree(
         });
       }
     }
-  } catch {
-    // Permission denied or other error
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    process.stderr.write(`warning: skipping ${dirPath}: ${msg}\n`);
   }
 
   return node;
@@ -161,5 +155,22 @@ function getFileIcon(language?: string): string {
       return "[cs]";
     default:
       return "[file]";
+  }
+}
+
+function printCompactTree(node: TreeNode, rootPath: string): void {
+  collectPaths(node, rootPath);
+}
+
+function collectPaths(node: TreeNode, rootPath: string): void {
+  if (node.type === "file") {
+    const relPath = relative(rootPath, node.path);
+    console.log(relPath);
+  }
+
+  if (node.children) {
+    for (const child of node.children) {
+      collectPaths(child, rootPath);
+    }
   }
 }

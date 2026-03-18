@@ -240,9 +240,9 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Confidence:** high
 - **Risks:** Token budget tuning
 
-### CORE-010: .distilignore support
+### CORE-010: .distilignore support ✅
 
-- **Status:** Planned
+- **Status:** Complete
 - **Intent:** Allow projects to exclude files/directories from analysis via ignore patterns
 - **Expected Outcome:** `.distilignore` file in project root is respected by all analysis commands; supports glob patterns like `.gitignore`
 - **Scope:** `src/ignore/`
@@ -441,13 +441,13 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 
 ## Decisions
 
-- **D-001:** Tree-sitter is the parsing foundation; no fallback to regex or other parsers
-- **D-002:** All analysis results are JSON-serializable for Kindling storage
-- **D-003:** Content hashes (SHA-256) are used for dirty detection
-- **D-004:** Higher layers (CFG, DFG, PDG) are computed on-demand, not eagerly
-- **D-005:** `.distilignore` uses `.gitignore` syntax for familiarity
-- **D-006:** Semantic search uses external embedding APIs; no local models
-- **D-007:** Monorepo detection is automatic; explicit `--package` flag for scoping
+- **CORE-D-001:** Tree-sitter is the parsing foundation; no fallback to regex or other parsers
+- **CORE-D-002:** All analysis results are JSON-serializable for Kindling storage
+- **CORE-D-003:** Content hashes (SHA-256) are used for dirty detection
+- **CORE-D-004:** Higher layers (CFG, DFG, PDG) are computed on-demand, not eagerly
+- **CORE-D-005:** `.distilignore` uses `.gitignore` syntax for familiarity
+- **CORE-D-006:** Semantic search uses external embedding APIs; no local models
+- **CORE-D-007:** Monorepo detection is automatic; explicit `--package` flag for scoping
 
 ## Notes
 

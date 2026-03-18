@@ -87,6 +87,20 @@ distil slice src/auth.ts validateToken 42 --forward
 
 All commands support `--json` for programmatic use. Function names use fuzzy matching.
 
+## Analysis Precision
+
+**L1-L3** (AST, Call Graph, CFG) are structurally exact — they reflect the parse tree and control flow as written.
+
+**L4 (DFG)** uses a conservative reaching-definitions approximation. For each variable use, Distil connects it to the most recent definition by source line number rather than performing full control-flow-aware reaching-definitions. This means:
+
+- Definitions in mutually exclusive branches (e.g. if/else) may not be distinguished
+- Loop-carried dependencies use the nearest prior definition heuristic
+- Multiple reaching definitions are marked `isMayReach: true`
+
+This approximation can introduce both false positives (spurious def-use edges) and false negatives (missing valid edges), especially in the presence of complex control flow such as branching and loops.
+
+**L5 (PDG/Slicing)** inherits L4's approximation — slices may include some statements that are not strictly relevant and may miss some that are, and are intended as a practical aid rather than a fully sound program analysis.
+
 ## Supported Languages
 
 | Language              | L1      | L2  | L3-L5 |
@@ -101,31 +115,59 @@ All commands support `--json` for programmatic use. Function names use fuzzy mat
 packages/
   distil-core   # Analysis engine (tree-sitter parsers, L1-L5 extractors)
   distil-cli    # Command-line interface (Commander.js)
+  distil-mcp    # MCP server for editor/agent integration
 ```
 
-Distil will integrate with [Kindling](https://github.com/anthropics/kindling) for caching and persistence:
-
 ```
-                     Distil CLI
+              Distil CLI / MCP Server
                         |
                         v
               Distil Analysis Engine
          L1 -> L2 -> L3 -> L4 -> L5
                         |
                         v
-              Kindling Persistence
-         SQLite + FTS5, observation storage
-                        |
-                        v
-               .kindling/distil.db
+                  tree-sitter
+            (language-specific grammars)
 ```
+
+## MCP Server
+
+Distil includes an MCP server for editor and agent integration. Start it with:
+
+```bash
+distil mcp
+```
+
+Or add to your editor's MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "distil": {
+      "command": "distil",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+**Available MCP tools:**
+
+| Tool             | Description                                     |
+| ---------------- | ----------------------------------------------- |
+| `distil_extract` | L1: Extract file structure (functions, classes) |
+| `distil_calls`   | L2: Build project call graph                    |
+| `distil_impact`  | L2: Find all callers of a function              |
+| `distil_cfg`     | L3: Control flow graph with complexity metrics  |
+| `distil_dfg`     | L4: Data flow graph with def-use chains         |
+| `distil_slice`   | L5: Program slice (backward/forward)            |
+
+**Workflow prompts:** `distil_before_editing`, `distil_debug_line`, `distil_refactor_impact`
 
 ## Roadmap
 
-Planned features (not yet implemented):
+Planned features:
 
-- **MCP server** -- expose analysis via Model Context Protocol for editor and agent integration
-- **`.distilignore`** -- project-level ignore patterns (like `.gitignore`)
 - **Semantic search** -- natural language code search via embeddings
 - **Index warming** -- pre-build all analysis layers for fast queries
 - **Monorepo support** -- per-package analysis with cross-package call graphs

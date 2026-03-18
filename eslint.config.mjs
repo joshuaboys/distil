@@ -7,7 +7,14 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   eslintConfigPrettier,
   {
-    ignores: ["**/dist/**", "**/node_modules/**", "**/*.js", "**/*.mjs", "**/*.cjs"],
+    ignores: [
+      "**/.claude/**",
+      "**/dist/**",
+      "**/node_modules/**",
+      "**/*.js",
+      "**/*.mjs",
+      "**/*.cjs",
+    ],
   },
   {
     files: ["**/*.ts", "**/*.tsx"],

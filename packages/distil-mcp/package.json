@@ -1,0 +1,57 @@
+{
+  "name": "@distil/mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Distil — expose code analysis via Model Context Protocol",
+  "type": "module",
+  "bin": {
+    "distil-mcp": "dist/index.js"
+  },
+  "main": "./dist/server.js",
+  "types": "./dist/server.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@distil/core": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.25"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "keywords": [
+    "mcp",
+    "code-analysis",
+    "llm",
+    "distil"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joshuaboys/distil.git",
+    "directory": "packages/distil-mcp"
+  },
+  "homepage": "https://github.com/joshuaboys/distil",
+  "bugs": {
+    "url": "https://github.com/joshuaboys/distil/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

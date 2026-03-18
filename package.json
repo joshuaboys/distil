@@ -5,6 +5,8 @@
   "scripts": {
     "build": "pnpm -r build",
     "test": "pnpm -r test",
+    "coverage": "pnpm -r run coverage",
+    "bench": "pnpm -F @distil/core bench",
     "clean": "pnpm -r clean",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
@@ -25,6 +27,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/node": "^22.10.0",
+    "@vitest/coverage-v8": "^2.1.9",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
@@ -37,5 +40,13 @@
   "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joshuaboys/distil.git"
+  },
+  "homepage": "https://github.com/joshuaboys/distil",
+  "bugs": {
+    "url": "https://github.com/joshuaboys/distil/issues"
   }
 }
