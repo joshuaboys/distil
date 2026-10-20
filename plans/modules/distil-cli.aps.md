@@ -1,8 +1,8 @@
 # @distil/cli
 
-| Scope | Owner  | Priority | Status                                                    |
-| ----- | ------ | -------- | --------------------------------------------------------- |
-| CLI   | @aneki | high     | In Progress (commands work, 0 tests, misleading help/ext) |
+| Scope | Owner  | Priority | Status                                                                  |
+| ----- | ------ | -------- | ----------------------------------------------------------------------- |
+| CLI   | @aneki | high     | In Progress (commands work, partial test coverage, misleading help/ext) |
 
 ## Purpose
 
@@ -261,16 +261,16 @@ This is the user-facing surface of Distil. It formats analysis results for human
 - **Confidence:** high
 - **Risks:** None significant
 
-### CLI-013: CLI test coverage
+### CLI-013: CLI test coverage expansion
 
 - **Status:** Ready
-- **Intent:** Add test coverage for all CLI commands — currently 0 tests
-- **Expected Outcome:** Tests verify command parsing, output formats (--json, --compact, default), error handling, and fuzzy matching for all 7 commands
-- **Scope:** `src/` — new test files
-- **Non-scope:** Core analysis logic (tested in CORE)
-- **Files:** `src/commands/extract.test.ts`, `src/commands/tree.test.ts`, `src/index.test.ts`
+- **Intent:** Close the remaining CLI test gaps, building on the existing suites (`src/commands/commands.test.ts`, `src/config/config.test.ts`, `src/format/format.test.ts`, `src/index.test.ts`), which already cover mocked command parsing for all 7 analysis commands
+- **Expected Outcome:** End-to-end runs of the built CLI for representative flows; error paths (missing files, unknown functions, unsupported extensions, invalid `--limit`/`--depth`) and edge cases covered; output formats (--json, --compact, default) asserted on real output
+- **Scope:** `packages/distil-cli/src/` — extend existing tests and add E2E tests where needed
+- **Non-scope:** Core analysis logic (tested in CORE); re-testing paths already covered by the existing suites
+- **Files:** Existing test files above, plus new E2E test file(s) as required
 - **Dependencies:** CLI-001
-- **Validation:** `pnpm -F @distil/cli test` — all tests pass, `passWithNoTests` removed from vitest config
+- **Validation:** `pnpm -F @distil/cli test` — all tests pass; `passWithNoTests` removed from the CLI vitest config
 - **Confidence:** high
 - **Risks:** None significant
 
@@ -326,14 +326,14 @@ This is the user-facing surface of Distil. It formats analysis results for human
 - **Confidence:** high
 - **Risks:** Output size for large directories; need sensible defaults (respect .distilignore, skip node_modules)
 
-### CLI-018: Modularize inline commands
+### CLI-018: Modularise inline commands ✅
 
-- **Status:** Planned
+- **Status:** Complete — already landed: each command has its own file under `src/commands/`, fuzzy matching is shared via `fuzzyMatchFunction` in `src/commands/helpers.ts`, and `src/index.ts` is ~90 lines
 - **Intent:** Extract calls, impact, cfg, dfg, slice commands from index.ts into separate command files
 - **Expected Outcome:** Each command is in its own file under `src/commands/`. Fuzzy matching logic is extracted into a shared utility. index.ts is under 100 lines.
 - **Scope:** `src/commands/`, `src/index.ts`
 - **Non-scope:** Changing command behavior
-- **Files:** `src/commands/calls.ts`, `src/commands/impact.ts`, `src/commands/cfg.ts`, `src/commands/dfg.ts`, `src/commands/slice.ts`, `src/utils/fuzzy.ts`
+- **Files:** `src/commands/calls.ts`, `src/commands/impact.ts`, `src/commands/cfg.ts`, `src/commands/dfg.ts`, `src/commands/slice.ts`, `src/commands/helpers.ts`
 - **Dependencies:** (none)
 - **Validation:** `pnpm build && distil --help` — all commands still work
 - **Confidence:** high

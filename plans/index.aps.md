@@ -57,7 +57,7 @@ Those concerns are either out of scope or deferred to future versions.
 - [x] CLI `distil tree` and `distil extract` available
 - [ ] Arrow function extraction (`const fn = () => {}` — the dominant modern TS/JS pattern)
 - [ ] Destructured parameter parsing (`function f({ name, age })` → params: [])
-- [ ] Interface member extraction (methods/properties return empty arrays)
+- [x] Interface member extraction (methods/properties extracted; index and call/construct signatures still skipped)
 - [ ] Re-export and standalone `export default` capture
 - [ ] Compact output includes interfaces, types, variables, exports
 
@@ -81,7 +81,7 @@ Those concerns are either out of scope or deferred to future versions.
 - [x] L5: Program Dependence Graph with backward/forward slicing
 - [x] `distil cfg`, `distil dfg`, `distil slice` commands
 - [ ] L4: DFG reaching definitions use line-number heuristic, not real dataflow analysis
-- [ ] L4: `getReachingDefinitions()` and `getLiveVariables()` are stubs (return empty maps)
+- [ ] L4: `DFGInfo.reachingDefs` and `DFGInfo.liveVars` are currently always empty; reaching-definition and live-variable data is not yet populated
 - [ ] L5: Control dependence only considers direct successors, not post-dominance
 
 **Target:** `distil slice <file> <func> <line>` returns relevant lines only — works for simple functions, approximate for complex control flow
@@ -92,11 +92,11 @@ This milestone addresses the critical gaps found in the usability audit that blo
 
 - [ ] Arrow function extraction (CORE-014)
 - [ ] Destructured parameter parsing (CORE-015)
-- [ ] Interface member extraction (CORE-016)
+- [x] Interface member extraction (CORE-016 — already implemented)
 - [ ] Re-export and standalone export default capture (CORE-017)
 - [ ] Compact output completeness (CORE-018)
 - [ ] Core test coverage expansion (CORE-019)
-- [ ] CLI test coverage (CLI-013)
+- [ ] CLI test coverage expansion — E2E and error paths (CLI-013)
 - [ ] Clean up misleading language extensions (CLI-014)
 - [ ] Fix CLI help text referencing nonexistent commands (CLI-015)
 
@@ -238,7 +238,7 @@ Prioritized queue of ready work across all packages:
 - **D-009:** MCP server uses stdio transport; started via `distil mcp` or configured in editor settings
 - **D-010:** `.distilignore` uses `.gitignore` syntax and is checked into version control
 - **D-011:** Monorepo detection is automatic; `--package` flag for explicit scoping
-- **D-012:** M1 (L1 AST) is not complete until arrow functions, destructured params, interface members, and re-exports are handled — these are not edge cases but dominant patterns in modern TS/JS
+- **D-012:** M1 (L1 AST) is not complete until arrow functions, re-exports, destructured params, and compact output are fully handled — these are not edge cases but dominant patterns in modern TS/JS
 - **D-013:** Test coverage must be meaningful before claiming a milestone is complete — `.toBeGreaterThan(0)` assertions do not constitute verification
 - **D-014:** Python/Rust/C# file extensions must not be listed as supported until parser implementations exist
 
