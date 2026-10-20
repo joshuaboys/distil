@@ -120,7 +120,7 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Known gaps (see CORE-014 through CORE-018):**
   - `tryParseArrowFunction()` is a stub returning `null` — arrow functions not extracted
   - Destructured parameters (`{ name, age }`) produce empty param lists
-  - Interface methods and properties arrays are always empty
+  - Interface method and property signatures are extracted, but index signatures, call/construct signatures and computed member names are skipped
   - Re-exports (`export { Foo }`) and standalone `export default` not captured
   - `toCompact()` drops interfaces, type aliases, variables, and exports
 
@@ -202,17 +202,18 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Status:** Functional but approximate — uses line-number heuristic, not real dataflow
 - **Intent:** Track variable definitions and uses for data flow analysis
 - **Expected Outcome:** `extractDFG()` returns variable refs and def-use chains
-- **Scope:** `src/parsers/typescript.ts` (DFGBuilder class)
+- **Scope:** `src/parsers/dfg-builder.ts` (DFGBuilder class)
 - **Non-scope:** PDG, slicing
-- **Files:** `src/parsers/typescript.ts`, `src/types/dfg.ts`
+- **Files:** `src/parsers/dfg-builder.ts`, `src/types/dfg.ts`
 - **Dependencies:** CORE-001, CORE-002
 - **Validation:** `pnpm test`
 - **Confidence:** medium
 - **Partially complete:** DFG extraction with parameters, definitions, uses, updates, closures
 - **Known limitations:**
   - Reaching definitions use line-number heuristic (def at line 5 assumed to reach any use at line > 5, ignoring control flow branches)
-  - `getReachingDefinitions()` returns empty map (stubbed)
-  - `getLiveVariables()` returns empty map (stubbed)
+  - `DFGInfo.reachingDefs` is always an empty `Map` in `DFGBuilder.getDFG()` (reaching-definitions analysis not yet implemented)
+  - `DFGInfo.liveVars` is always an empty `Map` in `DFGBuilder.getDFG()` (liveness analysis not yet implemented)
+  - Any downstream analyses depending on `reachingDefs`/`liveVars` currently see no data and must treat these fields as placeholders
 
 ### CORE-008: L5 PDG extractor and slicing 🔄
 
@@ -366,11 +367,11 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Status:** Ready
 - **Intent:** Extract arrow functions assigned to variables as functions, not just variables
 - **Expected Outcome:** `const handler = async (req, res) => { ... }` appears in `functions` array with name, params, return type, async flag — not just as a variable with no type info
-- **Scope:** `src/parsers/typescript.ts` — `tryParseArrowFunction()` (currently a stub returning null)
+- **Scope:** `src/parsers/typescript.ts` — the `lexical_declaration`/`variable_declaration` path in `extractAST()` and `parseVariableDeclaration()`/`parseVariableDeclarator()` (including the `export const` path), which currently only emit `VariableInfo`; plus `tryParseArrowFunction()` (currently a stub returning null, only reached from the `expression_statement`/`assignment_expression` path). Arrow-valued `const`/`let` declarations must reach the arrow parser and be emitted as functions
 - **Non-scope:** Class method arrows (already handled)
 - **Files:** `src/parsers/typescript.ts`
 - **Dependencies:** CORE-002
-- **Validation:** `pnpm test` — new tests for arrow functions (block body, expression body, async, exported, typed)
+- **Validation:** `pnpm test` — new tests for arrow functions (block body, expression body, async, exported, typed), including `const`/`let` declarations and `export const`
 - **Confidence:** high
 - **Risks:** Distinguishing arrow function variables from non-function `const` declarations
 
@@ -387,9 +388,9 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Confidence:** high
 - **Risks:** None significant
 
-### CORE-016: Interface member extraction
+### CORE-016: Interface member extraction ✅
 
-- **Status:** Ready
+- **Status:** Complete — already implemented via `parseInterfaceBody()`, `parseMethodSignature()` and `parsePropertySignature()`; `typescript.test.ts` covers extends clauses, method signatures and readonly/optional properties. Index signatures, call/construct signatures and computed member names remain unhandled (minor follow-up, not blocking M1)
 - **Intent:** Extract method signatures and property declarations from interfaces
 - **Expected Outcome:** `interface Foo { bar(x: string): void; baz: number }` reports methods and properties, not empty arrays
 - **Scope:** `src/parsers/typescript.ts` — `parseInterface()`
@@ -418,11 +419,11 @@ This is the analytical spine of Distil. It extracts structure from code and prod
 - **Status:** Ready
 - **Intent:** Include interfaces, type aliases, variables, and exports in compact output
 - **Expected Outcome:** `toCompact()` produces a summary that includes all structural elements, not just functions and classes
-- **Scope:** `src/types/ast.ts` — `ModuleInfo.toCompact()`
+- **Scope:** The runtime implementation of `ModuleInfo.toCompact()` in `src/parsers/typescript.ts` (`src/types/ast.ts` only declares the interface), and the CLI's `--compact` printer `printCompactModuleInfo()` in `@distil/cli` `src/commands/extract.ts`, which currently lists interface names only and drops type aliases, variables and exports
 - **Non-scope:** Full JSON output (already complete)
-- **Files:** `src/types/ast.ts`
+- **Files:** `src/parsers/typescript.ts`, `packages/distil-cli/src/commands/extract.ts`
 - **Dependencies:** CORE-003
-- **Validation:** `pnpm test` — compact output includes interfaces, types, variables, exports
+- **Validation:** `pnpm test` — `toCompact()` and `distil extract --compact` both include interfaces, types, variables, exports
 - **Confidence:** high
 - **Risks:** None significant
 

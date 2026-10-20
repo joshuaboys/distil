@@ -3,21 +3,23 @@
 **Date:** 2026-02-07
 **Scope:** Full codebase walk — build, tests, type safety, CLI end-to-end, parser correctness
 
+> **Note:** This audit is a historical snapshot of the codebase as of 2026-02-07, when the repo had 19 tests. Several findings have since been addressed on `dev`; those are annotated inline with "Update (2026-10-20)". As of 2026-10-20, `pnpm test` runs 118 tests (68 core, 32 CLI, 18 MCP).
+
 ---
 
 ## Executive Summary
 
-Distil **builds, typechecks, lints, and passes all 19 tests cleanly**. The core L1 extraction and CLI commands are functional for basic TypeScript analysis. However, several gaps significantly limit real-world usability:
+At the time of the audit, Distil **built, typechecked, linted, and passed all 19 tests cleanly**. The core L1 extraction and CLI commands are functional for basic TypeScript analysis. However, several gaps significantly limit real-world usability:
 
-| Area              | Verdict                                                                               |
-| ----------------- | ------------------------------------------------------------------------------------- |
-| Build & tooling   | **Works** — clean build, typecheck, lint                                              |
-| L1 AST extraction | **Partially usable** — misses arrow functions, destructured params, interface members |
-| L2 Call graph     | **Works** for simple cases                                                            |
-| L3-L5 CFG/DFG/PDG | **Works** for simple functions; analysis is approximate                               |
-| CLI UX            | **Functional** but has misleading help text and missing validation                    |
-| Test coverage     | **Insufficient** — 21 tests for core, 0 for CLI                                       |
-| Python/Rust/C#    | **Not usable** — listed as supported but no parsers implemented                       |
+| Area              | Verdict                                                                                                               |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Build & tooling   | **Works** — clean build, typecheck, lint                                                                              |
+| L1 AST extraction | **Partially usable** — misses arrow functions, destructured params, re-exports                                        |
+| L2 Call graph     | **Works** for simple cases                                                                                            |
+| L3-L5 CFG/DFG/PDG | **Works** for simple functions; analysis is approximate                                                               |
+| CLI UX            | **Functional** but has misleading help text and missing validation                                                    |
+| Test coverage     | **Insufficient** — 21 tests for core, 0 for CLI at audit time (CLI now has unit and mocked command tests, but no E2E) |
+| Python/Rust/C#    | **Not usable** — listed as supported but no parsers implemented                                                       |
 
 **Bottom line:** Usable as a prototype for TypeScript/JavaScript L1 extraction. Not production-ready due to missing arrow function support (the dominant function form in modern TS/JS) and thin test coverage.
 
@@ -89,6 +91,8 @@ interface UserService {
 
 Interface method signatures and property declarations are empty in the JSON output.
 
+**Update (2026-10-20):** Interface method and property signatures are now extracted (`parseInterfaceBody()`, `parseMethodSignature()` and `parsePropertySignature()` in `packages/distil-core/src/parsers/typescript.ts`), and `typescript.test.ts` asserts extends clauses, method signatures and readonly/optional properties. Index signatures, call/construct signatures and computed member names are still skipped.
+
 #### 2d. Re-exports and type exports at file end are not captured
 
 ```typescript
@@ -138,7 +142,7 @@ All three analysis layers produce output for the tested functions.
 
 **CFG (L3):** Correctly identifies basic blocks, branches, loops, back edges, and switch cases. Cyclomatic complexity is calculated. Try-catch modeling is incomplete — exception flow edges are not fully represented.
 
-**DFG (L4):** Tracks variable definitions and uses with def-use chains. However, reaching definitions use a **line-number heuristic** rather than proper dataflow analysis — a definition at line 5 is assumed to reach any use at line > 5, ignoring control flow branches. `getReachingDefinitions()` and `getLiveVariables()` return empty maps (stubbed).
+**DFG (L4):** Tracks variable definitions and uses with def-use chains. However, reaching definitions use a **line-number heuristic** rather than proper dataflow analysis — a definition at line 5 is assumed to reach any use at line > 5, ignoring control flow branches. `DFGInfo.reachingDefs` and `DFGInfo.liveVars` are always returned as empty maps by `DFGBuilder.getDFG()` (reaching-definitions and liveness analysis are not implemented).
 
 **PDG (L5):** Combines CFG and DFG into program dependence graph. Backward and forward slicing works for simple cases. Control dependence only considers direct successors of predicates, not proper post-dominance.
 
@@ -162,7 +166,9 @@ The comment block at the top of `packages/distil-cli/src/index.ts:2-19` referenc
 
 #### 5b. Code organization
 
-`index.ts` is 858 lines. Only `extract` and `tree` are in separate command files; `calls`, `impact`, `cfg`, `dfg`, and `slice` are defined inline. There's significant code duplication — the fuzzy function matching logic is copy-pasted across 4 commands.
+At the time of the audit, `index.ts` was 858 lines. Only `extract` and `tree` were in separate command files; `calls`, `impact`, `cfg`, `dfg`, and `slice` were defined inline, and the fuzzy function matching logic was copy-pasted across 4 commands.
+
+**Update (2026-10-20):** Resolved. Each command now lives in its own module under `packages/distil-cli/src/commands/`, fuzzy matching is shared via `fuzzyMatchFunction` in `src/commands/helpers.ts`, and `src/index.ts` is ~90 lines.
 
 #### 5c. Python/Rust/C# are misleadingly listed
 
@@ -176,7 +182,9 @@ When a user runs `distil extract foo.py`, the error says "Unsupported file type"
 
 #### 5e. Zero CLI tests
 
-The CLI package has `passWithNoTests: true` in its vitest config and contains no test files. No command, option parsing, or error handling is tested.
+At the time of the audit, the CLI package had `passWithNoTests: true` in its vitest config and contained no test files.
+
+**Update (2026-10-20):** The CLI now has four Vitest files (`src/commands/commands.test.ts`, `src/config/config.test.ts`, `src/format/format.test.ts`, `src/index.test.ts`; 32 tests) covering mocked command parsing for `extract`, `tree`, `calls`, `impact`, `cfg`, `dfg` and `slice`, config loading, output formatting and `.distilignore` wiring. Remaining gaps: no end-to-end runs of the built binary, limited error-path and edge-case coverage, no coverage thresholds, and `passWithNoTests: true` is still set.
 
 ---
 
@@ -206,7 +214,7 @@ The CLI package has `passWithNoTests: true` in its vitest config and contains no
 
 ### CLI package: 0 tests
 
-No test coverage at all.
+No test coverage at all at the time of the audit. See the update under 5e for the current state.
 
 ---
 
@@ -225,7 +233,7 @@ No test coverage at all.
 - **No parser caching:** Each `extract*` method re-parses the source from scratch. Running `cfg` on a function parses the entire file again even if `extractAST` just parsed it.
 - **Tree-sitter string matching:** Node type detection uses string literals (`"function_declaration"`, `"property_identifier"`) throughout — fragile across grammar versions.
 - **Lazy init race condition:** `initTreeSitter()` has no mutex; concurrent calls could double-initialize.
-- **`BUILTIN_METHODS` hardcoded in CLI:** 200+ lines of built-in method names are embedded in `index.ts` instead of a data file.
+- **`BUILTIN_METHODS` hardcoded in CLI:** 200+ lines of built-in method names were embedded in `index.ts` instead of a data file. **Update (2026-10-20):** Resolved — built-in method detection is centralised in core; the CLI imports `isBuiltinMethod` from `@distil/core` (see `src/commands/calls.ts`).
 
 ---
 
@@ -235,21 +243,21 @@ No test coverage at all.
 
 1. **Implement arrow function extraction** — Without this, the tool misses the majority of functions in modern TS/JS codebases
 2. **Fix destructured parameter parsing** — Common pattern, currently produces empty param lists
-3. **Extract interface members** — Interfaces show as empty shells
+3. ~~**Extract interface members** — Interfaces show as empty shells~~ (done since the audit)
 4. **Fix compact output** — Include interfaces, types, exports, and variables
 5. **Remove or disable Python/Rust/C# from supported extensions list** — Currently misleading
 
 ### Should-fix for reliability
 
-6. Add CLI tests (at minimum: extract, tree, error cases)
+6. Expand CLI tests (initial tests now exist; add E2E and error cases)
 7. Strengthen core tests with specific assertions and edge cases
 8. Add file-existence validation before read operations
-9. Extract duplicated fuzzy-matching into shared utility
+9. ~~Extract duplicated fuzzy-matching into shared utility~~ (done since the audit)
 10. Cache parsed ASTs across extraction layers
 
 ### Nice-to-have for polish
 
-11. Modularize remaining inline CLI commands
+11. ~~Modularise remaining inline CLI commands~~ (done since the audit)
 12. Remove references to nonexistent commands from help text
 13. Add `--verbose` flag for debugging
 14. Add coverage reporting with thresholds
